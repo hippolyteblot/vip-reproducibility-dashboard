@@ -123,7 +123,7 @@ def layout():
 def toggle_modal_exec(n1, n2, is_open):
     if n1 or n2:
         exec_list = load_exec_from_db()
-        exec_data = get_list_structure(exec_list)
+        exec_data = get_list_structure(exec_list, '/repro-execution')
 
         return not is_open, exec_data
 
@@ -140,7 +140,7 @@ def toggle_modal_exec(n1, n2, is_open):
 def toggle_modal_exp(n1, n2, is_open):
     if n1 or n2:
         exp_list = load_exp_from_db()
-        exp_data = get_list_structure(exp_list)
+        exp_data = get_list_structure(exp_list, '/repro-experiment')
         return not is_open, exp_data
 
     return is_open, []
@@ -156,7 +156,7 @@ def search_exp(value):
     if value is not None:
         exp_list = [exp for exp in exp_list if value.lower() in exp.get("name").lower()]
 
-    exp_data = get_list_structure(exp_list)
+    exp_data = get_list_structure(exp_list, '/repro-experiment')
 
     return exp_data
 
@@ -171,12 +171,12 @@ def search_exec(value):
     if value is not None:
         exec_list = [exec_item for exec_item in exec_list if value.lower() in exec_item.get("name").lower()]
 
-    exec_data = get_list_structure(exec_list)
+    exec_data = get_list_structure(exec_list, '/repro-execution')
 
     return exec_data
 
 
-def get_list_structure(exp_list):
+def get_list_structure(exp_list, href):
     return dbc.Row(
         children=[
             html.Div(
@@ -187,7 +187,7 @@ def get_list_structure(exp_list):
                                 exp.get("name"),
                                 id='repro-execution',
                                 className="mr-1",
-                                href='/repro-experiment?experiment=' + str(exp.get("id")),
+                                href=href + '?experiment=' + str(exp.get("id")),
                                 style={'width': 'fit-content'},
                             ),
                         ],

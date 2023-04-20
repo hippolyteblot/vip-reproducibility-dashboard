@@ -54,7 +54,8 @@ class GirderVIPClient:
         # filter the items by experiment id
         filtered_items = []
         for item in items:
-            if item['meta'] and int(item['meta'].get('experiment_id')) == int(experiment_id):
+            if item['meta'] and item['meta'].get('experiment_id') and \
+                    int(item['meta'].get('experiment_id')) == int(experiment_id):
                 filtered_items.append(item)
 
         first_item = None
@@ -62,6 +63,7 @@ class GirderVIPClient:
             if item['name'].endswith('.feather'):
                 first_item = item
                 break
+
         self.client.downloadItem(first_item['_id'], self.download_folder + str(user_id), str(experiment_id))
         self.log_request.append((experiment_id, user_id, time.time(), first_item['name']))
         path = self.download_folder + str(user_id) + "/" + str(experiment_id) + '/' + first_item['name']
