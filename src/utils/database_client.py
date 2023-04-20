@@ -1,6 +1,7 @@
 import mysql.connector
 
-class Database:
+
+class DatabaseClient:
     def __init__(self, host, user, password, database):
         self.host = host
         self.user = user
@@ -38,7 +39,7 @@ class Database:
         result = cursor.fetchone()
         cursor.close()
         return result
-    
+
     def fetch_many(self, query, params=None):
         cursor = self.connection.cursor(dictionary=True)
         cursor.execute(query, params)

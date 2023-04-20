@@ -1,7 +1,7 @@
 from dash import html, Output, Input, State, callback
 import dash_bootstrap_components as dbc
 
-from models.home import load_exec_from_local, load_exp_from_db
+from models.home import load_exp_from_db, load_exec_from_db
 
 
 def layout():
@@ -36,12 +36,21 @@ def layout():
                                 [
                                     dbc.ModalHeader(dbc.ModalTitle("Select an execution to reproduce")),
                                     dbc.ModalBody(
-                                        # list of executions (for now, read local files)
-                                        dbc.Row(
-                                            className='card',
-                                            id='execution-container',
-                                            style={'flexDirection': 'row'},
-                                        ),
+                                        children=[
+                                            # Search bar
+                                            dbc.Input(
+                                                id='search-exec',
+                                                type='text',
+                                                placeholder='Search for an execution',
+                                                style={'width': '100%'},
+                                            ),
+                                            html.Br(),
+                                            dbc.Row(
+                                                className='card',
+                                                id='execution-container',
+                                                style={'flexDirection': 'row'},
+                                            ),
+                                        ]
                                     ),
                                     dbc.ModalFooter(
                                         dbc.Button(
@@ -53,7 +62,7 @@ def layout():
                                 is_open=False,
                             ),
                             dbc.Button(
-                                "Reproduce an experience",
+                                "Reproduce an experiment",
                                 id="exp-open",
                                 n_clicks=0,
                                 style={'width': 'fit-content'},
@@ -61,14 +70,14 @@ def layout():
                             ),
                             dbc.Modal(
                                 [
-                                    dbc.ModalHeader(dbc.ModalTitle("Select an experience to reproduce")),
+                                    dbc.ModalHeader(dbc.ModalTitle("Select an experiment to reproduce")),
                                     dbc.ModalBody(
                                         children=[
                                             # Search bar
                                             dbc.Input(
                                                 id='search-exp',
                                                 type='text',
-                                                placeholder='Search for an experience',
+                                                placeholder='Search for an experiment',
                                                 style={'width': '100%'},
                                             ),
                                             html.Br(),
@@ -77,7 +86,7 @@ def layout():
                                                     # List of executions (from db)
                                                     dbc.Row(
                                                         className='card',
-                                                        id='experience-container',
+                                                        id='experiment-container',
                                                         style={'flexDirection': 'row'},
                                                     ),
                                                 ],
@@ -113,26 +122,8 @@ def layout():
 )
 def toggle_modal_exec(n1, n2, is_open):
     if n1 or n2:
-        exec_list = load_exec_from_local()
-        exec_data = html.Div(
-            children=[
-                dbc.Row(
-                    children=[
-                        dbc.Button(
-                            execution.get("name"),
-                            id='repro-execution',
-                            className="mr-1",
-                            href='/repro-execution?execution_id=' + execution.get("path"),
-                            style={'width': 'fit-content'},
-                        ),
-                    ],
-                    className='card-body',
-                    style={'justifyContent': 'center', 'gap': '10px', 'width': 'fit-content'},
-                )
-                for execution in exec_list
-            ],
-            className='card',
-        )
+        exec_list = load_exec_from_db()
+        exec_data = get_list_structure(exec_list)
 
         return not is_open, exec_data
 
@@ -141,7 +132,7 @@ def toggle_modal_exec(n1, n2, is_open):
 
 @callback(
     Output("exp-modal", "is_open"),
-    Output("experience-container", "children", allow_duplicate=True),
+    Output("experiment-container", "children", allow_duplicate=True),
     [Input("exp-open", "n_clicks"), Input("exp-close", "n_clicks")],
     [State("exp-modal", "is_open")],
     prevent_initial_call=True
@@ -149,14 +140,14 @@ def toggle_modal_exec(n1, n2, is_open):
 def toggle_modal_exp(n1, n2, is_open):
     if n1 or n2:
         exp_list = load_exp_from_db()
-        exp_data = get_experiences_structure(exp_list)
+        exp_data = get_list_structure(exp_list)
         return not is_open, exp_data
 
     return is_open, []
 
 
 @callback(
-    Output("experience-container", "children", allow_duplicate=True),
+    Output("experiment-container", "children", allow_duplicate=True),
     [Input("search-exp", "value")],
     prevent_initial_call=True
 )
@@ -165,12 +156,27 @@ def search_exp(value):
     if value is not None:
         exp_list = [exp for exp in exp_list if value.lower() in exp.get("name").lower()]
 
-    exp_data = get_experiences_structure(exp_list)
+    exp_data = get_list_structure(exp_list)
 
     return exp_data
 
 
-def get_experiences_structure(exp_list):
+@callback(
+    Output("execution-container", "children", allow_duplicate=True),
+    [Input("search-exec", "value")],
+    prevent_initial_call=True
+)
+def search_exec(value):
+    exec_list = load_exec_from_db()
+    if value is not None:
+        exec_list = [exec_item for exec_item in exec_list if value.lower() in exec_item.get("name").lower()]
+
+    exec_data = get_list_structure(exec_list)
+
+    return exec_data
+
+
+def get_list_structure(exp_list):
     return dbc.Row(
         children=[
             html.Div(
@@ -181,7 +187,7 @@ def get_experiences_structure(exp_list):
                                 exp.get("name"),
                                 id='repro-execution',
                                 className="mr-1",
-                                href='/repro-experience?experience_id=' + str(exp.get("id")),
+                                href='/repro-experiment?experiment=' + str(exp.get("id")),
                                 style={'width': 'fit-content'},
                             ),
                         ],

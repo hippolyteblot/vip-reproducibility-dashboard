@@ -12,7 +12,7 @@ metabolites, voxels, groups = get_parameters_for_spectro(get_prebuilt_data())
 def layout():
     return html.Div(
         [
-            html.H2('Reproduce an experience'),
+            html.H2('Reproduce an experiment'),
             # Parameter menu
             html.Div(
                 children=[

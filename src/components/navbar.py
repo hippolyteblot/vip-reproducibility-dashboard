@@ -2,7 +2,7 @@ from dash import html, callback, Output, Input, State
 import dash_bootstrap_components as dbc
 
 # local imports
-from .login import login_info, add_experience
+from .login import login_info, add_experiment
 
 logo_main = '/assets/logos/logo_main.png'
 
@@ -42,7 +42,7 @@ navbar = dbc.Navbar(
                                 href='/reproducibility'
                             )
                         ),
-                        add_experience,
+                        add_experiment,
                         html.Div(
                             login_info,
                             style={'display': 'flex', 'alignItems': 'center', 'justifyContent': 'center'}

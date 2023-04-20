@@ -16,13 +16,13 @@
 /*!40111 SET @OLD_SQL_NOTES=@@SQL_NOTES, SQL_NOTES=0 */;
 
 --
--- Table structure for table `EXPERIENCES`
+-- Table structure for table `EXPERIMENTS`
 --
 
-DROP TABLE IF EXISTS `EXPERIENCES`;
+DROP TABLE IF EXISTS `EXPERIMENTS`;
 /*!40101 SET @saved_cs_client     = @@character_set_client */;
 /*!50503 SET character_set_client = utf8mb4 */;
-CREATE TABLE `EXPERIENCES` (
+CREATE TABLE `EXPERIMENTS` (
   `id` int NOT NULL AUTO_INCREMENT,
   `application_name` varchar(45) NOT NULL,
   `application_version` varchar(45) NOT NULL,

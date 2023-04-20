@@ -4,6 +4,7 @@ import dash_bootstrap_components as dbc
 from flask_login import UserMixin, current_user, logout_user, login_user
 
 from models.login import check_user
+from utils.settings import GVC
 
 
 class User(UserMixin):
@@ -83,21 +84,21 @@ logged_out_info = dbc.NavItem(
     )
 )
 
-add_experience = html.Div(
-    id='add-experience-link',
+add_experiment = html.Div(
+    id='add-experiment-link',
 )
 
-add_experience_admin = dbc.NavItem(
+add_experiment_admin = dbc.NavItem(
     dbc.NavLink(
-        'Add experience',
-        href='/add-experience'
+        'Add experiment',
+        href='/add-experiment'
     )
 )
 
 
 @callback(
     Output('user-status-header', 'children'),
-    Output('add-experience-link', 'children'),
+    Output('add-experiment-link', 'children'),
     Input('url-login', 'pathname')
 )
 def update_authentication_status(path):
@@ -106,8 +107,9 @@ def update_authentication_status(path):
         logout_user()
         children = [logged_out_info, ""]
     elif logged_in:
-        children = [logged_in_info, add_experience_admin] \
-            if current_user.role == 'admin' else [logged_in_info, add_experience]
+        GVC.clean_user_download_folder(current_user.id)
+        children = [logged_in_info, add_experiment_admin] \
+            if current_user.role == 'admin' else [logged_in_info, add_experiment]
     else:
         children = [logged_out_info, ""]
     return children

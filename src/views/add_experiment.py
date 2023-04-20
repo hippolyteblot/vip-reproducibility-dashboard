@@ -1,7 +1,7 @@
 from dash import html, callback, Output, Input, State
 import dash_bootstrap_components as dbc
 
-from models.add_experience import add_experience_to_db
+from models.add_experiment import add_experiment_to_db
 """
 applications = [
     {
@@ -26,10 +26,10 @@ applications = [
 def layout():
     return html.Div(
         [
-            html.H1('Add a new experience recorded on the VIP platform'),
+            html.H1('Add a new experiment recorded on the VIP platform'),
             html.Div(
                 html.P(
-                    'Please fill the following form to add a new experience to the dashboard.'
+                    'Please fill the following form to add a new experiment to the dashboard.'
                 )
             ),
 
@@ -37,7 +37,7 @@ def layout():
                 children=[
                     dbc.Row(
                         children=[
-                            html.H3('Add an experience'),
+                            html.H3('Add an experiment'),
                         ],
                         className='card-body',
                         style={'justifyContent': 'center', 'gap': '10px'},
@@ -167,6 +167,15 @@ def layout():
                                     ),
                                 ],
                             ),
+                            dbc.Col(
+                                children=[
+                                    html.Label('Single run'),
+                                    dbc.Checkbox(
+                                        id='single-run',
+                                        style={'width': '100%'},
+                                    ),
+                                ],
+                            ),
                         ],
                         className='card-body',
                         style={'justifyContent': 'center', 'gap': '10px'},
@@ -174,10 +183,10 @@ def layout():
                     dbc.Row(
                         children=[
                             dbc.Button(
-                                "Add experience",
+                                "Add experiment",
                                 type="submit",
                                 color="primary",
-                                id="add-experience",
+                                id="add-experiment",
                                 className="mr-1",
                                 style={'width': 'fit-content'},
                             ),
@@ -194,26 +203,10 @@ def layout():
     )
 
 
-"""
-@callback(
-    Output('version', 'options'),
-    Output('version', 'value'),
-    Output('version', 'disabled'),
-    Input('application', 'value'),
-)
-def update_version_options(application):
-    app = next(app for app in applications if app['label'] == application)
-    return [
-        {'label': version, 'value': version}
-        for version in app['versions']
-    ], app['versions'][0], False
-"""
-
-
 @callback(
     Output('add-exp-output-state', 'children'),
     Output('add-exp-output-state', 'className'),
-    Input('add-experience', 'n_clicks'),
+    Input('add-experiment', 'n_clicks'),
     State('application', 'value'),
     State('version', 'value'),
     State('input-to-vary', 'value'),
@@ -223,11 +216,14 @@ def update_version_options(application):
     State('experiment', 'value'),
     State('number-of-reminders', 'value'),
     State('launch-frequency', 'value'),
+    State('single-run', 'value'),
 )
-def add_experience(n_clicks, application, version, input_to_vary, fileset_dir, parameters, results_dir, experiment,
-                   number_of_reminders, launch_frequency):
+def add_experiment(n_clicks, application, version, input_to_vary, fileset_dir, parameters, results_dir, experiment,
+                   number_of_reminders, launch_frequency, single_run):
     if n_clicks is None:
         return '', ''
-    alert, alert_type = add_experience_to_db(application, version, input_to_vary, fileset_dir, parameters, results_dir,
-                                             experiment, number_of_reminders, launch_frequency)
+    if single_run is None:
+        single_run = False
+    alert, alert_type = add_experiment_to_db(application, version, input_to_vary, fileset_dir, parameters, results_dir,
+                                             experiment, number_of_reminders, launch_frequency, single_run)
     return alert, 'alert ' + alert_type

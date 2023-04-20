@@ -16,7 +16,6 @@ def load_exec_from_local() -> list:
     exec_list = []
     for group in ["A", "B"]:
         for subfolder in os.listdir(folder + group):
-            subsubfolders = os.listdir(folder + group + "/" + subfolder)
             # add to list : group - subfolder - index
             # TODO : Correct the name of the execution (remove the white space of each .feather file)
 
@@ -32,8 +31,20 @@ def load_exec_from_local() -> list:
 
 
 def load_exp_from_db():
-    """Load the experiences from the local folder"""
-    query = 'SELECT * FROM EXPERIENCES INNER JOIN USERS U ON EXPERIENCES.user_id = U.id'
+    """Load the experiments from the local folder"""
+    query = 'SELECT * FROM EXPERIMENTS INNER JOIN USERS U ON EXPERIMENTS.user_id = U.id WHERE EXPERIMENTS.single = 0'
+    return build_json_from_db(query)
+
+
+def load_exec_from_db():
+    """Load the experiments from the local folder"""
+    query = 'SELECT EXPERIMENTS.id, EXPERIMENTS.application_name, EXPERIMENTS.application_version, U.username ' \
+            'FROM EXPERIMENTS INNER JOIN USERS U ON EXPERIMENTS.user_id = U.id WHERE EXPERIMENTS.single = 1'
+
+    return build_json_from_db(query)
+
+
+def build_json_from_db(query):
     results = DB.fetch(query)
     exp_list = []
     for result in results:
