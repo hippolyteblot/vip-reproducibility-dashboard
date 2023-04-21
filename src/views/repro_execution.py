@@ -1,4 +1,4 @@
-from dash import html, callback, Input, Output, dcc
+from dash import html, callback, Input, Output, dcc, dash_table
 import dash_bootstrap_components as dbc
 import plotly.express as px
 from flask import request
@@ -94,28 +94,20 @@ def update_metadata(href):
     exec_id = int(href.split('?')[1].split('=')[1])
     metadata_json, id_list = get_metadata_from_girder(exec_id)
 
-    metadata_structure = [
-        html.Div(
-            [
-                html.P('Session name : ' + metadata_json[i]['session_name']),
-                html.P('Workflow id : ' + metadata_json[i]['workflow_id']),
-                html.P('Workflow start : ' + metadata_json[i]['workflow_start']),
-                html.P('Workflow status : ' + metadata_json[i]['workflow_status']),
-                html.P(
-                    children=[
-                        'Folder link : ',
-                        html.A(
-                            'Girder',
-                            href=GVC.url + '/#collection/' + GVC.source_folder + '/folder/' + id_list[i],
-                            target='_blank',
-                        ),
-                    ]
-                ),
-            ],
-            className='card-body',
-        )
-        for i in range(len(metadata_json))
-    ]
+    metadata_structure = html.Div(
+        children=[
+            dash_table.DataTable(
+                columns=[{"name": i, "id": i} for i in metadata_json[0].keys()],
+                data=metadata_json,
+                style_cell={'textAlign': 'left'},
+                style_header={
+                    'backgroundColor': 'rgb(230, 230, 230)',
+                    'fontWeight': 'bold'
+                }
+            ),
+        ],
+        style={'padding': '10px', 'width': '100%'},
+    )
 
     return metadata_structure
 
