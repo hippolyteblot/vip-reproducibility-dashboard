@@ -1,4 +1,4 @@
-import bcrypt
+
 from utils.settings import DB
 
 
@@ -16,7 +16,7 @@ def hash_password(password):
     hashed_password = password
     return hashed_password
 
-
+"""
 # To use if we manage by ourselves the authentication system
 def get_hashed_password(plain_text_password):
     # Hash a password for the first time
@@ -27,3 +27,4 @@ def get_hashed_password(plain_text_password):
 def check_password(plain_text_password, hashed_password):
     # Check hashed password. Using bcrypt, the salt is saved into the hash itself
     return bcrypt.checkpw(plain_text_password, hashed_password)
+"""

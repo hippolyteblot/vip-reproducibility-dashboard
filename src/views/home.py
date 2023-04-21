@@ -1,4 +1,4 @@
-from dash import html, Output, Input, State, callback
+from dash import html, Output, Input, State, callback, clientside_callback, ClientsideFunction
 import dash_bootstrap_components as dbc
 
 from models.home import load_exp_from_db, load_exec_from_db
@@ -45,11 +45,24 @@ def layout():
                                                 style={'width': '100%'},
                                             ),
                                             html.Br(),
-                                            dbc.Row(
-                                                className='card',
-                                                id='execution-container',
-                                                style={'flexDirection': 'row'},
+                                            html.Div(
+                                                children=[
+                                                    dbc.Row(
+                                                        className='card',
+                                                        id='execution-container',
+                                                        style={'flexDirection': 'row'},
+                                                    ),
+                                                ],
                                             ),
+                                            html.Div(
+                                                children=[
+                                                    dbc.Row(
+                                                        className='card',
+                                                        id='execution-container-hidden',
+                                                        style={'display': 'none'},
+                                                    )
+                                                ],
+                                            )
                                         ]
                                     ),
                                     dbc.ModalFooter(
@@ -90,6 +103,16 @@ def layout():
                                                         style={'flexDirection': 'row'},
                                                     ),
                                                 ],
+                                            ),
+                                            html.Div(
+                                                children=[
+                                                    # List of executions (from db)
+                                                    dbc.Row(
+                                                        className='card',
+                                                        id='experiment-container-hidden',
+                                                        style={'display': 'none'},
+                                                    ),
+                                                ],
                                             )
 
                                         ]
@@ -116,7 +139,7 @@ def layout():
 
 @callback(
     Output("exec-modal", "is_open"),
-    Output("execution-container", "children"),
+    Output("execution-container-hidden", "children"),
     [Input("exec-open", "n_clicks"), Input("exec-close", "n_clicks")],
     [State("exec-modal", "is_open")],
 )
@@ -132,7 +155,7 @@ def toggle_modal_exec(n1, n2, is_open):
 
 @callback(
     Output("exp-modal", "is_open"),
-    Output("experiment-container", "children", allow_duplicate=True),
+    Output("experiment-container-hidden", "children", allow_duplicate=True),
     [Input("exp-open", "n_clicks"), Input("exp-close", "n_clicks")],
     [State("exp-modal", "is_open")],
     prevent_initial_call=True
@@ -146,6 +169,29 @@ def toggle_modal_exp(n1, n2, is_open):
     return is_open, []
 
 
+# Search on client side version (use a js function in src/assets/search.js)
+clientside_callback(
+    ClientsideFunction(
+        namespace="clientside",
+        function_name="search_exp",
+    ),
+    Output("experiment-container", "children", allow_duplicate=True),
+    [Input("search-exp", "value"), Input("experiment-container-hidden", "children")],
+    prevent_initial_call=True
+)
+
+clientside_callback(
+    ClientsideFunction(
+        namespace="clientside",
+        function_name="search_exp",
+    ),
+    Output("execution-container", "children", allow_duplicate=True),
+    [Input("search-exec", "value"), Input("execution-container-hidden", "children")],
+    prevent_initial_call=True
+)
+
+# Search on server side version
+"""
 @callback(
     Output("experiment-container", "children", allow_duplicate=True),
     [Input("search-exp", "value")],
@@ -174,6 +220,7 @@ def search_exec(value):
     exec_data = get_list_structure(exec_list, '/repro-execution')
 
     return exec_data
+"""
 
 
 def get_list_structure(exp_list, href):

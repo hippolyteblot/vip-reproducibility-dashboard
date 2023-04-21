@@ -222,6 +222,9 @@ def add_experiment(n_clicks, application, version, input_to_vary, fileset_dir, p
                    number_of_reminders, launch_frequency, single_run):
     if n_clicks is None:
         return '', ''
+    elif not application or not version or not input_to_vary or not fileset_dir or not parameters or \
+            not results_dir or not experiment or not number_of_reminders or not launch_frequency:
+        return 'Please fill all the fields', 'alert alert-danger'
     if single_run is None:
         single_run = False
     alert, alert_type = add_experiment_to_db(application, version, input_to_vary, fileset_dir, parameters, results_dir,
