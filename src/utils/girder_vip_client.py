@@ -36,10 +36,13 @@ class GirderVIPClient:
         parent_folders = [self.client.getFolder(experiment['folderId']) for experiment in experiments]
         metadata = [parent_folder['meta'] for parent_folder in parent_folders]
         id_list = [parent_folder['_id'] for parent_folder in parent_folders]
+
         return metadata, id_list
 
-    def download_experiment_data(self, experiment_id, user_id=None):
+    def download_experiment_data(self, experiment_id, user_id=-1):
         local_file = self.get_file_from_local(experiment_id, user_id)
+        if user_id is None:
+            user_id = -1
         if local_file:
             self.download_folder + str(user_id) + "/" + str(experiment_id) + '/' + self.get_name_from_id(experiment_id)
         folder = self.client.getFolder(self.processed_folder)

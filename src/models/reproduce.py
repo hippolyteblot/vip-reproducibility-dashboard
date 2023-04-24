@@ -45,6 +45,9 @@ def get_all_execution_data():
                 data = pd.concat([data, df])
                 iter += 1
     # convert the data to a dataframe and save it as feather use .reset_index(drop=True) to remove the index
+    # Voxels values are converted to string to avoid Dash to use a gradient color scale
+    data["Voxel"] = data["Voxel"].apply(lambda x: str(x))
+
     data = pd.DataFrame(data)
     data = data.reset_index(drop=True)
     data.to_feather("src/data/execution_data.feather")
@@ -86,7 +89,6 @@ def get_parameters_for_spectro(data):
     voxels = data["Voxel"].unique()
     voxels = [{'label': str(voxel), 'value': voxel} for voxel in voxels]
     voxels.insert(0, {'label': 'All', 'value': -1})
-    voxels = sorted(voxels, key=lambda k: k['value'])
 
     groups = data["Group"].unique()
     groups = [{'label': group, 'value': group} for group in groups]

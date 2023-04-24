@@ -17,7 +17,6 @@ def add_experiment_to_db(application: str, version: str, input_to_vary: str, fil
     if not user_role == 'admin':
         return 'You are not authorized to add an experiment', 'alert-danger'
     # Add the experiment to the database directly
-    print(application, version, input_to_vary, fileset_dir, parameters, results_dir, experiment, number_of_reminders,)
     query = 'INSERT INTO EXPERIMENTS (application_name, application_version, input_to_vary, fileset_dir, parameters, ' \
             'results_dir, experiment, number_of_reminders, launch_frequency, user_id, single) ' \
             'VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)'

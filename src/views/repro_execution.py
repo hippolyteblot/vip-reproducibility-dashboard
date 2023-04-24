@@ -93,6 +93,11 @@ def update_metadata(href):
         return html.P('No metadata available')
     exec_id = int(href.split('?')[1].split('=')[1])
     metadata_json, id_list = get_metadata_from_girder(exec_id)
+    # foreach metadata, add an url 'test.com' for now
+    i = 0
+    for metadata in metadata_json:
+        metadata['url'] =GVC.url + '/#collection/' + GVC.source_folder + '/folder/' + id_list[i]
+        i += 1
 
     metadata_structure = html.Div(
         children=[
@@ -117,15 +122,15 @@ def update_metadata(href):
     Input('metabolite-name', 'value'),
 )
 def update_chart(metabolite):
-    # Try to use flask.request.referrer to obtain query string inside callback and then parse_qs from urllib
+    # Get the query string from the url and get the execution id
     exec_id = int(request.referrer.split('?')[1].split('=')[1])
-    exec_data = get_data_from_girder(exec_id, current_user.id)
+    user_id = current_user.id if current_user.is_authenticated else None
+    exec_data = get_data_from_girder(exec_id, user_id)
 
-    # get only the data of the metabolite
+    # get only the data of the wanted metabolite
     if metabolite != 'All':
         exec_data = exec_data[exec_data["Metabolite"] == metabolite]
-
-    if metabolite == 'All':
+    else:
         graph = px.box(
             x=exec_data['Metabolite'],
             y=exec_data['Amplitude'],
@@ -135,7 +140,6 @@ def update_chart(metabolite):
                 'y': 'Amplitude',
             },
         )
-
         return graph
 
     graph = px.scatter(

@@ -2,11 +2,12 @@ from dash import html, callback, Input, Output, dcc
 import dash_bootstrap_components as dbc
 import plotly.express as px
 
-from models.reproduce import get_prebuilt_data, get_parameters_for_spectro
+from models.reproduce import get_prebuilt_data, get_parameters_for_spectro, get_all_execution_data
 
 # Todo : Optimize data loading (dont load data when the server starts)
 data = get_prebuilt_data()
-metabolites, voxels, groups = get_parameters_for_spectro(get_prebuilt_data())
+metabolites, voxels, groups = get_parameters_for_spectro(data)
+# Voxels values are converted to string to avoid Dash to use a gradient color scale
 
 
 def layout():
@@ -100,6 +101,8 @@ def layout():
 )
 def update_chart(metabolite, voxel, graph_type):
     global data  # TODO: find a proper way to do this
+
+
 
     # get only the data of the metabolite
     if metabolite != 'All':

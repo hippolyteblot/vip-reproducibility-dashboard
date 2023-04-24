@@ -10,12 +10,14 @@ def test_add_experiment(mocker):
         id = 1
         role = 'admin'
 
-    class MokeDB:
-        def execute(self, query, args):
-            pass
+    def mock_execute(query, params=None):
+        if query == 'INSERT INTO experiment (name, version, input, fileset, parameters, results, description, ' \
+                    'user_id, project_id, is_public) VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s)':
+            return True
+        return False
 
     mocker.patch('flask_login.utils._get_user', return_value=MockUser())
-    mocker.patch('utils.database_client.DatabaseClient', return_value=MokeDB())  # TODO : Look like this is not working
+    mocker.patch('utils.settings.DatabaseClient.execute', return_value=mock_execute)
 
     # Test the case where the user has not clicked on the button
     alert, alert_type = add_experiment(None, None, None, None, None, None, None, None, None, None, None)

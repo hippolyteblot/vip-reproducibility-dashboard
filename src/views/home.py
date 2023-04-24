@@ -7,7 +7,7 @@ from models.home import load_exp_from_db, load_exec_from_db
 def layout():
     return html.Div(
         [
-            html.H1('Welcome on the VIP reproductibility dashboard'),
+            html.H1('Welcome on the VIP reproducibility dashboard'),
             html.Div(
                 children=[
                     html.P(
@@ -45,15 +45,17 @@ def layout():
                                                 style={'width': '100%'},
                                             ),
                                             html.Br(),
+                                            # List of executions (from db)
                                             html.Div(
                                                 children=[
-                                                    dbc.Row(
+                                                    dbc.Col(
                                                         className='card',
                                                         id='execution-container',
-                                                        style={'flexDirection': 'row'},
+                                                        style={'flexDirection': 'column'},
                                                     ),
                                                 ],
                                             ),
+                                            # Used for the search bar powered by js (not displayed)
                                             html.Div(
                                                 children=[
                                                     dbc.Row(
@@ -96,17 +98,17 @@ def layout():
                                             html.Br(),
                                             html.Div(
                                                 children=[
-                                                    # List of executions (from db)
-                                                    dbc.Row(
+                                                    # List of experiments (from db)
+                                                    dbc.Col(
                                                         className='card',
                                                         id='experiment-container',
-                                                        style={'flexDirection': 'row'},
+                                                        style={'flexDirection': 'column'},
                                                     ),
                                                 ],
                                             ),
                                             html.Div(
                                                 children=[
-                                                    # List of executions (from db)
+                                                    # Used for the search bar powered by js (not displayed)
                                                     dbc.Row(
                                                         className='card',
                                                         id='experiment-container-hidden',
