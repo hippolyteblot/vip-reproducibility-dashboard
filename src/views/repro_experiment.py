@@ -75,18 +75,23 @@ def layout():
                 ]
             ),
             html.Div(
-                # foreach group, show a boxplot
                 children=[
-                    dcc.Graph(
-                        id='exp-chart-group1',
-                        config={"displayModeBar": False},
-                    ),
-                    dcc.Graph(
-                        id='exp-chart-group2',
-                        config={"displayModeBar": False},
-                    ),
+                    html.Div(
+                        # foreach group, show a boxplot
+                        children=[
+                            dcc.Graph(
+                                id='exp-chart-group1',
+                                config={"displayModeBar": False},
+                            ),
+                            dcc.Graph(
+                                id='exp-chart-group2',
+                                config={"displayModeBar": False},
+                            ),
+                        ],
+                        className='card-body',
+                    )
                 ],
-                style={'flexDirection': 'row'},
+                className='card',
             )
         ]
     )

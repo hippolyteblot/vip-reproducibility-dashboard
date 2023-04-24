@@ -12,6 +12,12 @@ from utils.settings import GVC
 data = get_prebuilt_data()
 metabolites, voxels, groups = get_parameters_for_spectro(get_prebuilt_data())
 
+signals = data['Execution'].unique()
+# sort
+signals.sort()
+# add the None option
+signals = ["None"] + list(signals)
+
 
 def layout():
     return html.Div(
@@ -38,6 +44,22 @@ def layout():
                                 width=3,
                                 className='card-body',
                             ),
+                            dbc.Col(
+                                children=[
+                                    html.H4('Signal to highlight'),
+                                    dcc.Dropdown(
+                                        id='signal-selected',
+                                        options=[
+                                            {'label': 'Signal ' + str(signal_id), 'value': signal_id}
+                                            for signal_id in signals
+                                        ],
+                                        value="None",
+                                        clearable=False,
+                                    ),
+                                ],
+                                width=3,
+                                className='card-body',
+                            ),
                         ],
                         className='card',
                         style={'flexDirection': 'row'},
@@ -51,7 +73,7 @@ def layout():
                         config={"displayModeBar": False},
                     ),
                 ],
-                style={'flexDirection': 'row'},
+                className='card',
             ),
             dbc.Input(id='execution-id', type='hidden', value=''),
             html.Div(
@@ -120,36 +142,68 @@ def update_metadata(href):
 @callback(
     Output('exec-chart', 'figure'),
     Input('metabolite-name', 'value'),
+    Input('signal-selected', 'value'),
 )
-def update_chart(metabolite):
+def update_chart(metabolite, signal_id):
     # Get the query string from the url and get the execution id
     exec_id = int(request.referrer.split('?')[1].split('=')[1])
     user_id = current_user.id if current_user.is_authenticated else None
     exec_data = get_data_from_girder(exec_id, user_id)
 
+    if signal_id != 'None':
+        # add a new column to the dataframe with the index as name and other for other
+        exec_data['Highlight'] = exec_data['Signal'].apply(lambda x: 'Signal ' + str(signal_id) if x == signal_id else 'Other')
+
+
     # get only the data of the wanted metabolite
     if metabolite != 'All':
         exec_data = exec_data[exec_data["Metabolite"] == metabolite]
     else:
-        graph = px.box(
-            x=exec_data['Metabolite'],
+        if signal_id != 'None':
+            graph = px.scatter(
+                x=exec_data['Metabolite'],
+                y=exec_data['Amplitude'],
+                title='Comparison of metabolites',
+                labels={
+                    'x': 'Metabolite',
+                    'y': 'Amplitude',
+                },
+                color=exec_data['Highlight'],
+            )
+            return graph
+        else:
+            graph = px.box(
+                x=exec_data['Metabolite'],
+                y=exec_data['Amplitude'],
+                title='Comparison of metabolites',
+                labels={
+                    'x': 'Metabolite',
+                    'y': 'Amplitude',
+                },
+            )
+            return graph
+
+    if signal_id == 'None':
+        graph = px.scatter(
+            x=exec_data['Signal'],
             y=exec_data['Amplitude'],
-            title='Comparison of metabolites',
+            title='Comparison of metabolite ' + metabolite,
             labels={
-                'x': 'Metabolite',
+                'x': 'Signal',
                 'y': 'Amplitude',
             },
         )
         return graph
+    else:
+        graph = px.scatter(
+            x=exec_data['Signal'],
+            y=exec_data['Amplitude'],
+            title='Comparison of metabolite ' + metabolite,
+            labels={
+                'x': 'Signal',
+                'y': 'Amplitude',
+            },
+            color=exec_data['Highlight'],
+        )
 
-    graph = px.scatter(
-        x=exec_data['Signal'],
-        y=exec_data['Amplitude'],
-        title='Comparison of metabolite ' + metabolite,
-        labels={
-            'x': 'Signal',
-            'y': 'Amplitude',
-        },
-    )
-
-    return graph
+        return graph
