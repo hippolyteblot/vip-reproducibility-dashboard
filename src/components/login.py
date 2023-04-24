@@ -7,14 +7,6 @@ from models.login import check_user
 from utils.settings import GVC
 
 
-class User(UserMixin):
-    # User data model. It has to have at least self.id as a minimum
-    def __init__(self, user_id, username, role='user'):
-        self.id = user_id
-        self.username = username
-        self.role = role
-
-
 login_card = dbc.Card(
     [
         dbc.CardHeader('Login'),
@@ -128,7 +120,7 @@ def login_button_click(n_clicks, username, password, pathname):
     if n_clicks > 0:
         result = check_user(username, password)
         if result is not None:
-            login_user(User(result['id'], result['username'], result['role']))
+            login_user(result)
             return 'Login Successful', '/'
         return 'Incorrect username or password', pathname
     raise PreventUpdate

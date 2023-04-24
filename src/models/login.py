@@ -1,22 +1,28 @@
+import bcrypt
+from flask_login import UserMixin
 
 from utils.settings import DB
 
 
+class User(UserMixin):
+    # User data model. It has to have at least self.id as a minimum
+    def __init__(self, user_id, username, role='user'):
+        self.id = user_id
+        self.username = username
+        self.role = role
+
+
 def check_user(username, password):
     """Check if the username and password are correct"""
-    query = 'SELECT * FROM USERS WHERE USERNAME = %s AND PASSWORD = %s'
-    hashed_password = hash_password(password)
-    user = DB.fetch_one(query, (username, hashed_password))
+    user = None
+    query = 'SELECT * FROM USERS WHERE USERNAME = %s'
+    check = DB.fetch_one(query, [username])
+    if check and check_password(password, check['password']):
+        user = User(check['id'], check['username'], check['role'])
+
     return user
 
 
-def hash_password(password):
-    """Hash the password"""
-    """TODO: Implement a proper hashing algorithm"""
-    hashed_password = password
-    return hashed_password
-
-"""
 # To use if we manage by ourselves the authentication system
 def get_hashed_password(plain_text_password):
     # Hash a password for the first time
@@ -25,6 +31,6 @@ def get_hashed_password(plain_text_password):
 
 
 def check_password(plain_text_password, hashed_password):
-    # Check hashed password. Using bcrypt, the salt is saved into the hash itself
-    return bcrypt.checkpw(plain_text_password, hashed_password)
-"""
+    encoded_plain_text_password = plain_text_password.encode('utf-8')
+    encoded_hashed_password = hashed_password.encode('utf-8')
+    return bcrypt.checkpw(encoded_plain_text_password, encoded_hashed_password)

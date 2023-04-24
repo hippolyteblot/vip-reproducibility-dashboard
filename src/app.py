@@ -7,7 +7,8 @@ import os
 
 # local imports
 from utils.settings import APP_HOST, APP_PORT, APP_DEBUG, DEV_TOOLS_PROPS_CHECK
-from components.login import User, login_location
+from components.login import login_location
+from models.login import User
 from components import navbar, footer
 from utils.settings import DB
 
