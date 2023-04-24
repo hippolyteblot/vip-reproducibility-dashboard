@@ -2,6 +2,7 @@ from dash import html, callback, Output, Input, State
 import dash_bootstrap_components as dbc
 
 from models.add_experiment import add_experiment_to_db
+
 """
 applications = [
     {
@@ -227,6 +228,7 @@ def add_experiment(n_clicks, application, version, input_to_vary, fileset_dir, p
         return 'Please fill all the fields', 'alert alert-danger'
     if single_run is None:
         single_run = False
-    alert, alert_type = add_experiment_to_db(application, version, input_to_vary, fileset_dir, parameters, results_dir,
-                                             experiment, number_of_reminders, launch_frequency, single_run)
+    alert, alert_type, _ = add_experiment_to_db(application, version, input_to_vary, fileset_dir, parameters,
+                                                results_dir, experiment, number_of_reminders, launch_frequency,
+                                                single_run)
     return alert, 'alert ' + alert_type

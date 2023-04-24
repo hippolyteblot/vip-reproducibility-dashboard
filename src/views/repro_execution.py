@@ -96,7 +96,7 @@ def update_metadata(href):
     # foreach metadata, add an url 'test.com' for now
     i = 0
     for metadata in metadata_json:
-        metadata['url'] =GVC.url + '/#collection/' + GVC.source_folder + '/folder/' + id_list[i]
+        metadata['url'] = GVC.url + '/#collection/' + GVC.source_folder + '/folder/' + str(id_list[i])
         i += 1
 
     metadata_structure = html.Div(

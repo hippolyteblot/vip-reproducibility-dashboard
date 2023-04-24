@@ -115,5 +115,4 @@ def get_data_from_girder(execution_id, user_id):
 
 def get_metadata_from_girder(execution_id):
     """Get the metadata of an execution from girder"""
-    metadata, id_list = GVC.get_parent_metadata(execution_id)
-    return metadata, id_list
+    return GVC.get_parent_metadata(execution_id)

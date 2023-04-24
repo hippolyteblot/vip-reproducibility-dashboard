@@ -139,6 +139,7 @@ def update_chart(metabolite, voxel, graph_type):
             std = stds2[metabolite]
             data2.loc[data2['Metabolite'] == metabolite, 'Normalized'] = (data2[data2['Metabolite'] == metabolite]
                                                                           ['Amplitude'] - mean) / std
+            # redo the previous instructions but use .loc['row_indexer', 'column_indexer'] = value
 
         graph1 = None
         graph2 = None

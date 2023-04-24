@@ -59,6 +59,7 @@ def test_update_chart(mocker):
         assert graph.layout.xaxis.title.text == 'Signal'
         assert graph.layout.yaxis.title.text == 'Amplitude'
 
+
 def test_update_metadata(mocker):
     """Test the update_metadata callback function"""
 
@@ -69,7 +70,8 @@ def test_update_metadata(mocker):
             return metadata, id_list
 
     href = '/repro-execution?execution_id=41'
-    mocked_metadata = [{'key': 'value'}]
+    mocked_metadata = [{'key': 'value', 'url':'https://pilot-warehouse.creatis.insa-lyon.fr/#collection/'
+                                              '63b6e0b14d15dd536f0484bc/folder/1'}]
 
     mocker.patch('models.reproduce.GVC', MockGVC())
 
@@ -93,4 +95,3 @@ def test_update_metadata(mocker):
     # 2. Test the case where the user url is not correct
     expected = html.P('No metadata available')
     assert str(update_metadata('')) == str(expected)
-

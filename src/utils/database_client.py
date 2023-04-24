@@ -25,6 +25,7 @@ class DatabaseClient:
         cursor.execute(query, params)
         self.connection.commit()
         cursor.close()
+        return cursor.lastrowid
 
     def fetch(self, query, params=None):
         cursor = self.connection.cursor(dictionary=True)
