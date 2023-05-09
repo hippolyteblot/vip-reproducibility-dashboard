@@ -15,7 +15,7 @@ class User(UserMixin):
 def check_user(username, password):
     """Check if the username and password are correct"""
     user = None
-    query = 'SELECT * FROM USERS WHERE USERNAME = %s'
+    query = 'SELECT * FROM users WHERE username = %s'
     check = DB.fetch_one(query, [username])
     if check and check_password(password, check['password']):
         user = User(check['id'], check['username'], check['role'])

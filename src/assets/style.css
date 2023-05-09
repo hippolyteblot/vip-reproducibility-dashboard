@@ -94,3 +94,15 @@ body {
 .row-graph {
     max-width: 45%;
 }
+
+#selected-option .form-check-input {
+    display: none;
+}
+
+#selected-option .form-check-label {
+    padding: 3px 6px;
+    border: 1px solid #91cfff;
+    border-radius: 4px;
+    transition: all 0.3s ease;
+    width: 90%;
+}

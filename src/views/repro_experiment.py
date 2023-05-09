@@ -1,8 +1,9 @@
 from dash import html, callback, Input, Output, dcc
 import dash_bootstrap_components as dbc
 import plotly.express as px
+from flask import request
 
-from models.reproduce import get_prebuilt_data, get_parameters_for_spectro, get_all_execution_data
+from models.reproduce import get_prebuilt_data, get_parameters_for_spectro, get_experiment_data
 
 # Todo : Optimize data loading (dont load data when the server starts)
 data = get_prebuilt_data()
@@ -105,20 +106,21 @@ def layout():
     Input('graph-type', 'value')
 )
 def update_chart(metabolite, voxel, graph_type):
-    global data  # TODO: find a proper way to do this
-
-
+    exec_id = int(request.referrer.split('?')[1].split('=')[1])
+    experiment_data = get_experiment_data(exec_id)
 
     # get only the data of the metabolite
     if metabolite != 'All':
-        df = data[data["Metabolite"] == metabolite]
+        df = experiment_data[experiment_data["Metabolite"] == metabolite]
     else:
-        df = data
+        df = experiment_data
     if voxel != -1:
         # get only the data of the voxel
         df = df[df["Voxel"] == voxel]
-    data1 = df[df["Group"] == "A"]
-    data2 = df[df["Group"] == "B"]
+    #data1 = df[df["Group"] == "A"]
+    #data2 = df[df["Group"] == "B"]
+    data1 = df
+    data2 = df
 
     if metabolite == 'All':
 
@@ -152,72 +154,72 @@ def update_chart(metabolite, voxel, graph_type):
             graph1 = px.box(
                 x=data1['Metabolite'],
                 y=data1['Normalized'],
-                color=data1['Voxel'],
+                color=data1['Workflow'],
                 title='Comparison of metabolites with set of parameters A',
                 labels={
                     'x': 'Metabolite',
                     'y': 'Normalized amplitude',
-                    'color': 'Voxel',
+                    'color': 'Workflow',
                 },
             )
 
             graph2 = px.box(
                 x=data2['Metabolite'],
                 y=data2['Normalized'],
-                color=data2['Voxel'],
+                color=data2['Workflow'],
                 title='Comparison of metabolites with set of parameters B',
                 labels={
                     'x': 'Metabolite',
                     'y': 'Normalized amplitude',
-                    'color': 'Voxel',
+                    'color': 'Workflow',
                 },
             )
         elif graph_type == 'violin':
             graph1 = px.violin(
                 x=data1['Metabolite'],
                 y=data1['Normalized'],
-                color=data1['Voxel'],
+                color=data1['Workflow'],
                 title='Comparison of metabolites with set of parameters A',
                 labels={
                     'x': 'Metabolite',
                     'y': 'Normalized amplitude',
-                    'color': 'Voxel',
+                    'color': 'Workflow',
                 },
             )
 
             graph2 = px.violin(
                 x=data2['Metabolite'],
                 y=data2['Normalized'],
-                color=data2['Voxel'],
+                color=data2['Workflow'],
                 title='Comparison of metabolites with set of parameters B',
                 labels={
                     'x': 'Metabolite',
                     'y': 'Normalized amplitude',
-                    'color': 'Voxel',
+                    'color': 'Workflow',
                 },
             )
         elif graph_type == 'scatter':
             graph1 = px.scatter(
                 x=data1['Metabolite'],
                 y=data1['Normalized'],
-                color=data1['Voxel'],
+                color=data1['Workflow'],
                 title='Comparison of metabolites with set of parameters A',
                 labels={
                     'x': 'Metabolite',
                     'y': 'Normalized amplitude',
-                    'color': 'Voxel',
+                    'color': 'Workflow',
                 },
             )
 
             graph2 = px.scatter(
                 x=data2['Metabolite'],
                 y=data2['Normalized'],
-                color=data2['Voxel'],
+                color=data2['Workflow'],
                 title='Comparison of metabolites with set of parameters B',
                 labels={
                     'x': 'Metabolite',
                     'y': 'Normalized amplitude',
-                    'color': 'Voxel',
+                    'color': 'Workflow',
                 },
             )
 
@@ -227,74 +229,74 @@ def update_chart(metabolite, voxel, graph_type):
     graph2 = None
     if graph_type == 'box':
         graph1 = px.box(
-            x=data1['Signal'],
+            x=data1['Iteration'],
             y=data1['Amplitude'],
-            color=data1['Voxel'],
+            color=data1['Workflow'],
             title='Comparison of metabolite ' + metabolite + ' with set of parameters A',
             labels={
-                'x': 'Signal',
+                'x': 'Iteration',
                 'y': 'Amplitude',
-                'color': 'Voxel',
+                'color': 'Workflow',
             },
         )
 
         graph2 = px.box(
-            x=data2['Signal'],
+            x=data2['Iteration'],
             y=data2['Amplitude'],
-            color=data2['Voxel'],
+            color=data2['Workflow'],
             title='Comparison of metabolite ' + metabolite + ' with set of parameters B',
             labels={
-                'x': 'Signal',
+                'x': 'Iteration',
                 'y': 'Amplitude',
-                'color': 'Voxel',
+                'color': 'Workflow',
             },
         )
     elif graph_type == 'violin':
         graph1 = px.violin(
-            x=data1['Signal'],
+            x=data1['Iteration'],
             y=data1['Amplitude'],
-            color=data1['Voxel'],
+            color=data1['Workflow'],
             title='Comparison of metabolite ' + metabolite + ' with set of parameters A',
             labels={
-                'x': 'Signal',
+                'x': 'Iteration',
                 'y': 'Amplitude',
-                'color': 'Voxel',
+                'color': 'Workflow',
             },
         )
 
         graph2 = px.violin(
-            x=data2['Signal'],
+            x=data2['Iteration'],
             y=data2['Amplitude'],
-            color=data2['Voxel'],
+            color=data2['Workflow'],
             title='Comparison of metabolite ' + metabolite + ' with set of parameters B',
             labels={
-                'x': 'Signal',
+                'x': 'Iteration',
                 'y': 'Amplitude',
-                'color': 'Voxel',
+                'color': 'Workflow',
             },
         )
     elif graph_type == 'scatter':
         graph1 = px.scatter(
-            x=data1['Signal'],
+            x=data1['Iteration'],
             y=data1['Amplitude'],
-            color=data1['Voxel'],
+            color=data1['Workflow'],
             title='Comparison of metabolite ' + metabolite + ' with set of parameters A',
             labels={
-                'x': 'Signal',
+                'x': 'Iteration',
                 'y': 'Amplitude',
-                'color': 'Voxel',
+                'color': 'Workflow',
             },
         )
 
         graph2 = px.scatter(
-            x=data2['Signal'],
+            x=data2['Iteration'],
             y=data2['Amplitude'],
-            color=data2['Voxel'],
+            color=data2['Workflow'],
             title='Comparison of metabolite ' + metabolite + ' with set of parameters B',
             labels={
-                'x': 'Signal',
+                'x': 'Iteration',
                 'y': 'Amplitude',
-                'color': 'Voxel',
+                'color': 'Workflow',
             },
         )
 

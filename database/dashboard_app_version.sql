@@ -1,8 +1,8 @@
--- MySQL dump 10.13  Distrib 8.0.32, for Linux (x86_64)
+-- MySQL dump 10.13  Distrib 8.0.33, for Linux (x86_64)
 --
--- Host: localhost    Database: TEST
+-- Host: 127.0.0.1    Database: dashboard
 -- ------------------------------------------------------
--- Server version	8.0.32
+-- Server version	8.0.33
 
 /*!40101 SET @OLD_CHARACTER_SET_CLIENT=@@CHARACTER_SET_CLIENT */;
 /*!40101 SET @OLD_CHARACTER_SET_RESULTS=@@CHARACTER_SET_RESULTS */;
@@ -16,27 +16,30 @@
 /*!40111 SET @OLD_SQL_NOTES=@@SQL_NOTES, SQL_NOTES=0 */;
 
 --
--- Table structure for table `EXPERIMENTS`
+-- Table structure for table `app_version`
 --
 
-DROP TABLE IF EXISTS `EXPERIMENTS`;
+DROP TABLE IF EXISTS `app_version`;
 /*!40101 SET @saved_cs_client     = @@character_set_client */;
 /*!50503 SET character_set_client = utf8mb4 */;
-CREATE TABLE `EXPERIMENTS` (
+CREATE TABLE `app_version` (
   `id` int NOT NULL AUTO_INCREMENT,
-  `application_name` varchar(45) NOT NULL,
-  `application_version` varchar(45) NOT NULL,
-  `input_to_vary` varchar(45) NOT NULL,
-  `fileset_dir` varchar(45) NOT NULL,
-  `parameters` varchar(45) NOT NULL,
-  `results_dir` varchar(45) NOT NULL,
-  `experiment` varchar(45) NOT NULL,
-  `number_of_reminders` varchar(45) NOT NULL,
-  `launch_frequency` int NOT NULL,
-  `user_id` int NOT NULL,
+  `number` varchar(45) NOT NULL,
+  `application_id` int NOT NULL,
+  `girder_id` varchar(45) NOT NULL,
   PRIMARY KEY (`id`)
-) ENGINE=InnoDB AUTO_INCREMENT=17 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=12 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
+
+--
+-- Dumping data for table `app_version`
+--
+
+LOCK TABLES `app_version` WRITE;
+/*!40000 ALTER TABLE `app_version` DISABLE KEYS */;
+INSERT INTO `app_version` VALUES (9,'1.3',6,'644a372385f48d3da071405d'),(10,'1.4',6,'6449163285f48d3da0713574'),(11,'1.5',6,'644a450e85f48d3da07145e2');
+/*!40000 ALTER TABLE `app_version` ENABLE KEYS */;
+UNLOCK TABLES;
 /*!40103 SET TIME_ZONE=@OLD_TIME_ZONE */;
 
 /*!40101 SET SQL_MODE=@OLD_SQL_MODE */;
@@ -47,4 +50,4 @@ CREATE TABLE `EXPERIMENTS` (
 /*!40101 SET COLLATION_CONNECTION=@OLD_COLLATION_CONNECTION */;
 /*!40111 SET SQL_NOTES=@OLD_SQL_NOTES */;
 
--- Dump completed on 2023-04-19 15:44:27
+-- Dump completed on 2023-05-09 15:49:19

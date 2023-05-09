@@ -1,4 +1,6 @@
+import json
 import os
+import threading
 import time
 
 from girder_client import GirderClient
@@ -14,6 +16,7 @@ class GirderVIPClient:
         self.source_folder = source_folder
         self.download_folder = 'src/tmp/'
         self.log_request = []
+        self.downloading_files = []
 
     def get_parent_metadata(self, experiment_id):
         # First, get the folder
@@ -90,3 +93,115 @@ class GirderVIPClient:
     def clean_user_download_folder(self, user_id):
         if os.path.exists(self.download_folder + str(user_id)):
             os.system('rm -rf ' + self.download_folder + str(user_id))
+
+    def download_json(self, src_results_folder):
+        folder = self.client.getFolder(src_results_folder)
+        # get the id of its subfolder named "cquest"
+        subfolder = [subfolder for subfolder in self.client.listFolder(folder['_id'])
+                     if subfolder['name'] == 'cquest'][0]
+        # get the id of all subfolders
+        versions = [subsubfolder for subsubfolder in self.client.listFolder(subfolder['_id'])]
+        # for each version folder, get every folder (this is an experiment)
+        experiments = [self.client.listFolder(version['_id']) for version in versions]
+        # for each experiment, get every item
+        items = []
+        for experiment in experiments:
+            for subexperiment in experiment:
+                execs = self.client.listFolder(subexperiment['_id'])
+                for execution in execs:
+                    items.append(self.client.listItem(execution['_id']))
+        # for each item, get the json
+        json_items = []
+        for item in items:
+            for subitem in item:
+                if subitem['name'].endswith('.json'):
+                    json_items.append(subitem)
+        # launch the previous function on a thread
+
+        counter = 0
+        for json_item in json_items:
+            json_file = None
+            for file in self.client.listFile(json_item['_id']):
+                if file['name'].endswith('.json'):
+                    json_file = file
+                    break
+            self.client.downloadFile(json_file['_id'], 'src/tmp/process_jsons/' + json_file['name'])
+            self.downloading_files.append(json_file['name'])
+            counter += 1
+
+        print('Downloading ' + str(counter) + ' files')
+        thread = threading.Thread(target=self.start_download_inspection, args=())
+        thread.start()
+        return 'src/tmp/process_jsons/'
+
+    def get_folders(self, folder_id):
+        return self.client.listFolder(folder_id)
+
+    def start_download_inspection(self):
+        print('Downloading ' + str(len(self.downloading_files)) + ' files')
+        while len(self.downloading_files) > 0:
+            # check if a file in self.downloading_files is in the folder
+            for file in self.downloading_files:
+                if file in os.listdir('src/tmp/process_jsons/'):
+                    self.downloading_files.remove(file)
+            time.sleep(0.1)
+        print('All files downloaded')
+
+    def finished_download(self):
+        return len(self.downloading_files) == 0
+
+    def get_jsons(self, folder_id):
+        """Return the data contained in the jsons of the folder"""
+        items = self.client.listItem(folder_id)
+        pending_files = []
+        json_items = []
+        for item in items:
+            if item['name'].endswith('.json'):
+                json_items.append(item)
+        jsons = []
+        for json_item in json_items:
+            json_file = None
+            for file in self.client.listFile(json_item['_id']):
+                if file['name'].endswith('.json'):
+                    json_file = file
+                    break
+            self.client.downloadFile(json_file['_id'], 'src/tmp/process_jsons/' + json_file['name'])
+            pending_files.append(json_file['name'])
+        while len(pending_files) > 0:
+            for file in pending_files:
+                if file in os.listdir('src/tmp/process_jsons/'):
+                    pending_files.remove(file)
+            time.sleep(0.1)
+        for file in os.listdir('src/tmp/process_jsons/'):
+            with open('src/tmp/process_jsons/' + file, 'r') as f:
+                jsons.append(json.load(f))
+        return jsons
+
+    def get_jsons_from_local(self, folder_id):
+        jsons = []
+        for file in os.listdir('src/tmp/process_jsons/'):
+            with open('src/tmp/process_jsons/' + file, 'r') as f:
+                jsons.append(json.load(f))
+        return jsons
+
+    def get_folders_in_folder(self, folder_id="63b6e2d34d15dd536f0484c3"):
+        """Return the folders contained in the folder"""
+        folders = self.client.listFolder(folder_id)
+        return folders
+
+    def get_items_in_folder(self, folder_id):
+        """Return the items contained in the folder"""
+        items = self.client.listItem(folder_id)
+        return items
+
+    def download_feather_data(self, folder_id):
+        """Download the feather file nammed data.feather in the folder"""
+        items = self.client.listItem(folder_id)
+        for item in items:
+            if item['name'] == 'data.feather':
+                for file in self.client.listFile(item['_id']):
+                    if file['name'] == 'data.feather':
+                        self.client.downloadFile(file['_id'], 'src/tmp/' + folder_id + '/data.feather')
+                        return 'src/tmp/' + folder_id + '/data.feather'
+
+        return None

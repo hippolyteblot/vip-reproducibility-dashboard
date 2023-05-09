@@ -5,7 +5,7 @@ from flask import request
 from flask_login import current_user
 
 from models.reproduce import get_parameters_for_spectro, get_prebuilt_data, get_execution_data_from_local, \
-    get_data_from_girder, get_metadata_from_girder
+    get_data_from_girder, get_metadata_from_girder, get_wf_data
 from utils.settings import GVC
 
 # Todo : Optimize data loading (dont load data when the server starts)
@@ -46,11 +46,11 @@ def layout():
                             ),
                             dbc.Col(
                                 children=[
-                                    html.H4('Signal to highlight'),
+                                    html.H4('Iteration to highlight'),
                                     dcc.Dropdown(
                                         id='signal-selected',
                                         options=[
-                                            {'label': 'Signal ' + str(signal_id), 'value': signal_id}
+                                            {'label': 'Iteration ' + str(signal_id), 'value': signal_id}
                                             for signal_id in signals
                                         ],
                                         value="None",
@@ -104,14 +104,14 @@ def layout():
         ]
     )
 
-
+"""
 @callback(
     Output('metadata', 'children'),
     Input('url', 'href'),
 )
 def update_metadata(href):
     page = href.split('/')[-1]
-    if not page.startswith('repro-execution'):
+    if not page.startswith('repro-workflow'):
         return html.P('No metadata available')
     exec_id = int(href.split('?')[1].split('=')[1])
     metadata_json, id_list = get_metadata_from_girder(exec_id)
@@ -137,7 +137,7 @@ def update_metadata(href):
     )
 
     return metadata_structure
-
+"""
 
 @callback(
     Output('exec-chart', 'figure'),
@@ -146,35 +146,36 @@ def update_metadata(href):
 )
 def update_chart(metabolite, signal_id):
     # Get the query string from the url and get the execution id
-    exec_id = int(request.referrer.split('?')[1].split('=')[1])
+    wf_id = int(request.referrer.split('?')[1].split('=')[1])
     user_id = current_user.id if current_user.is_authenticated else None
-    exec_data = get_data_from_girder(exec_id, user_id)
+    #exec_data = get_data_from_girder(wf_id, user_id)
+    wf_data = get_wf_data(wf_id)
 
     if signal_id != 'None':
         # add a new column to the dataframe with the index as name and other for other
-        exec_data['Highlight'] = exec_data['Signal'].apply(lambda x: 'Signal ' + str(signal_id) if x == signal_id else 'Other')
-
+        wf_data['Highlight'] = wf_data['Iteration'].apply(
+            lambda x: 'Iteration ' + str(signal_id) if x == signal_id else 'Other')
 
     # get only the data of the wanted metabolite
     if metabolite != 'All':
-        exec_data = exec_data[exec_data["Metabolite"] == metabolite]
+        exec_data = wf_data[wf_data["Metabolite"] == metabolite]
     else:
         if signal_id != 'None':
             graph = px.scatter(
-                x=exec_data['Metabolite'],
-                y=exec_data['Amplitude'],
+                x=wf_data['Metabolite'],
+                y=wf_data['Amplitude'],
                 title='Comparison of metabolites',
                 labels={
                     'x': 'Metabolite',
                     'y': 'Amplitude',
                 },
-                color=exec_data['Highlight'],
+                color=wf_data['Highlight'],
             )
             return graph
         else:
             graph = px.box(
-                x=exec_data['Metabolite'],
-                y=exec_data['Amplitude'],
+                x=wf_data['Metabolite'],
+                y=wf_data['Amplitude'],
                 title='Comparison of metabolites',
                 labels={
                     'x': 'Metabolite',
@@ -185,22 +186,22 @@ def update_chart(metabolite, signal_id):
 
     if signal_id == 'None':
         graph = px.scatter(
-            x=exec_data['Signal'],
+            x=exec_data['Iteration'],
             y=exec_data['Amplitude'],
             title='Comparison of metabolite ' + metabolite,
             labels={
-                'x': 'Signal',
+                'x': 'Iteration',
                 'y': 'Amplitude',
             },
         )
         return graph
     else:
         graph = px.scatter(
-            x=exec_data['Signal'],
+            x=exec_data['Iteration'],
             y=exec_data['Amplitude'],
             title='Comparison of metabolite ' + metabolite,
             labels={
-                'x': 'Signal',
+                'x': 'Iteration',
                 'y': 'Amplitude',
             },
             color=exec_data['Highlight'],

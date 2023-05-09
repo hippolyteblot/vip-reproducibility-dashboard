@@ -4,7 +4,10 @@ import pandas as pd
 import plotly.express as px
 import os
 
-from utils.settings import GVC
+from flask_login import current_user
+
+from utils.settings import GVC, DB
+from utils.quest2_reader import get_quest2
 
 
 def get_execution_data(execution_id):
@@ -116,3 +119,68 @@ def get_data_from_girder(execution_id, user_id):
 def get_metadata_from_girder(execution_id):
     """Get the metadata of an execution from girder"""
     return GVC.get_parent_metadata(execution_id)
+
+
+def get_experiment_data(experiment_id):
+    """Get the data of an experiment from database or local file"""
+    # first, get the girder_id of the folder containing the experiment
+    query = "SELECT girder_id FROM experiment WHERE id = %s"
+    girder_id = DB.fetch_one(query, (experiment_id,))['girder_id']
+
+    # then, get the data from girder
+    path = GVC.download_feather_data(girder_id)
+    # while the file is not downloaded, wait
+    while not os.path.exists(path):
+        sleep(0.1)
+
+    # finally, read the data from the file
+    data = pd.read_feather(path)
+    # convert field Amplitude and SD to float (they look like 1.2e-5)
+    data["Amplitude"] = data["Amplitude"].apply(lambda x: float(x))
+    data["SD"] = data["SD"].apply(lambda x: float(x))
+    return data
+
+
+def get_wf_data(wf_id):
+    """Get the data of an experiment from database or local file"""
+    # first, get the girder_id of the folder containing the experiment
+    query = "SELECT girder_id FROM workflow WHERE id = %s"
+    girder_id = DB.fetch_one(query, (wf_id,))['girder_id']
+
+    # then, get the data from girder
+    path = GVC.download_feather_data(girder_id)
+    # while the file is not downloaded, wait
+    while not os.path.exists(path):
+        sleep(0.1)
+
+    # finally, read the data from the file
+    data = pd.read_feather(path)
+    # convert field Amplitude and SD to float (they look like 1.2e-5)
+    data["Amplitude"] = data["Amplitude"].apply(lambda x: float(x))
+    data["SD"] = data["SD"].apply(lambda x: float(x))
+    return data
+
+
+def read_user_file(file_uuid):
+    """Read the file uploaded by the user using the uuid and return a dataframe"""
+    user_id = current_user.id
+    path = os.path.join("src", "tmp", "user_compare", str(user_id), str(file_uuid) + ".txt")
+    data = get_quest2(path)
+    return data
+
+
+def read_user_folder(folder, file):
+    """Read the file uploaded by the user using the uuid and return a dataframe"""
+    user_id = current_user.id
+    path = os.path.join("src", "tmp", "user_compare", str(user_id), str(folder), str(file))
+    data = get_quest2(path)
+    return data
+
+
+def get_files_in_folder(folder_id):
+    """Get the files in a folder from user's folder in local"""
+    user_id = current_user.id
+    path = os.path.join("src", "tmp", "user_compare", str(user_id), str(folder_id))
+    files = os.listdir(path)
+    files = [file for file in files if file.endswith(".txt")]
+    return files

@@ -18,11 +18,26 @@ def add_experiment_to_db(application: str, version: str, input_to_vary: str, fil
         insert_id = None
     # Add the experiment to the database directly
     else:
-        query = 'INSERT INTO EXPERIMENTS (application_name, application_version, input_to_vary, fileset_dir, ' \
+        query = 'INSERT INTO experiment (application_name, application_version, input_to_vary, fileset_dir, ' \
                 'parameters, results_dir, experiment, number_of_reminders, launch_frequency, user_id, single) ' \
                 'VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)'
-        insert_id = DB.execute(query, (application, version, input_to_vary, fileset_dir, parameters, results_dir, experiment,
-                           number_of_reminders, launch_frequency, current_user.id, single_run))
+        insert_id = DB.execute(query,
+                               (application, version, input_to_vary, fileset_dir, parameters, results_dir, experiment,
+                                number_of_reminders, launch_frequency, current_user.id, single_run))
         message = 'Experiment added successfully'
         alert = 'alert-success'
     return message, alert, insert_id
+
+
+def get_available_applications():
+    """Get the list of available applications"""
+    query = 'SELECT * FROM application'
+    applications = DB.fetch(query)
+    return applications
+
+
+def get_available_versions(application_id):
+    """Get the list of available versions"""
+    query = 'SELECT * FROM app_version WHERE application_id = %s'
+    versions = DB.fetch(query, (application_id,))
+    return versions

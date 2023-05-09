@@ -1,7 +1,10 @@
-from dash import html, Output, Input, State, callback, clientside_callback, ClientsideFunction
+import re
+
+from dash import html, Output, Input, State, callback, clientside_callback, ClientsideFunction, dcc
 import dash_bootstrap_components as dbc
 
-from models.home import load_exp_from_db, load_exec_from_db
+from models.home import load_exp_from_db, load_wf_from_db, get_available_applications, get_available_versions, \
+    save_file_for_comparison
 
 
 def layout():
@@ -26,7 +29,7 @@ def layout():
                     dbc.Row(
                         children=[
                             dbc.Button(
-                                "Reproduce an execution",
+                                "Study and compare workflows",
                                 id="exec-open",
                                 n_clicks=0,
                                 style={'width': 'fit-content'},
@@ -34,37 +37,77 @@ def layout():
                             ),
                             dbc.Modal(
                                 [
-                                    dbc.ModalHeader(dbc.ModalTitle("Select an execution to reproduce")),
+                                    dbc.ModalHeader(dbc.ModalTitle("Select a workflow to study")),
                                     dbc.ModalBody(
                                         children=[
-                                            # Search bar
-                                            dbc.Input(
-                                                id='search-exec',
-                                                type='text',
-                                                placeholder='Search for an execution',
-                                                style={'width': '100%'},
-                                            ),
-                                            html.Br(),
-                                            # List of executions (from db)
                                             html.Div(
                                                 children=[
+                                                    html.Label(
+                                                        children=[
+                                                            "Select an application",
+                                                            html.Br(),
+                                                            dbc.Select(
+                                                                id='select-app-wf',
+                                                                options=[
+                                                                    {'label': 'All', 'value': 'all'}
+                                                                ],
+                                                                value='vip',
+                                                                style={'width': '100%'},
+                                                            ),
+                                                        ],
+                                                    ),
+                                                    html.Label(
+                                                        children=[
+                                                            "Select a version",
+                                                            html.Br(),
+                                                            dbc.Select(
+                                                                id='select-version-wf',
+                                                                options=[
+                                                                    {'label': 'All', 'value': 'all'}
+                                                                ],
+                                                                value='all',
+                                                                style={'width': '100%'},
+                                                            ),
+                                                        ],
+                                                    ),
+                                                    html.Label(
+                                                        children=[
+                                                            "Search for a workflow",
+                                                            dbc.Input(
+                                                                id='search-exec',
+                                                                type='text',
+                                                                placeholder='Type here to search',
+                                                                style={'width': '100%'},
+                                                            ),
+                                                        ],
+                                                    ),
+                                                ],
+                                                style={'display': 'flex', 'gap': '10px', 'flexDirection': 'column'},
+                                            ),
+                                            # Search bar
+
+                                            html.Br(),
+                                            html.Div(
+                                                children=[
+                                                    # List of experiments (from db)
                                                     dbc.Col(
                                                         className='card',
-                                                        id='execution-container',
+                                                        id='wf-container',
                                                         style={'flexDirection': 'column'},
                                                     ),
                                                 ],
                                             ),
-                                            # Used for the search bar powered by js (not displayed)
                                             html.Div(
                                                 children=[
+                                                    # Used for the search bar powered by js (not displayed)
                                                     dbc.Row(
                                                         className='card',
-                                                        id='execution-container-hidden',
+                                                        id='wf-container-hidden',
                                                         style={'display': 'none'},
-                                                    )
+                                                    ),
                                                 ],
                                             )
+
                                         ]
                                     ),
                                     dbc.ModalFooter(
@@ -88,13 +131,52 @@ def layout():
                                     dbc.ModalHeader(dbc.ModalTitle("Select an experiment to reproduce")),
                                     dbc.ModalBody(
                                         children=[
-                                            # Search bar
-                                            dbc.Input(
-                                                id='search-exp',
-                                                type='text',
-                                                placeholder='Search for an experiment',
-                                                style={'width': '100%'},
+                                            html.Div(
+                                                children=[
+                                                    html.Label(
+                                                        children=[
+                                                            "Select an application",
+                                                            html.Br(),
+                                                            dbc.Select(
+                                                                id='select-app',
+                                                                options=[
+                                                                    {'label': 'All', 'value': 'all'}
+                                                                ],
+                                                                value='vip',
+                                                                style={'width': '100%'},
+                                                            ),
+                                                        ],
+                                                    ),
+                                                    html.Label(
+                                                        children=[
+                                                            "Select a version",
+                                                            html.Br(),
+                                                            dbc.Select(
+                                                                id='select-version',
+                                                                options=[
+                                                                    {'label': 'All', 'value': 'all'}
+                                                                ],
+                                                                value='all',
+                                                                style={'width': '100%'},
+                                                            ),
+                                                        ],
+                                                    ),
+                                                    html.Label(
+                                                        children=[
+                                                            "Search for an experiment",
+                                                            dbc.Input(
+                                                                id='search-exp',
+                                                                type='text',
+                                                                placeholder='Type here to search',
+                                                                style={'width': '100%'},
+                                                            ),
+                                                        ],
+                                                    ),
+                                                ],
+                                                style={'display': 'flex', 'gap': '10px', 'flexDirection': 'column'},
                                             ),
+                                            # Search bar
+
                                             html.Br(),
                                             html.Div(
                                                 children=[
@@ -133,6 +215,139 @@ def layout():
                         style={'justifyContent': 'center', 'gap': '10px'},
                     ),
                 ],
+                style={'display': 'flex', 'justifyContent': 'center', 'gap': '10px'},
+                className='card',
+            ),
+            html.Br(),
+            dbc.Row(
+                children=[
+                    html.Br(),
+                    dbc.Row(
+                        children=[
+                            dbc.Col(
+                                children=[
+                                    html.P('Select the application'),
+                                    dbc.Select(
+                                        id='application-selected-for-upload',
+                                        options=[
+                                            {'label': 'cQuest', 'value': 'cquest'},
+                                            {'label': 'BraTS', 'value': 'brats'},
+                                        ],
+                                        value='data',
+                                        style={'width': '100%'},
+                                    ),
+                                    html.Br(),
+                                    html.P('Select the format'),
+                                    dbc.Select(
+                                        id='data-type-selected-for-upload',
+                                        options=[
+                                            {'label': '1 file to 1 file', 'value': '1-1'},
+                                            {'label': 'x files to y files (zipped folders)', 'value': 'x-y'},
+                                        ],
+                                        value='1-1',
+                                        style={'width': '100%'},
+                                    ),
+                                ],
+                                className='card-body',
+                            ),
+                            dbc.Col(
+                                children=[
+                                    html.P('Upload a first file to compare'),
+                                    html.Br(),
+                                    dcc.Upload(
+                                        id='upload-data-1',
+                                        children=html.Div(
+                                            children=[
+                                                'Drag and Drop or ',
+                                                html.A('Select Files')
+                                            ],
+                                            id='upload-data-1-div'
+                                        ),
+                                        style={
+                                            'width': '100%',
+                                            'height': '60px',
+                                            'lineHeight': '60px',
+                                            'borderWidth': '1px',
+                                            'borderStyle': 'dashed',
+                                            'borderRadius': '5px',
+                                            'textAlign': 'center',
+                                        },
+                                        multiple=False
+                                    ),
+                                    dcc.Input(
+                                        id='data-1-uuid',
+                                        type='hidden',
+                                    ),
+                                    dcc.Input(
+                                        id='data-type-uploaded1',
+                                        type='hidden',
+                                    ),
+                                    html.Br(),
+                                    html.Div(
+                                        id='output-data-upload-1',
+                                        style={'display': 'flex', 'justifyContent': 'center'}
+                                    ),
+                                ],
+                                className='card-body',
+                            ),
+                            dbc.Col(
+                                children=[
+                                    html.P('Upload a second file to compare'),
+                                    html.Br(),
+                                    dcc.Upload(
+                                        id='upload-data-2',
+                                        children=html.Div(
+                                            children=[
+                                                'Drag and Drop or ',
+                                                html.A('Select Files')
+                                            ],
+                                            id='upload-data-2-div'
+                                        ),
+                                        style={
+                                            'width': '100%',
+                                            'height': '60px',
+                                            'lineHeight': '60px',
+                                            'borderWidth': '1px',
+                                            'borderStyle': 'dashed',
+                                            'borderRadius': '5px',
+                                            'textAlign': 'center',
+                                        },
+                                        multiple=False
+                                    ),
+                                    dcc.Input(
+                                        id='data-2-uuid',
+                                        type='hidden',
+                                    ),
+                                    dcc.Input(
+                                        id='data-type-uploaded2',
+                                        type='hidden',
+                                    ),
+                                    html.Br(),
+                                    html.Div(
+                                        id='output-data-upload-2',
+                                        style={'display': 'flex', 'justifyContent': 'center'}
+                                    ),
+                                ],
+                                className='card-body',
+                            ),
+                            dbc.Col(
+                                children=[
+                                    dbc.Button(
+                                        'Compare',
+                                        id='compare-btn',
+                                        style={'width': '100%'},
+                                        className='btn btn-primary',
+                                        href='/compare-11?id1=&id2=',
+                                        disabled=True,
+                                    ),
+                                ],
+                                className='card-body',
+                            ),
+                        ],
+                        className='card-body',
+                        style={'justifyContent': 'center', 'gap': '10px'},
+                    ),
+                ],
                 className='card',
             )
         ]
@@ -140,24 +355,165 @@ def layout():
 
 
 @callback(
+    Output('compare-btn', 'disabled'),
+    Input('compare-btn', 'href'),
+    State('data-type-uploaded1', 'value'),
+    State('data-type-uploaded2', 'value'),
+    State('data-type-selected-for-upload', 'value'),
+    prevent_initial_call=True
+)
+def update_compare_btn(href, type1, type2, type_selected):
+    # assert that if type_selected is 1-1, type1 and type2 are txt else zip
+    if type_selected == '1-1' and type1 == 'txt' and type2 == 'txt':
+        return False
+    elif type_selected == 'x-y' and type1 == 'zip' and type2 == 'zip':
+        return False
+    else:
+        return True
+
+
+@callback(
+    Output('upload-data-1-div', 'children'),
+    Output('data-1-uuid', 'value'),
+    Output('compare-btn', 'href', allow_duplicate=True),
+    Output('data-type-uploaded1', 'value'),
+    Input('upload-data-1', 'contents'),
+    State('compare-btn', 'href'),
+    State('upload-data-1', 'filename'),
+    State('upload-data-1', 'last_modified'),
+    prevent_initial_call=True
+)
+def update_output1(content, href, name, date):
+    return update_output(content, href, name, date, 1)
+
+
+@callback(
+    Output('upload-data-2-div', 'children'),
+    Output('data-2-uuid', 'value'),
+    Output('compare-btn', 'href', allow_duplicate=True),
+    Output('data-type-uploaded2', 'value'),
+    Input('upload-data-2', 'contents'),
+    State('compare-btn', 'href'),
+    State('upload-data-2', 'filename'),
+    State('upload-data-2', 'last_modified'),
+    prevent_initial_call=True
+)
+def update_output2(content, href, name, date):
+    return update_output(content, href, name, date, 2)
+
+
+@callback(
+    Output('compare-btn', 'href'),
+    Input('data-type-selected-for-upload', 'value'),
+    State('compare-btn', 'href'),
+)
+def update_href(data_type, href):
+    href_end = href.split('?')[1]
+    if data_type == '1-1':
+        href = 'compare-11' + '?' + href_end
+    else:
+        href = 'compare-xy' + '?' + href_end
+    return href
+
+
+def update_output(content, href, name, date, data_id):
+    # TODO: Peut pas remplacer fichier déjà upload
+    if len(name.split('.')) > 1 and content is not None:
+        print('name', name)
+        file_extension = name.split('.')[-1]
+        if file_extension in ['txt', 'zip']:
+            # save the file in the server
+            uuid = save_file_for_comparison(content, name)
+            # get olds values
+            id1 = 'id1=' + href.split('id1=')[1].split('&id2=')[0]
+            id2 = 'id2=' + href.split('id2=')[1]
+            print("id1", id1)
+            print("id2", id2)
+            # update the href
+            if data_id == 1:
+                id1 = 'id1=' + str(uuid)
+            else:
+                id2 = 'id2=' + str(uuid)
+            href_begin = href.split('?')[0]
+            href = href_begin + '?' + id1 + '&' + id2
+            return html.Div([
+                html.P('File uploaded: ' + name),
+            ]), str(uuid), href, file_extension
+        else:
+            return html.Div([
+                'Wrong file type, please upload a .txt file'
+            ]), None, href, None
+    else:
+        return html.Div([
+            'Drag and Drop or ',
+            html.A('Select Files')
+        ]), None, href, None
+
+
+@callback(
     Output("exec-modal", "is_open"),
-    Output("execution-container-hidden", "children"),
+    Output("wf-container-hidden", "children", allow_duplicate=True),
+    Output("select-app-wf", "options"),
     [Input("exec-open", "n_clicks"), Input("exec-close", "n_clicks")],
     [State("exec-modal", "is_open")],
+    prevent_initial_call=True
 )
-def toggle_modal_exec(n1, n2, is_open):
+def toggle_modal_workflows(n1, n2, is_open):
     if n1 or n2:
-        exec_list = load_exec_from_db()
-        exec_data = get_list_structure(exec_list, '/repro-execution')
+        wf_list = load_wf_from_db()
+        wf_data = get_list_structure2(wf_list, '/repro-workflow')
+        applications = get_available_applications()
+        options = [{'label': app['name'], 'value': app['id']} for app in applications]
+        options.insert(0, {'label': 'All', 'value': 'all'})
+        return not is_open, wf_data, options
 
-        return not is_open, exec_data
+    return is_open, [], []
 
-    return is_open, []
+
+@callback(
+    Output("experiment-container", "children", allow_duplicate=True),
+    Input("select-version", "value"),
+    prevent_initial_call=True
+)
+def filter_exp(version_id):
+    exp_list = load_exp_from_db()
+    new_exp_list = []
+    if version_id != 'all':
+        for exp in exp_list:
+            if int(exp['version_id']) == int(version_id):
+                new_exp_list.append(exp)
+    else:
+        new_exp_list = exp_list
+
+    exp_data = get_list_structure2(new_exp_list, '/repro-experiment')
+
+    return exp_data
+
+
+@callback(
+    Output("wf-container", "children", allow_duplicate=True),
+    Input("select-version-wf", "value"),
+    prevent_initial_call=True
+)
+def filter_wf(version_id):
+    wf_list = load_wf_from_db()
+    new_wf_list = []
+    if version_id != 'all':
+        for wf in wf_list:
+            if int(wf['version_id']) == int(version_id):
+                new_wf_list.append(wf)
+    else:
+        new_wf_list = wf_list
+
+    wf_data = get_list_structure2(new_wf_list, '/repro-workflow')
+
+    return wf_data
 
 
 @callback(
     Output("exp-modal", "is_open"),
     Output("experiment-container-hidden", "children", allow_duplicate=True),
+    Output("select-app", "options"),
     [Input("exp-open", "n_clicks"), Input("exp-close", "n_clicks")],
     [State("exp-modal", "is_open")],
     prevent_initial_call=True
@@ -165,10 +521,64 @@ def toggle_modal_exec(n1, n2, is_open):
 def toggle_modal_exp(n1, n2, is_open):
     if n1 or n2:
         exp_list = load_exp_from_db()
-        exp_data = get_list_structure(exp_list, '/repro-experiment')
-        return not is_open, exp_data
+        # exp_data = get_list_structure(exp_list, '/repro-experiment')
+        exp_data = get_list_structure2(exp_list, '/repro-experiment')
+        applications = get_available_applications()
+        options = [{'label': app['name'], 'value': app['id']} for app in applications]
+        options.insert(0, {'label': 'All', 'value': 'all'})
+        return not is_open, exp_data, options
 
-    return is_open, []
+    return is_open, [], []
+
+
+@callback(
+    Output("select-version", "options"),
+    Output("experiment-container", "children", allow_duplicate=True),
+    [Input("select-app", "value")],
+    prevent_initial_call=True
+)
+def update_exp_version_dropdown(app_id):
+    versions = get_available_versions(app_id)
+    options = [{'label': version['number'], 'value': version['id']} for version in versions]
+    options.insert(0, {'label': 'All', 'value': 'all'})
+    exp_list = load_exp_from_db()
+    new_exp_list = []
+    if app_id != 'all':
+        for exp in exp_list:
+            if int(exp['application_id']) == int(app_id):
+                new_exp_list.append(exp)
+    else:
+        new_exp_list = exp_list
+
+    exp_data = get_list_structure2(new_exp_list, '/repro-execution')
+    return options, exp_data
+
+
+@callback(
+    Output("select-version-wf", "options"),
+    Output("wf-container", "children", allow_duplicate=True),
+    [Input("select-app-wf", "value")],
+    prevent_initial_call=True
+)
+def update_wf_version_dropdown(app_id):
+    versions = get_available_versions(app_id)
+    options = [{'label': version['number'], 'value': version['id']} for version in versions]
+    options.insert(0, {'label': 'All', 'value': 'all'})
+    wf_list = load_wf_from_db()
+    new_wf_list = []
+    if app_id != 'all':
+        for wf in wf_list:
+            if int(wf['application_id']) == int(app_id):
+                new_wf_list.append(wf)
+    else:
+        new_wf_list = wf_list
+
+    wf_data = get_list_structure2(new_wf_list, '/repro-workflow')
+    return options, wf_data
+
+
+def get_options_version_dropdown(app_id):
+    pass
 
 
 # Search on client side version (use a js function in src/assets/search.js)
@@ -187,8 +597,8 @@ clientside_callback(
         namespace="clientside",
         function_name="search_exp",
     ),
-    Output("execution-container", "children", allow_duplicate=True),
-    [Input("search-exec", "value"), Input("execution-container-hidden", "children")],
+    Output("wf-container", "children", allow_duplicate=True),
+    [Input("search-exec", "value"), Input("wf-container-hidden", "children")],
     prevent_initial_call=True
 )
 
@@ -237,6 +647,33 @@ def get_list_structure(exp_list, href):
                                 id='repro-execution',
                                 className="mr-1",
                                 href=href + '?experiment=' + str(exp.get("id")),
+                                style={'width': 'fit-content'},
+                            ),
+                        ],
+                        className='card-body',
+                        style={'justifyContent': 'center', 'gap': '10px', 'width': 'fit-content'},
+                    )
+                    for exp in exp_list
+                ],
+            )
+        ],
+        style={'flexDirection': 'row'},
+    )
+
+
+def get_list_structure2(exp_list, href):
+    return dbc.Row(
+        children=[
+            html.Div(
+                children=[
+                    dbc.Row(
+                        children=[
+                            dbc.Button(
+                                exp.get("name") + ' - ' + exp.get("application_name") + '/' +
+                                exp.get("application_version"),
+                                id='repro-execution',
+                                className="mr-1",
+                                href=href + '?id=' + str(exp.get("id")),
                                 style={'width': 'fit-content'},
                             ),
                         ],
