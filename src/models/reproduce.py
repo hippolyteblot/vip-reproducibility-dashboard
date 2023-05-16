@@ -1,5 +1,7 @@
 from time import sleep
 
+import imageio
+import numpy as np
 import pandas as pd
 import plotly.express as px
 import os
@@ -161,26 +163,110 @@ def get_wf_data(wf_id):
     return data
 
 
-def read_user_file(file_uuid):
+def read_file(file_uuid):
     """Read the file uploaded by the user using the uuid and return a dataframe"""
-    user_id = current_user.id
-    path = os.path.join("src", "tmp", "user_compare", str(user_id), str(file_uuid) + ".txt")
+    path = os.path.join("src", "tmp", "user_compare", str(file_uuid) + ".txt")
     data = get_quest2(path)
     return data
 
 
-def read_user_folder(folder, file):
+def read_file_in_folder(folder, file):
     """Read the file uploaded by the user using the uuid and return a dataframe"""
-    user_id = current_user.id
-    path = os.path.join("src", "tmp", "user_compare", str(user_id), str(folder), str(file))
+    path = os.path.join("src", "tmp", "user_compare", str(folder), str(file))
     data = get_quest2(path)
+    return data
+
+
+def read_folder(folder):
+    """Read all the files in a folder and return a dataframe containing all the data"""
+    path = os.path.join("src", "tmp", "user_compare", str(folder))
+    files = os.listdir(path)
+    files = [file for file in files if file.endswith(".txt")]
+    data = pd.DataFrame()
+    for file in files:
+        df = read_file_in_folder(folder, file)
+        data = pd.concat([data, df])
     return data
 
 
 def get_files_in_folder(folder_id):
     """Get the files in a folder from user's folder in local"""
-    user_id = current_user.id
-    path = os.path.join("src", "tmp", "user_compare", str(user_id), str(folder_id))
+    path = os.path.join("src", "tmp", "user_compare", str(folder_id))
     files = os.listdir(path)
     files = [file for file in files if file.endswith(".txt")]
     return files
+
+
+def read_nii_file(file):
+    pass
+
+
+def get_processed_data_from_niftis(id1, id2, slider_value, axe):
+    data1 = "src/tmp/user_compare/" + id1 + ".nii"
+    data2 = "src/tmp/user_compare/" + id2 + ".nii"
+
+    vol1 = imageio.volread(data1)
+    vol2 = imageio.volread(data2)
+    max_vol1 = np.max(vol1)
+    max_vol2 = np.max(vol2)
+
+    # build an image using the slider value
+    if axe == 'z':
+        img_mask1 = vol1[slider_value, :, :]
+        img_mask2 = vol2[slider_value, 3:, 5:]
+    elif axe == 'y':
+        img_mask1 = vol1[:, slider_value, :]
+        img_mask2 = vol2[4:, slider_value, 5:]
+    else:
+        img_mask1 = vol1[:, :, slider_value]
+        img_mask2 = vol2[4:, 3:, slider_value]
+
+    img_rgb1 = np.stack([img_mask1 / max_vol1, img_mask1 / max_vol1, img_mask1 / max_vol1], axis=-1)
+    img_rgb2 = np.stack([img_mask2 / max_vol2, img_mask2 / max_vol2, img_mask2 / max_vol2], axis=-1)
+
+    axe_index = 2
+    if axe == 'y':
+        axe_index = 1
+    elif axe == 'z':
+        axe_index = 0
+
+    return img_rgb1, img_rgb2, vol1.shape[axe_index]
+
+
+def get_processed_data_from_niftis_folder(folder_id, slider_value, axe):
+    """Get the data from the niftis folder"""
+    path = os.path.join("src", "tmp", "user_compare", str(folder_id))
+    files = os.listdir(path)
+    files = [file for file in files if file.endswith(".nii")]
+    # build a new 2d array with all the niftis. Calculate the variance of each voxel
+    # and store it in the new array
+    data = []
+    for file in files:
+        data1 = "src/tmp/user_compare/" + str(folder_id) + "/" + file
+        vol1 = imageio.volread(data1)
+        if axe == 'z':
+            img_mask1 = vol1[slider_value, :, :]
+        elif axe == 'y':
+            img_mask1 = vol1[:, slider_value, :]
+        else:
+            img_mask1 = vol1[:, :, slider_value]
+        data.append(img_mask1)
+    data = np.array(data)
+    data = np.var(data, axis=0)
+    data = np.stack([data, data, data], axis=-1)
+
+    return data
+
+
+def build_difference_image(img_rgb1, img_rgb2):
+    min_shape0 = min(img_rgb1.shape[0], img_rgb2.shape[0])
+    min_shape1 = min(img_rgb1.shape[1], img_rgb2.shape[1])
+    img_mask3 = np.zeros(img_rgb1.shape)
+    for i in range(min_shape0):
+        for j in range(min_shape1):
+            if img_rgb1[i, j, 0] == img_rgb2[i, j, 0]:
+                img_mask3[i, j] = img_rgb1[i, j]
+            else:
+                img_mask3[i, j] = [255, 0, 0]
+
+    return img_mask3

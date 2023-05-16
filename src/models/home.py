@@ -128,8 +128,7 @@ def build_wf_json_from_db(query):
 
 def save_file_for_comparison(content, name):
     """Save the file for comparison"""
-    user_id = current_user.id
-    path = "src/tmp/user_compare/" + str(user_id) + "/"
+    path = "src/tmp/user_compare/"
     if not os.path.exists(path):
         os.makedirs(path)
 
@@ -139,15 +138,11 @@ def save_file_for_comparison(content, name):
     # get the extension
     extension = name.split(".")[-1]
     # decode the content
-    if extension == "txt":
-        content = decode_base64(content)
-    else:
-        content = decode_base64_zip(content)
-    if extension == "txt":
-        # save the file
-        with open(path + str(uuid) + ".txt", "w") as f:
+    content = decode_base64(content)
+    if extension != "zip":
+        with open(path + str(uuid) + "." + extension, "wb") as f:
             f.write(content)
-    elif extension == "zip":
+    else:
         # create the folder if not exists
         if not os.path.exists(path + str(uuid)):
             os.makedirs(path + str(uuid))
@@ -159,12 +154,7 @@ def save_file_for_comparison(content, name):
     return uuid
 
 
-def decode_base64(string: str) -> str:
-    """Decode a base64 string"""
-    return base64.b64decode(string).decode("utf-8")
-
-
-def decode_base64_zip(string: str) -> bytes:
+def decode_base64(string: str) -> bytes:
     """Decode a base64 string"""
     return base64.b64decode(string)
 

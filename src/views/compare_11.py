@@ -4,7 +4,7 @@ import plotly.express as px
 from flask import request
 from flask_login import current_user
 
-from models.reproduce import read_user_file
+from models.reproduce import read_file
 
 
 def layout():
@@ -20,13 +20,15 @@ def layout():
                         children=[
                             dbc.Col(
                                 children=[
-                                    html.H4('Metabolite'),
-                                    dcc.Dropdown(
-                                        id='metabolite-name-compare',
+                                    html.H4('Normalization'),
+                                    dcc.RadioItems(
+                                        id='normalization-compare-11',
                                         options=[
+                                            {'label': 'No', 'value': False},
+                                            {'label': 'Yes', 'value': True},
                                         ],
-                                        value='All',
-                                        clearable=False,
+                                        value=False,
+                                        labelStyle={'display': 'block'},
                                     ),
                                 ],
                                 width=3,
@@ -54,18 +56,26 @@ def layout():
 @callback(
     Output('11-chart-compare', 'figure'),
     Input('url', 'pathname'),
+    Input('normalization-compare-11', 'value'),
 )
-def bind_charts(pathname):
+def bind_charts(pathname, normalization):
     id1 = request.referrer.split('id1=')[1].split('&')[0]
     id2 = request.referrer.split('id2=')[1]
-    data1 = read_user_file(id1)
-    data2 = read_user_file(id2)
+    data1 = read_file(id1)
+    data2 = read_file(id2)
     data1['Amplitude'] = data1['Amplitude'].apply(lambda x: float(x))
     data2['Amplitude'] = data2['Amplitude'].apply(lambda x: float(x))
     data1['File'] = 'File 1'
     data2['File'] = 'File 2'
 
     data = data1.append(data2)
+
+    if normalization:
+        # subtract mean and divide by std by metabolite
+        means = data.groupby('Metabolite').mean()['Amplitude']
+        stds = data.groupby('Metabolite').std()['Amplitude']
+        data['Amplitude'] = data.apply(lambda row: (row['Amplitude'] - means[row['Metabolite']]) /
+                                       stds[row['Metabolite']], axis=1)
 
     fig1 = px.scatter(
         x=data['Metabolite'],

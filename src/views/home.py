@@ -233,7 +233,7 @@ def layout():
                                             {'label': 'cQuest', 'value': 'cquest'},
                                             {'label': 'BraTS', 'value': 'brats'},
                                         ],
-                                        value='data',
+                                        value='cquest',
                                         style={'width': '100%'},
                                     ),
                                     html.Br(),
@@ -242,7 +242,8 @@ def layout():
                                         id='data-type-selected-for-upload',
                                         options=[
                                             {'label': '1 file to 1 file', 'value': '1-1'},
-                                            {'label': 'x files to y files (zipped folders)', 'value': 'x-y'},
+                                            {'label': 'x files to y files (two zipped folders)', 'value': 'x-y'},
+                                            {'label': 'x files (one zipped folder)', 'value': 'x'},
                                         ],
                                         value='1-1',
                                         style={'width': '100%'},
@@ -329,6 +330,7 @@ def layout():
                                     ),
                                 ],
                                 className='card-body',
+                                id='upload-data-2-container',
                             ),
                             dbc.Col(
                                 children=[
@@ -355,18 +357,33 @@ def layout():
 
 
 @callback(
+    Output('upload-data-2-container', 'style'),
+    Input('data-type-selected-for-upload', 'value'),
+)
+def update_upload_data_2_container(type_selected):
+    if type_selected == 'x':
+        return {'display': 'none'}
+    else:
+        return {'display': 'block'}
+
+
+@callback(
     Output('compare-btn', 'disabled'),
     Input('compare-btn', 'href'),
     State('data-type-uploaded1', 'value'),
     State('data-type-uploaded2', 'value'),
+    State('application-selected-for-upload', 'value'),
     State('data-type-selected-for-upload', 'value'),
     prevent_initial_call=True
 )
-def update_compare_btn(href, type1, type2, type_selected):
+def update_compare_btn(_, type1, type2, app, type_selected):
     # assert that if type_selected is 1-1, type1 and type2 are txt else zip
-    if type_selected == '1-1' and type1 == 'txt' and type2 == 'txt':
+    if type_selected == '1-1' and ((type1 == 'txt' and type2 == 'txt' and app == 'cquest') or
+                                   (type1 == 'nii' and type2 == 'nii' and app == 'brats')):
         return False
     elif type_selected == 'x-y' and type1 == 'zip' and type2 == 'zip':
+        return False
+    elif type_selected == 'x' and type1 == 'zip':
         return False
     else:
         return True
@@ -381,10 +398,12 @@ def update_compare_btn(href, type1, type2, type_selected):
     State('compare-btn', 'href'),
     State('upload-data-1', 'filename'),
     State('upload-data-1', 'last_modified'),
+    State('data-type-selected-for-upload', 'value'),
+    State('application-selected-for-upload', 'value'),
     prevent_initial_call=True
 )
-def update_output1(content, href, name, date):
-    return update_output(content, href, name, date, 1)
+def update_output1(content, href, name, date, type_selected, app):
+    return update_output(content, href, name, date, 1, type_selected, app)
 
 
 @callback(
@@ -396,39 +415,45 @@ def update_output1(content, href, name, date):
     State('compare-btn', 'href'),
     State('upload-data-2', 'filename'),
     State('upload-data-2', 'last_modified'),
+    State('data-type-selected-for-upload', 'value'),
+    State('application-selected-for-upload', 'value'),
     prevent_initial_call=True
 )
-def update_output2(content, href, name, date):
-    return update_output(content, href, name, date, 2)
+def update_output2(content, href, name, date, type_selected, app):
+    return update_output(content, href, name, date, 2, type_selected, app)
 
 
 @callback(
     Output('compare-btn', 'href'),
+    Input('application-selected-for-upload', 'value'),
     Input('data-type-selected-for-upload', 'value'),
     State('compare-btn', 'href'),
 )
-def update_href(data_type, href):
+def update_href(app, data_type, href):
+    app_str = 'compare'
+    if app == 'brats':
+        app_str = 'compare-nii'
+    data_type_str = '11'
+    if data_type == 'x-y':
+        data_type_str = 'xy'
+    elif data_type == 'x':
+        data_type_str = 'x'
     href_end = href.split('?')[1]
-    if data_type == '1-1':
-        href = 'compare-11' + '?' + href_end
-    else:
-        href = 'compare-xy' + '?' + href_end
+    href = app_str + '-' + data_type_str + '?' + href_end
+    print('href', href)
     return href
 
 
-def update_output(content, href, name, date, data_id):
-    # TODO: Peut pas remplacer fichier déjà upload
-    if len(name.split('.')) > 1 and content is not None:
-        print('name', name)
+def update_output(content, href, name, date, data_id, data_type, app):
+    # TODO: Remake the file type checking system (for each upload, check if the file's type is equal to the select)
+    if content is not None and check_type(data_type, name, app):
         file_extension = name.split('.')[-1]
-        if file_extension in ['txt', 'zip']:
+        if file_extension in ['txt', 'zip', 'nii']:
             # save the file in the server
             uuid = save_file_for_comparison(content, name)
             # get olds values
             id1 = 'id1=' + href.split('id1=')[1].split('&id2=')[0]
             id2 = 'id2=' + href.split('id2=')[1]
-            print("id1", id1)
-            print("id2", id2)
             # update the href
             if data_id == 1:
                 id1 = 'id1=' + str(uuid)
@@ -445,9 +470,18 @@ def update_output(content, href, name, date, data_id):
             ]), None, href, None
     else:
         return html.Div([
-            'Drag and Drop or ',
-            html.A('Select Files')
+            'Wrong file type, please upload a file according to the selected application and data type',
         ]), None, href, None
+
+
+def check_type(data_type, name, app):
+    ext = name.split('.')[-1]
+    if data_type == '1-1' and app == 'cquest':
+        return ext == 'txt'
+    elif data_type == '1-1' and app == 'brats':
+        return ext == 'nii'
+    elif data_type == 'x-y' or data_type == 'x':
+        return ext == 'zip'
 
 
 @callback(

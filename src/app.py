@@ -198,12 +198,17 @@ def insert_json_if_not_exist(workflow_id, workflow_id_db, experiment_id):
         DB.execute(query, (parameter_id, experiment_id))
 
 
-if __name__ == "__main__":
-    #insert_data_from_girder()
-    app = create_app()
-    app.run_server(
-        host=APP_HOST,
-        port=APP_PORT,
-        debug=APP_DEBUG,
-        dev_tools_props_check=DEV_TOOLS_PROPS_CHECK
-    )
+#insert_data_from_girder()
+app = create_app()
+app.run_server(
+    host=APP_HOST,
+    port=APP_PORT,
+    debug=APP_DEBUG,
+    dev_tools_props_check=DEV_TOOLS_PROPS_CHECK
+)
+
+
+def get_app():
+    """Get the Dash app"""
+    global app
+    return app
