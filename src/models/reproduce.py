@@ -1,3 +1,5 @@
+import gzip
+import shutil
 from time import sleep
 
 import imageio
@@ -233,29 +235,75 @@ def get_processed_data_from_niftis(id1, id2, slider_value, axe):
     return img_rgb1, img_rgb2, vol1.shape[axe_index]
 
 
-def get_processed_data_from_niftis_folder(folder_id, slider_value, axe):
+def get_processed_data_from_niftis_folder(folder_id, slider_value, axe, only_mask):
     """Get the data from the niftis folder"""
     path = os.path.join("src", "tmp", "user_compare", str(folder_id))
     files = os.listdir(path)
-    files = [file for file in files if file.endswith(".nii")]
-    # build a new 2d array with all the niftis. Calculate the variance of each voxel
-    # and store it in the new array
-    data = []
-    for file in files:
-        data1 = "src/tmp/user_compare/" + str(folder_id) + "/" + file
-        vol1 = imageio.volread(data1)
-        if axe == 'z':
-            img_mask1 = vol1[slider_value, :, :]
-        elif axe == 'y':
-            img_mask1 = vol1[:, slider_value, :]
-        else:
-            img_mask1 = vol1[:, :, slider_value]
-        data.append(img_mask1)
-    data = np.array(data)
-    data = np.var(data, axis=0)
-    data = np.stack([data, data, data], axis=-1)
 
-    return data
+    # list .nii.gz files
+    files = [file for file in files if file.endswith(".nii.gz")]
+    # uncompress them
+    for file in files:
+        with gzip.open(os.path.join(path, file), 'rb') as f_in:
+            with open(os.path.join(path, file[:-3]), 'wb') as f_out:
+                shutil.copyfileobj(f_in, f_out)
+        os.remove(os.path.join(path, file))
+
+    files = os.listdir(path)
+    files = [file for file in files if file.endswith(".nii")]
+    data = []
+    max_vol = 0
+    max_value = 0
+    for file in files:
+        path = "src/tmp/user_compare/" + str(folder_id) + "/" + file
+        vol = imageio.volread(path)
+        tmp_max = np.max(vol)
+        if axe == 'z':
+            max_vol = vol.shape[0]
+            img_mask = vol[slider_value, :, :]
+        elif axe == 'y':
+            max_vol = vol.shape[1]
+            img_mask = vol[:, slider_value, :]
+            tmp_max = np.max(img_mask)
+        else:
+            max_vol = vol.shape[2]
+            img_mask = vol[:, :, slider_value]
+            tmp_max = np.max(img_mask)
+        if tmp_max > max_value:
+            max_value = tmp_max
+        data.append(img_mask)
+
+    print("max value: ", max_value)
+    # new frame is the mean of all the pixel of the loaded niftis
+    new_frame = np.mean(data, axis=0)
+    # convert to rgb
+
+    img_rgb = np.stack([(new_frame / max_value) * 255, (new_frame / max_value) * 255, (new_frame / max_value) * 255],
+                       axis=-1)
+
+    diff_mask = np.zeros_like(new_frame)
+
+    for i in range(diff_mask.shape[0]):
+        for j in range(diff_mask.shape[1]):
+            values = []
+            for k in range(len(data)):
+                values.append(data[k][i, j])
+            unique = np.unique(values)
+            diff_mask[i, j] = (len(unique) - 1) * 4
+
+    diff_mask /= len(data)
+    diff_mask /= max_value
+    diff_mask *= 255
+    diff_mask = np.stack([diff_mask, np.zeros(diff_mask.shape), np.zeros(diff_mask.shape)], axis=-1)
+
+    if only_mask:
+        img_rgb = diff_mask
+    else:
+        img_rgb += diff_mask
+
+    img_rgb = np.clip(img_rgb, 0, 255)
+
+    return img_rgb, max_vol
 
 
 def build_difference_image(img_rgb1, img_rgb2):

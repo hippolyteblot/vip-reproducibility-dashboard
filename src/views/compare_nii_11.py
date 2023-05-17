@@ -162,13 +162,13 @@ def get_processed_data_from_niftis(id1, id2, slider_value, axe):
     # build an image using the slider value
     if axe == 'z':
         img_mask1 = vol1[slider_value, :, :]
-        img_mask2 = vol2[slider_value, 3:, 5:]
+        img_mask2 = vol2[slider_value, :, :]
     elif axe == 'y':
         img_mask1 = vol1[:, slider_value, :]
-        img_mask2 = vol2[4:, slider_value, 5:]
+        img_mask2 = vol2[:, slider_value, :]
     else:
         img_mask1 = vol1[:, :, slider_value]
-        img_mask2 = vol2[4:, 3:, slider_value]
+        img_mask2 = vol2[:, :, slider_value]
 
     img_rgb1 = np.stack([img_mask1 / max_vol1, img_mask1 / max_vol1, img_mask1 / max_vol1], axis=-1)
     img_rgb2 = np.stack([img_mask2 / max_vol2, img_mask2 / max_vol2, img_mask2 / max_vol2], axis=-1)
@@ -188,8 +188,10 @@ def build_difference_image(img_rgb1, img_rgb2):
     img_mask3 = np.zeros(img_rgb1.shape)
     for i in range(min_shape0):
         for j in range(min_shape1):
+            # if values are the same, then we put the value of the pixel in the mask
             if img_rgb1[i, j, 0] == img_rgb2[i, j, 0]:
-                img_mask3[i, j] = img_rgb1[i, j]
+                img_mask3[i, j] = [img_rgb1[i, j, 0]*255, img_rgb1[i, j, 1]*255, img_rgb1[i, j, 2]*255]
+            # if values are different, then we put red in the mask
             else:
                 img_mask3[i, j] = [255, 0, 0]
 

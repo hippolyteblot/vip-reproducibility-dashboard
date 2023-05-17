@@ -36,6 +36,19 @@ def layout():
                                 width=3,
                                 className='card-body',
                             ),
+                            dbc.Col(
+                                children=[
+                                    html.H4('Only display the differences mask'),
+                                    dcc.RadioItems(
+                                        options=[
+                                            {'label': 'Yes', 'value': 'yes'},
+                                            {'label': 'No', 'value': 'no'},
+                                        ],
+                                        value='no',
+                                        id='only-differences-nii-xy',
+                                    ),
+                                ],
+                            ),
                         ],
                         className='card',
                         style={'flexDirection': 'row'},
@@ -76,7 +89,7 @@ def layout():
 )
 def bind_components(pathname):
     folder_id = request.referrer.split('id1=')[1].split('&')[0]
-    _, size = get_processed_data_from_niftis_folder(folder_id, 0, "z")
+    _, size = get_processed_data_from_niftis_folder(folder_id, 0, "z", False)
 
     return (
         0,
@@ -92,12 +105,13 @@ def bind_components(pathname):
     Output('slider-nii-xy', 'value', allow_duplicate=True),
     Input('slider-nii-xy', 'value'),
     Input('axes-nii-xy', 'value'),
+    Input('only-differences-nii-xy', 'value'),
     prevent_initial_call=True,
 )
-def show_frames(slider_value, axe):
-    folder_id = request.referrer.split('id1=')[1]
+def show_frames(slider_value, axe, only_differences):
+    folder_id = request.referrer.split('id1=')[1].split('&')[0]
 
-    diff_matrix, size = get_processed_data_from_niftis_folder(folder_id, slider_value, axe)
+    diff_matrix, size = get_processed_data_from_niftis_folder(folder_id, slider_value, axe, only_differences == 'yes')
 
     if slider_value > size:
         slider_value = size
@@ -108,5 +122,3 @@ def show_frames(slider_value, axe):
         size,
         slider_value,
     )
-
-

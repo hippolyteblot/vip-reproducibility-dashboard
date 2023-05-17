@@ -1,3 +1,4 @@
+import gzip
 import hashlib
 import io
 import os
@@ -142,6 +143,12 @@ def save_file_for_comparison(content, name):
     if extension != "zip":
         with open(path + str(uuid) + "." + extension, "wb") as f:
             f.write(content)
+
+        if extension == "gz":
+            with gzip.open(path + str(uuid) + "." + extension, 'rb') as f:
+                file_content = f.read()
+                with open(path + str(uuid) + "." + name.split(".")[-2], "wb") as f2:
+                    f2.write(file_content)
     else:
         # create the folder if not exists
         if not os.path.exists(path + str(uuid)):

@@ -379,7 +379,8 @@ def update_upload_data_2_container(type_selected):
 def update_compare_btn(_, type1, type2, app, type_selected):
     # assert that if type_selected is 1-1, type1 and type2 are txt else zip
     if type_selected == '1-1' and ((type1 == 'txt' and type2 == 'txt' and app == 'cquest') or
-                                   (type1 == 'nii' and type2 == 'nii' and app == 'brats')):
+                                   (type1 == 'nii' and type2 == 'nii' and app == 'brats') or \
+                                   (type1 in ['gz', 'nii'] and type2 in ['gz', 'nii']) and app == 'brats'):
         return False
     elif type_selected == 'x-y' and type1 == 'zip' and type2 == 'zip':
         return False
@@ -440,15 +441,14 @@ def update_href(app, data_type, href):
         data_type_str = 'x'
     href_end = href.split('?')[1]
     href = app_str + '-' + data_type_str + '?' + href_end
-    print('href', href)
     return href
 
 
 def update_output(content, href, name, date, data_id, data_type, app):
-    # TODO: Remake the file type checking system (for each upload, check if the file's type is equal to the select)
+    print("File name : ", name)
     if content is not None and check_type(data_type, name, app):
         file_extension = name.split('.')[-1]
-        if file_extension in ['txt', 'zip', 'nii']:
+        if file_extension in ['txt', 'zip', 'nii'] or (name.split('.')[-2] == 'nii' and file_extension == 'gz'):
             # save the file in the server
             uuid = save_file_for_comparison(content, name)
             # get olds values
@@ -479,9 +479,11 @@ def check_type(data_type, name, app):
     if data_type == '1-1' and app == 'cquest':
         return ext == 'txt'
     elif data_type == '1-1' and app == 'brats':
-        return ext == 'nii'
+        return (ext == 'nii') or (name.split('.')[-2] == 'nii' and ext == 'gz')
     elif data_type == 'x-y' or data_type == 'x':
         return ext == 'zip'
+    else:
+        return False
 
 
 @callback(
