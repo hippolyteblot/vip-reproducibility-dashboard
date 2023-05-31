@@ -72,7 +72,7 @@ def layout():
                         children=[
                             dbc.Col(
                                 children=[
-                                    html.Label('Fileset directory'),
+                                    html.Label('Inputs directory (on girder)'),
                                     # button for opening a modal to add a new input to vary
                                     dbc.Button(
                                         'Select a fileset directory',
@@ -98,7 +98,7 @@ def layout():
                             ),
                             dbc.Modal(
                                 [
-                                    dbc.ModalHeader('Choose a fileset directory'),
+                                    dbc.ModalHeader('Girder directory'),
                                     dbc.ModalBody(
                                         children=[
                                             dbc.Row(
@@ -157,11 +157,10 @@ def layout():
                             dbc.Col(
                                 children=[
                                     html.Label('Parameters'),
-                                    dbc.Input(
+                                    dbc.Textarea(
                                         id='parameters',
-                                        type='text',
                                         placeholder='Parameters',
-                                        style={'width': '100%'},
+                                        style={'width': '100%', 'height': '100px'},
                                     ),
                                 ],
                             ),

@@ -14,7 +14,7 @@ def layout():
     return html.Div(
         [
             dcc.Location(id='url', refresh=False),
-            html.H2('Compare quest2 files'),
+            html.H2('Compare multiple niftis'),
             html.Div(
                 children=[
                     dbc.Row(
@@ -59,7 +59,7 @@ def layout():
                 children=[
                     html.Div(
                         children=[
-                            html.H4('File 1'),
+                            html.H4('Differences'),
                             dcc.Graph(
                                 id="graph-nii-xy",
                             ),

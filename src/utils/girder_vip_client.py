@@ -205,3 +205,13 @@ class GirderVIPClient:
                         return 'src/tmp/' + folder_id + '/data.feather'
 
         return None
+
+    def download_file_by_name(self, folder_id, file_name):
+        """Download the feather file nammed 'data.feather' in the folder"""
+        items = self.client.listItem(folder_id)
+        for item in items:
+            if item['name'] == file_name:
+                file = next(self.client.listFile(item['_id']))
+                self.client.downloadFile(file['_id'], 'src/tmp/' + folder_id + '/' + file_name)
+                print('File found and downloaded')
+                return 'src/tmp/' + folder_id + '/' + file_name

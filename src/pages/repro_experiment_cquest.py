@@ -1,11 +1,11 @@
 import dash
 
-from views.repro_experiment import layout
+from views.repro_experiment_cquest import layout
 
 
 dash.register_page(
     __name__,
-    path='/repro-experiment',
+    path='/repro-experiment-cquest',
     title='Reproduce an experiment'
 )
 

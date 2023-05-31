@@ -164,7 +164,7 @@ def insert_workflow_if_not_exist(workflow, experiment_id):
 
 def insert_json_if_not_exist(workflow_id, workflow_id_db, experiment_id):
     """Insert a JSON file into the database if it does not exist"""
-    # jsons = GVC.get_jsons(workflow_id)
+    #jsons = GVC.get_jsons(workflow_id)
     jsons = GVC.get_jsons_from_local(workflow_id)
     for json in jsons:
         query = "SELECT * FROM input WHERE md5 = %s"

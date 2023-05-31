@@ -1,3 +1,4 @@
+import base64
 import gzip
 import shutil
 from time import sleep
@@ -7,11 +8,14 @@ import numpy as np
 import pandas as pd
 import plotly.express as px
 import os
+import cv2
 
 from flask_login import current_user
+from skimage.metrics import structural_similarity
 
 from utils.settings import GVC, DB
 from utils.quest2_reader import get_quest2
+from .home import save_file_for_comparison
 
 
 def get_execution_data(execution_id):
@@ -237,6 +241,7 @@ def get_processed_data_from_niftis(id1, id2, slider_value, axe):
 
 def get_processed_data_from_niftis_folder(folder_id, slider_value, axe, only_mask):
     """Get the data from the niftis folder"""
+    print("Start")
     path = os.path.join("src", "tmp", "user_compare", str(folder_id))
     files = os.listdir(path)
 
@@ -303,18 +308,107 @@ def get_processed_data_from_niftis_folder(folder_id, slider_value, axe, only_mas
 
     img_rgb = np.clip(img_rgb, 0, 255)
 
+    print("End")
     return img_rgb, max_vol
 
 
-def build_difference_image(img_rgb1, img_rgb2):
+def build_difference_image(img_rgb1, img_rgb2, tolerance=0.0):
     min_shape0 = min(img_rgb1.shape[0], img_rgb2.shape[0])
     min_shape1 = min(img_rgb1.shape[1], img_rgb2.shape[1])
     img_mask3 = np.zeros(img_rgb1.shape)
     for i in range(min_shape0):
         for j in range(min_shape1):
-            if img_rgb1[i, j, 0] == img_rgb2[i, j, 0]:
-                img_mask3[i, j] = img_rgb1[i, j]
+            if equal_with_tolerance(img_rgb1[i, j], img_rgb2[i, j], tolerance):
+                # img_mask3[i, j] = img_rgb1[i, j]
+                img_mask3[i, j] = 0
             else:
-                img_mask3[i, j] = [255, 0, 0]
+                # absolute difference
+                img_mask3[i, j] = np.abs(img_rgb1[i, j] - img_rgb2[i, j])
 
     return img_mask3
+
+
+def equal_with_tolerance(val1, val2, tolerance):
+    return abs(val1 - val2) <= tolerance
+
+
+def get_global_brats_experiment_data(experiment_id, file=None):
+    """Get the data of a brats experiment from database or local file"""
+    # first, get the girder_id of the folder containing the experiment
+    query = "SELECT girder_id FROM experiment WHERE id = %s"
+    girder_id = DB.fetch_one(query, (experiment_id,))['girder_id']
+
+    # then, get the data from girder
+    path = GVC.download_feather_data(girder_id)
+
+    # while the file is not downloaded, wait
+    while not os.path.exists(path):
+        sleep(0.1)
+
+    # finally, read the data from the file
+    data = pd.read_feather(path)
+    files = data['File_type'].unique()
+    if file is not None:
+        data = data[data['File_type'] == file]
+
+    return data, files
+
+
+def download_brats_file(execution_number, file_type, patient_id, experiment_id):
+    # This function finds in the database the girder_id of the file to download
+    # and downloads it in the tmp folder
+    query = "SELECT id FROM workflow WHERE experiment_id = %s and timestamp = %s"
+    workflow_id = DB.fetch_one(query, (experiment_id, execution_number))['id']
+    print("SELECT girder_id FROM output WHERE workflow_id = ", workflow_id, " AND name = ", patient_id)
+    query = "SELECT girder_id FROM output WHERE workflow_id = %s AND name = %s"
+    girder_id = DB.fetch_one(query, (workflow_id, patient_id))['girder_id']
+    path = GVC.download_file_by_name(girder_id, file_type + ".nii.gz")
+    while not os.path.exists(path):
+        sleep(0.01)
+
+    # read the file and get the data as b64
+    with open(path, "rb") as f:
+        data = f.read()
+
+    data = base64.b64encode(data).decode('utf-8')
+
+    md5 = save_file_for_comparison(data, patient_id + ".nii.gz")
+    print("md5: ", md5)
+    return md5
+
+
+def build_difference_image_ssim(img1, img2, k1=0.01, k2=0.03, sigma=1.5):
+    (score, diff) = structural_similarity(img1, img2, full=True, K1=k1, K2=k2, data_range=255,
+                                          gaussian_weights=True, sigma=sigma, use_sample_covariance=False,
+                                          multichannel=True)
+    diff = (diff * 255).astype("uint8")
+
+    heatmap = cv2.applyColorMap(diff, cv2.COLORMAP_JET)
+    print("SSIM: {}".format(score))
+
+    # convert to grayscale
+    heatmap = cv2.cvtColor(heatmap, cv2.COLOR_BGR2GRAY)
+
+    return heatmap
+
+
+def get_metadata_cquest(exp_id):
+    query = "SELECT id FROM workflow WHERE experiment_id = %s"
+    wf_ids = DB.fetch(query, (exp_id,))
+    array_wf_ids = [wf_ids[i]['id'] for i in range(len(wf_ids))]
+
+    query = "SELECT input.name as input_name, output.name as output_name, count(output.id) as count " \
+            "FROM output INNER JOIN input ON output.input_id = input.id " \
+            "WHERE output.workflow_id = %s "
+    for i in range(len(wf_ids) - 1):
+        query += "OR output.workflow_id = %s "
+    query += "GROUP BY input.name, output.name ORDER BY input.name, output.name"
+
+    outputs = DB.fetch(query, array_wf_ids)
+
+    # Return an array of metadata with every output with their name and their id and their input (also with name and id)
+    metadata = []
+    for output in outputs:
+        metadata.append({'input_name': output['input_name'], 'output_name': output['output_name'],
+                         'count': output['count']})
+    return metadata

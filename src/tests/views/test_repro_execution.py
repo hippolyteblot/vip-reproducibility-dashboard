@@ -1,6 +1,6 @@
 import plotly.graph_objects as go
 from dash import html, dash_table
-from views.repro_workflow import update_chart, update_metadata
+from views.repro_workflow_cquest import update_chart, update_metadata
 from utils.settings import GVC
 
 from flask import Flask

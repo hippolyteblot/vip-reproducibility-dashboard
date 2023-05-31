@@ -119,7 +119,8 @@ def build_wf_json_from_db(query):
         exp_list.append({
             "id": result.get("workflow_id"),
             "name": result.get("workflow_name"),
-            "application_name": result.get("application_name") + " - " + result.get("experiment_name"),
+            "application_name": result.get("application_name"),
+            "experiment_name": result.get("experiment_name"),
             "application_version": result.get("application_version"),
             "application_id": result.get("application_id"),
             "version_id": result.get("version_id"),

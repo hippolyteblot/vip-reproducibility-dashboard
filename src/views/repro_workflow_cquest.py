@@ -1,22 +1,10 @@
-from dash import html, callback, Input, Output, dcc, dash_table
 import dash_bootstrap_components as dbc
 import plotly.express as px
+from dash import html, callback, Input, Output, dcc
 from flask import request
 from flask_login import current_user
 
-from models.reproduce import get_parameters_for_spectro, get_prebuilt_data, get_execution_data_from_local, \
-    get_data_from_girder, get_metadata_from_girder, get_wf_data
-from utils.settings import GVC
-
-# Todo : Optimize data loading (dont load data when the server starts)
-data = get_prebuilt_data()
-metabolites, voxels, groups = get_parameters_for_spectro(get_prebuilt_data())
-
-signals = data['Execution'].unique()
-# sort
-signals.sort()
-# add the None option
-signals = ["None"] + list(signals)
+from models.reproduce import get_parameters_for_spectro, get_prebuilt_data, get_wf_data, get_metadata_cquest, get_experiment_data
 
 
 def layout():
@@ -34,8 +22,7 @@ def layout():
                                     dcc.Dropdown(
                                         id='metabolite-name',
                                         options=[
-                                            {'label': metabolite.get('label'), 'value': metabolite.get('value')}
-                                            for metabolite in metabolites
+                                            {'label': 'All', 'value': 'All'}
                                         ],
                                         value='All',
                                         clearable=False,
@@ -50,8 +37,7 @@ def layout():
                                     dcc.Dropdown(
                                         id='signal-selected',
                                         options=[
-                                            {'label': 'Iteration ' + str(signal_id), 'value': signal_id}
-                                            for signal_id in signals
+                                            {'label': 'None', 'value': 'None'}
                                         ],
                                         value="None",
                                         clearable=False,
@@ -59,6 +45,20 @@ def layout():
                                 ],
                                 width=3,
                                 className='card-body',
+                            ),
+                            dbc.Col(
+                                children=[
+                                    html.H4('Normalization'),
+                                    dcc.RadioItems(
+                                        id='normalization-repro-wf',
+                                        options=[
+                                            {'label': 'No', 'value': False},
+                                            {'label': 'Yes', 'value': True},
+                                        ],
+                                        value=False,
+                                        labelStyle={'display': 'block'},
+                                    ),
+                                ],
                             ),
                         ],
                         className='card',
@@ -104,52 +104,71 @@ def layout():
         ]
     )
 
-"""
 @callback(
+    Output('metabolite-name', 'options'),
+    Output('signal-selected', 'options'),
+    Output('metabolite-name', 'value'),
+    Output('signal-selected', 'value'),
     Output('metadata', 'children'),
-    Input('url', 'href'),
+    Input('execution-id', 'value'),
 )
-def update_metadata(href):
-    page = href.split('/')[-1]
-    if not page.startswith('repro-workflow'):
-        return html.P('No metadata available')
-    exec_id = int(href.split('?')[1].split('=')[1])
-    metadata_json, id_list = get_metadata_from_girder(exec_id)
-    # foreach metadata, add an url 'test.com' for now
-    i = 0
-    for metadata in metadata_json:
-        metadata['url'] = GVC.url + '/#collection/' + GVC.source_folder + '/folder/' + str(id_list[i])
-        i += 1
+def update_dropdowns(_):
+    wf_id = int(request.referrer.split('?')[1].split('=')[1])
+    wf_data = get_experiment_data(wf_id)
+    metabolites = wf_data['Metabolite'].unique()
+    signals = wf_data['Iteration'].unique()
+    list_metabolites = [{'label': metabolite, 'value': metabolite} for metabolite in metabolites]
+    list_metabolites.insert(0, {'label': 'All', 'value': 'All'})
+    list_signals = [{'label': 'Iteration ' + str(signal_id), 'value': signal_id} for signal_id in signals]
+    list_signals.insert(0, {'label': 'None', 'value': 'None'})
 
-    metadata_structure = html.Div(
-        children=[
-            dash_table.DataTable(
-                columns=[{"name": i, "id": i} for i in metadata_json[0].keys()],
-                data=metadata_json,
-                style_cell={'textAlign': 'left'},
-                style_header={
-                    'backgroundColor': 'rgb(230, 230, 230)',
-                    'fontWeight': 'bold'
-                }
-            ),
-        ],
-        style={'padding': '10px', 'width': '100%'},
-    )
+    metadata = get_metadata_cquest(wf_id)
+    metadata_structure = [
+        dbc.Table(
+            [
+                html.Thead(
+                    html.Tr(
+                        [
+                            html.Th('Input name'),
+                            html.Th('Outputs name'),
+                            html.Th('Outputs number'),
+                        ]
+                    )
+                ),
+                html.Tbody(
+                    [
+                        html.Tr(
+                            [
+                                html.Td(output['input_name']),
+                                html.Td(output['output_name']),
+                                html.Td(output['count']),
+                            ]
+                        )
+                        for output in metadata
+                    ]
+                ),
+            ],
+            bordered=True,
+            hover=True,
+            responsive=True,
+            striped=True,
+        )
+    ]
 
-    return metadata_structure
-"""
+    return list_metabolites, list_signals, 'All', 'None', metadata_structure
+
 
 @callback(
     Output('exec-chart', 'figure'),
     Input('metabolite-name', 'value'),
     Input('signal-selected', 'value'),
+    Input('normalization-repro-wf', 'value'),
 )
-def update_chart(metabolite, signal_id):
+def update_chart(metabolite, signal_id, normalization):
     # Get the query string from the url and get the execution id
     wf_id = int(request.referrer.split('?')[1].split('=')[1])
-    user_id = current_user.id if current_user.is_authenticated else None
-    #exec_data = get_data_from_girder(wf_id, user_id)
-    wf_data = get_wf_data(wf_id)
+    # exec_data = get_data_from_girder(wf_id, user_id)
+    wf_data = get_experiment_data(wf_id)
 
     if signal_id != 'None':
         # add a new column to the dataframe with the index as name and other for other
@@ -160,6 +179,11 @@ def update_chart(metabolite, signal_id):
     if metabolite != 'All':
         exec_data = wf_data[wf_data["Metabolite"] == metabolite]
     else:
+        if normalization:
+            means = wf_data.groupby('Metabolite').mean()['Amplitude']
+            stds = wf_data.groupby('Metabolite').std()['Amplitude']
+            wf_data['Amplitude'] = wf_data.apply(lambda row: (row['Amplitude'] - means[row['Metabolite']]) /
+                                              stds[row['Metabolite']], axis=1)
         if signal_id != 'None':
             graph = px.scatter(
                 x=wf_data['Metabolite'],
@@ -170,6 +194,8 @@ def update_chart(metabolite, signal_id):
                     'y': 'Amplitude',
                 },
                 color=wf_data['Highlight'],
+                data_frame=wf_data,
+                hover_data=['Iteration']
             )
             return graph
         else:
@@ -181,6 +207,8 @@ def update_chart(metabolite, signal_id):
                     'x': 'Metabolite',
                     'y': 'Amplitude',
                 },
+                data_frame=wf_data,
+                hover_data=['Iteration']
             )
             return graph
 
@@ -193,6 +221,8 @@ def update_chart(metabolite, signal_id):
                 'x': 'Iteration',
                 'y': 'Amplitude',
             },
+            data_frame=exec_data,
+            hover_data=['Iteration']
         )
         return graph
     else:
@@ -205,6 +235,8 @@ def update_chart(metabolite, signal_id):
                 'y': 'Amplitude',
             },
             color=exec_data['Highlight'],
+            data_frame=exec_data,
+            hover_data=['Iteration']
         )
 
         return graph
