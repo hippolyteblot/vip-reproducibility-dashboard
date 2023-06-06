@@ -63,6 +63,9 @@ def bind_charts(pathname, normalization):
     id2 = request.referrer.split('id2=')[1]
     data1 = read_file(id1)
     data2 = read_file(id2)
+    # delete metabolites water1, water2, water3
+    data1 = data1[~data1['Metabolite'].str.contains('water')]
+    data2 = data2[~data2['Metabolite'].str.contains('water')]
     data1['Amplitude'] = data1['Amplitude'].apply(lambda x: float(x))
     data2['Amplitude'] = data2['Amplitude'].apply(lambda x: float(x))
     data1['File'] = 'File 1'

@@ -5,7 +5,8 @@ import dash_bootstrap_components as dbc
 import plotly.express as px
 from flask import request
 
-from models.reproduce import build_difference_image, build_difference_image_ssim
+from models.reproduce import build_difference_image, build_difference_image_ssim, compute_psnr, \
+    get_processed_data_from_niftis
 
 
 def layout():
@@ -56,6 +57,22 @@ def layout():
                     ),
                 ]
             ),
+            html.P(
+                children=[
+                    'PSNR for the whole image: ',
+                    html.Span(
+                        id='psnr-image-value',
+                    ),
+                ],
+            ),
+            html.P(
+                children=[
+                    'PSNR for this slice: ',
+                    html.Span(
+                        id='psnr-slice-value',
+                    ),
+                ],
+            ),
             html.Div(
                 children=[
                     html.Div(
@@ -99,6 +116,14 @@ def layout():
             ),
             html.Div(
                 children=[
+                    html.H4(
+                        children=[
+                            'SSIM: ',
+                            html.Span(
+                                id='ssim-value',
+                            ),
+                        ],
+                    ),
                     html.H4('Parameters for SSIM'),
                     html.A(
                         'What is SSIM?',
@@ -134,11 +159,12 @@ def layout():
     Output('slider-nii', 'value'),
     Input('url', 'pathname'),
 )
-def bind_components(pathname):
+def bind_components(_):
     id1 = request.referrer.split('id1=')[1].split('&')[0]
     id2 = request.referrer.split('id2=')[1]
 
-    _, _, size = get_processed_data_from_niftis(id1, id2, 0, 'x')
+    # TODO : lot of data processing here, should be done in a better way
+    _, _, size, _, _ = get_processed_data_from_niftis(id1, id2, 0, 'x')
 
     return (
         0,
@@ -155,6 +181,9 @@ def bind_components(pathname):
     Output('slider-nii', 'max', allow_duplicate=True),
     Output('slider-nii', 'value', allow_duplicate=True),
     Output('parameters-ssim', 'style'),
+    Output('ssim-value', 'children'),
+    Output('psnr-image-value', 'children'),
+    Output('psnr-slice-value', 'children'),
     Input('slider-nii', 'value'),
     Input('axes-nii', 'value'),
     Input('mode-nii-11', 'value'),
@@ -167,18 +196,18 @@ def show_frames(slider_value, axe, mode, k1, k2, sigma):
     id1 = request.referrer.split('id1=')[1].split('&')[0]
     id2 = request.referrer.split('id2=')[1]
 
-    img_rgb1, img_rgb2, max_slider = get_processed_data_from_niftis(id1, id2, slider_value, axe)
+    img_rgb1, img_rgb2, max_slider, vol1, vol2 = get_processed_data_from_niftis(id1, id2, slider_value, axe)
+    value = 0
 
     if mode == 'pixel':
         img_mask3 = build_difference_image(img_rgb1, img_rgb2)
         style = {'display': 'none'}
     else:
-        img_mask3 = build_difference_image_ssim(img_rgb1, img_rgb2, k1, k2, sigma)
+        img_mask3, value = build_difference_image_ssim(img_rgb1, img_rgb2, k1, k2, sigma)
         style = {'display': 'block'}
 
     if slider_value > max_slider:
         slider_value = max_slider
-    print("end show_frames")
     return (
         px.imshow(img_rgb1, color_continuous_scale='gray'),
         px.imshow(img_mask3),
@@ -187,33 +216,7 @@ def show_frames(slider_value, axe, mode, k1, k2, sigma):
         max_slider,
         slider_value,
         style,
+        value,
+        compute_psnr(vol1, vol2),
+        compute_psnr(vol1[slider_value, :, :], vol2[slider_value, :, :]),
     )
-
-
-def get_processed_data_from_niftis(id1, id2, slider_value, axe):
-    data1 = "src/tmp/user_compare/" + id1 + ".nii"
-    data2 = "src/tmp/user_compare/" + id2 + ".nii"
-
-    vol1 = imageio.volread(data1)
-    vol2 = imageio.volread(data2)
-    max_vol1 = np.max(vol1)
-    max_vol2 = np.max(vol2)
-
-    # build an image using the slider value
-    if axe == 'z':
-        img_mask1 = vol1[slider_value, :, :]
-        img_mask2 = vol2[slider_value, :, :]
-    elif axe == 'y':
-        img_mask1 = vol1[:, slider_value, :]
-        img_mask2 = vol2[:, slider_value, :]
-    else:
-        img_mask1 = vol1[:, :, slider_value]
-        img_mask2 = vol2[:, :, slider_value]
-
-    axe_index = 2
-    if axe == 'y':
-        axe_index = 1
-    elif axe == 'z':
-        axe_index = 0
-
-    return img_mask1, img_mask2, vol1.shape[axe_index]

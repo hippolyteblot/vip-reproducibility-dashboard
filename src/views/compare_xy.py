@@ -138,6 +138,10 @@ def update_chart(file1, file2, aggregate1, aggregate2, normalization):
         file2 = file2 if file2 else get_files_in_folder(id2)[0]
         data2 = read_file_in_folder(id2, file2)
 
+    # delete metabolites water1, water2, water3
+    data1 = data1[~data1['Metabolite'].str.contains('water')]
+    data2 = data2[~data2['Metabolite'].str.contains('water')]
+
     data1['Amplitude'] = data1['Amplitude'].apply(lambda x: float(x))
     data2['Amplitude'] = data2['Amplitude'].apply(lambda x: float(x))
     data1['File'] = 'File 1'

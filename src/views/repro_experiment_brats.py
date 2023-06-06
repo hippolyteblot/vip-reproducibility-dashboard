@@ -1,17 +1,10 @@
-from dash import html, callback, Input, Output, State, dcc
 import dash_bootstrap_components as dbc
+import pandas as pd
 import plotly.express as px
+from dash import html, callback, Input, Output, dcc
 from flask import request
 
-from models.reproduce import get_prebuilt_data, get_parameters_for_spectro, get_global_brats_experiment_data, \
-    download_brats_file
-
-# Todo : Optimize data loading (dont load data when the server starts)
-data = get_prebuilt_data()
-metabolites, _, _ = get_parameters_for_spectro(data)
-
-
-# Voxels values are converted to string to avoid Dash to use a gradient color scale
+from models.reproduce import get_global_brats_experiment_data, download_brats_file
 
 
 def layout():
@@ -40,7 +33,20 @@ def layout():
                             ),
 
                             dbc.Col(
-
+                                children=[
+                                    html.H4('Normalization'),
+                                    dcc.RadioItems(
+                                        id='normalization-brats-exp',
+                                        options=[
+                                            {'label': 'No', 'value': False},
+                                            {'label': 'Yes', 'value': True},
+                                        ],
+                                        value=False,
+                                        labelStyle={'display': 'block'},
+                                    ),
+                                ],
+                                width=3,
+                                className='card-body',
                             ),
                         ],
                         className='card',
@@ -167,39 +173,58 @@ def toggle_modal(n1, n2):
     Output('file-brats-exp', 'options'),
     Input('general-chart-brats-exp', 'figure'),
     Input('file-brats-exp', 'value'),
+    Input('normalization-brats-exp', 'value'),
 )
-def update_chart(pathname, file):
+def update_chart(_, file, normalization):
     exec_id = int(request.referrer.split('?')[1].split('=')[1])
 
     if file == 'All':
         experiment_data, files = get_global_brats_experiment_data(exec_id)
     else:
         experiment_data, files = get_global_brats_experiment_data(exec_id, file=file)
+    # Delete row beginning with T1CE
+    experiment_data = experiment_data[~experiment_data['File'].str.contains('T1CE')]
+
+    # put in first row where File contains raw, after rai, after SRI, after SRI_brain
+    sorted_experiments = pd.DataFrame()
+    # check each row of experiment_data
+    for index, row in experiment_data.iterrows():
+        # check if File contains raw
+        if 'T1_raw.nii.gz' in row['File']:
+            sorted_experiments = sorted_experiments.append(row)
+            experiment_data = experiment_data.drop(index)
+    # check each row of experiment_data
+    for index, row in experiment_data.iterrows():
+        # check if File contains rai
+        if 'T1_rai.nii.gz' in row['File']:
+            sorted_experiments = sorted_experiments.append(row)
+            experiment_data = experiment_data.drop(index)
+    # check each row of experiment_data
+    for index, row in experiment_data.iterrows():
+        # check if File contains rai
+        if 'T1_rai_n4.nii.gz' in row['File']:
+            sorted_experiments = sorted_experiments.append(row)
+            experiment_data = experiment_data.drop(index)
+    # check each row of experiment_data
+    for index, row in experiment_data.iterrows():
+        # check if File contains SRI
+        if 'T1_to_SRI.nii.gz' in row['File']:
+            sorted_experiments = sorted_experiments.append(row)
+            experiment_data = experiment_data.drop(index)
+    for index, row in experiment_data.iterrows():
+        # check if File contains SRI
+        if 'T1_to_SRI_brain.nii.gz' in row['File']:
+            sorted_experiments = sorted_experiments.append(row)
+            experiment_data = experiment_data.drop(index)
 
     files = [file for file in files]
     files.insert(0, 'All')
 
-    # keep only the patient_id UPENN-GBM-00019
-    # experiment_data = experiment_data[experiment_data['Patient_id'] == 'UPENN-GBM-00019']
-
-    # normalize sigdig_mean by File_type and Patient_id
-    """for file_type in experiment_data['File_type'].unique():
-        for patient in experiment_data['Patient_id'].unique():
-            mean = \
-                experiment_data[
-                    (experiment_data['File_type'] == file_type) & (experiment_data['Patient_id'] == patient)][
-                    'Sigdig_mean'].mean()
-            experiment_data.loc[(experiment_data['File_type'] == file_type) & (
-                    experiment_data['Patient_id'] == patient), 'Sigdig_mean'] = \
-                experiment_data[
-                    (experiment_data['File_type'] == file_type) & (experiment_data['Patient_id'] == patient)][
-                    'Sigdig_mean'] / mean
-    """
-    figure = px.box(experiment_data, x="File_type", y="Sigdig_mean",
+    figure = px.box(sorted_experiments, x="File", y="Sigdig_mean",
                     title="Significant digits mean per file")
     figure.update_layout(
         xaxis_title="Patient",
-        yaxis_title="Normalized significant digits mean",
+        yaxis_title="Significant digits mean",
         legend_title="Patient",
     )
     return figure, [{'label': file, 'value': file} for file in files]
@@ -219,15 +244,15 @@ def update_chart(click_data):
     if click_data is None:
         return {}
     else:
-        file_type = click_data['points'][0]['x']
+        file = click_data['points'][0]['x']
         exec_id = int(request.referrer.split('?')[1].split('=')[1])
         experiment_data, files = get_global_brats_experiment_data(exec_id)
-        experiment_data = experiment_data[experiment_data['File_type'] == file_type]
+        experiment_data = experiment_data[experiment_data['File'] == file]
         experiment_data = experiment_data.sort_values(by=['Execution'])
         # scatter where index is used as x and y is the significant digits mean
         figure = px.box(experiment_data, x=experiment_data["Execution"], y="Sigdig_mean",
-                            title="Significant digits mean for file " + file_type,
-                            hover_data=['Patient_id'])
+                        title="Significant digits mean for file " + file,
+                        hover_data=['Patient_id'])
         figure.update_layout(
             xaxis_title="Execution",
             yaxis_title="Significant digits",
@@ -242,7 +267,7 @@ def update_chart(click_data):
                     dcc.RadioItems(
                         id="file-1-brats-exp",
                         options=[
-                            {'label': "File " + str(i), 'value': i + "/-/" + str(file_type)}
+                            {'label': "File " + str(i), 'value': i + "/-/" + str(file)}
                             for i in experiment_data['Execution']
                         ],
                     ),
@@ -255,7 +280,7 @@ def update_chart(click_data):
                     dcc.RadioItems(
                         id="file-2-brats-exp",
                         options=[
-                            {'label': "File " + str(i), 'value': i + "/-/" + str(file_type)}
+                            {'label': "File " + str(i), 'value': i + "/-/" + str(file)}
                             for i in experiment_data['Execution']
                         ],
                     ),
@@ -264,7 +289,7 @@ def update_chart(click_data):
             ),
         ]
 
-        return figure, possible_files, file_type, {'display': 'block'}, {'display': 'block'}
+        return figure, possible_files, file, {'display': 'block'}, {'display': 'block'}
 
 
 @callback(
@@ -278,9 +303,9 @@ def update_compare_link(file_1, file_2):
         return ""
     execution_number_1 = file_1.split('/-/')[0]
     execution_number_2 = file_2.split('/-/')[0]
-    file_type = file_1.split('/-/')[1]
+    file = file_1.split('/-/')[1]
     patient_id = file_1.split('/-/')[2]
     experiment_id = int(request.referrer.split('?')[1].split('=')[1])
-    md5_1 = download_brats_file(execution_number_1, file_type, patient_id, experiment_id)
-    md5_2 = download_brats_file(execution_number_2, file_type, patient_id, experiment_id)
+    md5_1 = download_brats_file(execution_number_1, file, patient_id, experiment_id)
+    md5_2 = download_brats_file(execution_number_2, file, patient_id, experiment_id)
     return "/compare-nii-11?id1=" + md5_1 + "&id2=" + md5_2

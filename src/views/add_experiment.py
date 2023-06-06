@@ -28,6 +28,23 @@ def layout():
                         children=[
                             dbc.Col(
                                 children=[
+                                    html.Label('Experiment name'),
+                                    dbc.Input(
+                                        id='experiment',
+                                        type='text',
+                                        placeholder='Experiment',
+                                        style={'width': '100%'},
+                                    ),
+                                ],
+                            ),
+                        ],
+                        className='card-body',
+                        style={'justifyContent': 'center', 'gap': '10px'},
+                    ),
+                    dbc.Row(
+                        children=[
+                            dbc.Col(
+                                children=[
                                     html.Label('Application'),
                                     dbc.Select(
                                         id='application',
@@ -62,14 +79,7 @@ def layout():
                                     ),
 
                                 ],
-
                             ),
-                        ],
-                        className='card-body',
-                        style={'justifyContent': 'center', 'gap': '10px'},
-                    ),
-                    dbc.Row(
-                        children=[
                             dbc.Col(
                                 children=[
                                     html.Label('Inputs directory (on girder)'),
@@ -93,61 +103,60 @@ def layout():
                                         placeholder='Fileset directory label',
                                         style={'width': '100%'},
                                         disabled=True,
-                                    )
-                                ],
-                            ),
-                            dbc.Modal(
-                                [
-                                    dbc.ModalHeader('Girder directory'),
-                                    dbc.ModalBody(
-                                        children=[
-                                            dbc.Row(
-                                                id='girder-path',
-                                                children='source_folder',
-                                                style={'fontWeight': 'bold', 'padding': '10px'},
+                                    ),
+                                    dbc.Modal(
+                                        [
+                                            dbc.ModalHeader('Girder directory'),
+                                            dbc.ModalBody(
+                                                children=[
+                                                    dbc.Row(
+                                                        id='girder-path',
+                                                        children='source_folder',
+                                                        style={'fontWeight': 'bold', 'padding': '10px'},
+                                                    ),
+                                                    dbc.Row(
+                                                        id='girder-id-path',
+                                                        children='63b6e2d34d15dd536f0484c3',
+                                                        style={'display': 'none'},
+                                                    ),
+                                                    dbc.RadioItems(
+                                                        id='selected-option',
+                                                        options=[]
+                                                    ),
+                                                ],
+                                                id='select-fileset-directory-modal-body',
                                             ),
-                                            dbc.Row(
-                                                id='girder-id-path',
-                                                children='63b6e2d34d15dd536f0484c3',
-                                                style={'display': 'none'},
+                                            html.Div(
+                                                children=[],
+                                                id='container',
                                             ),
-                                            dbc.RadioItems(
-                                                id='selected-option',
-                                                options=[]
+                                            dbc.ModalFooter(
+                                                children=[
+                                                    dbc.Button(
+                                                        'Back',
+                                                        id='parent-folder-btn',
+                                                        className='mr-auto',
+                                                        color='danger',
+                                                    ),
+                                                    dbc.Button(
+                                                        'Open',
+                                                        id='open-folder-btn',
+                                                        className='mr-auto',
+                                                    ),
+                                                    dbc.Button(
+                                                        'Choose',
+                                                        id='choose-folder-btn',
+                                                        className='mr-auto',
+                                                        color='success',
+                                                    ),
+                                                ],
                                             ),
                                         ],
-                                        id='select-fileset-directory-modal-body',
-                                    ),
-                                    html.Div(
-                                        children=[],
-                                        id='container',
-                                    ),
-                                    dbc.ModalFooter(
-                                        children=[
-                                            dbc.Button(
-                                                'Back',
-                                                id='parent-folder-btn',
-                                                className='mr-auto',
-                                                color='danger',
-                                            ),
-                                            dbc.Button(
-                                                'Open',
-                                                id='open-folder-btn',
-                                                className='mr-auto',
-                                            ),
-                                            dbc.Button(
-                                                'Choose',
-                                                id='choose-folder-btn',
-                                                className='mr-auto',
-                                                color='success',
-                                            ),
-                                        ],
+                                        id='select-fileset-directory-modal',
+                                        size='lg',
                                     ),
                                 ],
-                                id='select-fileset-directory-modal',
-                                size='lg',
                             ),
-
                         ],
                         className='card-body',
                         style={'justifyContent': 'center', 'gap': '10px'},
@@ -164,34 +173,12 @@ def layout():
                                     ),
                                 ],
                             ),
-                            dbc.Col(
-                                children=[
-                                    html.Label('Results directory'),
-                                    dbc.Input(
-                                        id='results-dir',
-                                        type='text',
-                                        placeholder='Results directory',
-                                        style={'width': '100%'},
-                                    ),
-                                ],
-                            ),
                         ],
                         className='card-body',
                         style={'justifyContent': 'center', 'gap': '10px'},
                     ),
                     dbc.Row(
                         children=[
-                            dbc.Col(
-                                children=[
-                                    html.Label('Experiment'),
-                                    dbc.Input(
-                                        id='experiment',
-                                        type='text',
-                                        placeholder='Experiment',
-                                        style={'width': '100%'},
-                                    ),
-                                ],
-                            ),
                             dbc.Col(
                                 children=[
                                     html.Label('Number of reminders'),
@@ -203,12 +190,6 @@ def layout():
                                     ),
                                 ],
                             ),
-                        ],
-                        className='card-body',
-                        style={'justifyContent': 'center', 'gap': '10px'},
-                    ),
-                    dbc.Row(
-                        children=[
                             dbc.Col(
                                 children=[
                                     html.Label('Launch frequency'),
@@ -220,19 +201,11 @@ def layout():
                                     ),
                                 ],
                             ),
-                            dbc.Col(
-                                children=[
-                                    html.Label('Single run'),
-                                    dbc.Checkbox(
-                                        id='single-run',
-                                        style={'width': '100%'},
-                                    ),
-                                ],
-                            ),
                         ],
                         className='card-body',
                         style={'justifyContent': 'center', 'gap': '10px'},
                     ),
+
                     dbc.Row(
                         children=[
                             dbc.Button(
@@ -358,23 +331,20 @@ def get_dir_options(location_id=None):
     State('version', 'value'),
     State('input-to-vary', 'value'),
     State('parameters', 'value'),
-    State('results-dir', 'value'),
     State('experiment', 'value'),
     State('number-of-reminders', 'value'),
     State('launch-frequency', 'value'),
-    State('single-run', 'value'),
 )
-def add_experiment(n_clicks, application, version, input_to_vary, parameters, results_dir, experiment,
-                   number_of_reminders, launch_frequency, single_run):
+def add_experiment(n_clicks, application, version, input_to_vary, parameters, experiment,
+                   number_of_reminders, launch_frequency):
     if n_clicks is None:
         return '', ''
     elif not application or not version or not parameters or \
-            not results_dir or not experiment or not number_of_reminders or not launch_frequency:
+            not experiment or not number_of_reminders or not launch_frequency:
         return 'Please fill all the fields', 'alert alert-danger'
-    if single_run is None:
-        single_run = False
+    single_run = False
     alert, alert_type, _ = add_experiment_to_db(application, version, input_to_vary, "a enlever", parameters,
-                                                results_dir, experiment, number_of_reminders, launch_frequency,
+                                                "undefined", experiment, number_of_reminders, launch_frequency,
                                                 single_run)
     return alert, 'alert ' + alert_type
 

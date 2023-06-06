@@ -1,6 +1,8 @@
 import base64
 import gzip
+import math
 import shutil
+from math import log10, sqrt
 from time import sleep
 
 import imageio
@@ -207,41 +209,8 @@ def read_nii_file(file):
     pass
 
 
-def get_processed_data_from_niftis(id1, id2, slider_value, axe):
-    data1 = "src/tmp/user_compare/" + id1 + ".nii"
-    data2 = "src/tmp/user_compare/" + id2 + ".nii"
-
-    vol1 = imageio.volread(data1)
-    vol2 = imageio.volread(data2)
-    max_vol1 = np.max(vol1)
-    max_vol2 = np.max(vol2)
-
-    # build an image using the slider value
-    if axe == 'z':
-        img_mask1 = vol1[slider_value, :, :]
-        img_mask2 = vol2[slider_value, 3:, 5:]
-    elif axe == 'y':
-        img_mask1 = vol1[:, slider_value, :]
-        img_mask2 = vol2[4:, slider_value, 5:]
-    else:
-        img_mask1 = vol1[:, :, slider_value]
-        img_mask2 = vol2[4:, 3:, slider_value]
-
-    img_rgb1 = np.stack([img_mask1 / max_vol1, img_mask1 / max_vol1, img_mask1 / max_vol1], axis=-1)
-    img_rgb2 = np.stack([img_mask2 / max_vol2, img_mask2 / max_vol2, img_mask2 / max_vol2], axis=-1)
-
-    axe_index = 2
-    if axe == 'y':
-        axe_index = 1
-    elif axe == 'z':
-        axe_index = 0
-
-    return img_rgb1, img_rgb2, vol1.shape[axe_index]
-
-
 def get_processed_data_from_niftis_folder(folder_id, slider_value, axe, only_mask):
     """Get the data from the niftis folder"""
-    print("Start")
     path = os.path.join("src", "tmp", "user_compare", str(folder_id))
     files = os.listdir(path)
 
@@ -278,7 +247,6 @@ def get_processed_data_from_niftis_folder(folder_id, slider_value, axe, only_mas
             max_value = tmp_max
         data.append(img_mask)
 
-    print("max value: ", max_value)
     # new frame is the mean of all the pixel of the loaded niftis
     new_frame = np.mean(data, axis=0)
     # convert to rgb
@@ -308,7 +276,6 @@ def get_processed_data_from_niftis_folder(folder_id, slider_value, axe, only_mas
 
     img_rgb = np.clip(img_rgb, 0, 255)
 
-    print("End")
     return img_rgb, max_vol
 
 
@@ -347,22 +314,21 @@ def get_global_brats_experiment_data(experiment_id, file=None):
 
     # finally, read the data from the file
     data = pd.read_feather(path)
-    files = data['File_type'].unique()
+    files = data['File'].unique()
     if file is not None:
-        data = data[data['File_type'] == file]
+        data = data[data['File'] == file]
 
     return data, files
 
 
-def download_brats_file(execution_number, file_type, patient_id, experiment_id):
+def download_brats_file(execution_number, File, patient_id, experiment_id):
     # This function finds in the database the girder_id of the file to download
     # and downloads it in the tmp folder
     query = "SELECT id FROM workflow WHERE experiment_id = %s and timestamp = %s"
     workflow_id = DB.fetch_one(query, (experiment_id, execution_number))['id']
-    print("SELECT girder_id FROM output WHERE workflow_id = ", workflow_id, " AND name = ", patient_id)
     query = "SELECT girder_id FROM output WHERE workflow_id = %s AND name = %s"
     girder_id = DB.fetch_one(query, (workflow_id, patient_id))['girder_id']
-    path = GVC.download_file_by_name(girder_id, file_type + ".nii.gz")
+    path = GVC.download_file_by_name(girder_id, File + ".nii.gz")
     while not os.path.exists(path):
         sleep(0.01)
 
@@ -373,7 +339,6 @@ def download_brats_file(execution_number, file_type, patient_id, experiment_id):
     data = base64.b64encode(data).decode('utf-8')
 
     md5 = save_file_for_comparison(data, patient_id + ".nii.gz")
-    print("md5: ", md5)
     return md5
 
 
@@ -384,12 +349,11 @@ def build_difference_image_ssim(img1, img2, k1=0.01, k2=0.03, sigma=1.5):
     diff = (diff * 255).astype("uint8")
 
     heatmap = cv2.applyColorMap(diff, cv2.COLORMAP_JET)
-    print("SSIM: {}".format(score))
 
     # convert to grayscale
     heatmap = cv2.cvtColor(heatmap, cv2.COLOR_BGR2GRAY)
 
-    return heatmap
+    return heatmap, score
 
 
 def get_metadata_cquest(exp_id):
@@ -412,3 +376,46 @@ def get_metadata_cquest(exp_id):
         metadata.append({'input_name': output['input_name'], 'output_name': output['output_name'],
                          'count': output['count']})
     return metadata
+
+
+def get_experiment_name(exp_id):
+    query = "SELECT name FROM experiment WHERE id = %s"
+    return DB.fetch_one(query, (exp_id,))['name']
+
+
+def compute_psnr(array1, array2):
+    img1 = array1.astype(np.float64) / 255.
+    img2 = array2.astype(np.float64) / 255.
+    mse = np.mean((img1 - img2) ** 2)
+    if mse == 0:
+        return "Infinite"
+    return 10 * math.log10(1. / mse)
+
+
+def get_processed_data_from_niftis(id1, id2, slider_value, axe):
+    data1 = "src/tmp/user_compare/" + id1 + ".nii"
+    data2 = "src/tmp/user_compare/" + id2 + ".nii"
+
+    vol1 = imageio.volread(data1)
+    vol2 = imageio.volread(data2)
+    max_vol1 = np.max(vol1)
+    max_vol2 = np.max(vol2)
+
+    # build an image using the slider value
+    if axe == 'z':
+        img_mask1 = vol1[slider_value, :, :]
+        img_mask2 = vol2[slider_value, :, :]
+    elif axe == 'y':
+        img_mask1 = vol1[:, slider_value, :]
+        img_mask2 = vol2[:, slider_value, :]
+    else:
+        img_mask1 = vol1[:, :, slider_value]
+        img_mask2 = vol2[:, :, slider_value]
+
+    axe_index = 2
+    if axe == 'y':
+        axe_index = 1
+    elif axe == 'z':
+        axe_index = 0
+
+    return img_mask1, img_mask2, vol1.shape[axe_index], vol1, vol2
