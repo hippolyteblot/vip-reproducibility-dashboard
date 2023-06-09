@@ -4,8 +4,8 @@ from dash import html, callback, Input, Output, dcc, State
 from flask import request
 from flask_login import current_user
 
-from models.reproduce import get_parameters_for_spectro, get_prebuilt_data, get_wf_data, get_metadata_cquest, \
-    get_experiment_data, get_experiment_name
+from models.cquest_utils import get_cquest_experiment_data, get_metadata_cquest
+from models.reproduce import get_experiment_name
 
 
 def layout():
@@ -151,7 +151,7 @@ def layout():
 )
 def update_dropdowns(_, metabolite_name, signal_selected, workflow_selected):
     wf_id = int(request.referrer.split('?')[1].split('=')[1])
-    wf_data = get_experiment_data(wf_id)
+    wf_data = get_cquest_experiment_data(wf_id)
     metabolites = wf_data['Metabolite'].unique()
     # delete water from metabolites
     metabolites = [metabolite for metabolite in metabolites if 'water' not in metabolite]
@@ -221,7 +221,7 @@ def update_chart(metabolite, signal, workflow, normalization):
     # Get the query string from the url and get the execution id
     wf_id = int(request.referrer.split('?')[1].split('=')[1])
     # exec_data = get_data_from_girder(wf_id, user_id)
-    wf_data = get_experiment_data(wf_id)
+    wf_data = get_cquest_experiment_data(wf_id)
     # sort by metabolite
     wf_data = wf_data.sort_values(by=['Metabolite'])
 

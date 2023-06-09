@@ -2,9 +2,8 @@ from dash import html, callback, Input, Output, dcc
 import dash_bootstrap_components as dbc
 import plotly.express as px
 from flask import request
-from flask_login import current_user
 
-from models.reproduce import read_file
+from models.cquest_utils import read_cquest_file
 
 
 def layout():
@@ -61,8 +60,8 @@ def layout():
 def bind_charts(pathname, normalization):
     id1 = request.referrer.split('id1=')[1].split('&')[0]
     id2 = request.referrer.split('id2=')[1]
-    data1 = read_file(id1)
-    data2 = read_file(id2)
+    data1 = read_cquest_file(id1)
+    data2 = read_cquest_file(id2)
     # delete metabolites water1, water2, water3
     data1 = data1[~data1['Metabolite'].str.contains('water')]
     data2 = data2[~data2['Metabolite'].str.contains('water')]

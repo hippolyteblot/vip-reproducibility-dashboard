@@ -4,7 +4,7 @@ import plotly.express as px
 from dash import html, callback, Input, Output, dcc
 from flask import request
 
-from models.reproduce import get_global_brats_experiment_data, download_brats_file
+from models.brats_utils import get_global_brats_experiment_data, download_brats_file
 
 
 def layout():

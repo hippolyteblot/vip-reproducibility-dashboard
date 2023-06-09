@@ -3,12 +3,6 @@ import dash_bootstrap_components as dbc
 import plotly.express as px
 from flask import request
 
-from models.reproduce import get_prebuilt_data, get_parameters_for_spectro, get_experiment_data
-
-# Todo : Optimize data loading (dont load data when the server starts)
-data = get_prebuilt_data()
-metabolites, _, _ = get_parameters_for_spectro(data)
-# Voxels values are converted to string to avoid Dash to use a gradient color scale
 
 
 def layout():
@@ -26,8 +20,6 @@ def layout():
                                     dcc.Dropdown(
                                         id='metabolite-name',
                                         options=[
-                                            {'label': metabolite.get('label'), 'value': metabolite.get('value')}
-                                            for metabolite in metabolites
                                         ],
                                         value='All',
                                         clearable=False,
@@ -88,7 +80,8 @@ def layout():
 )
 def update_chart(metabolite, graph_type):
     exec_id = int(request.referrer.split('?')[1].split('=')[1])
-    experiment_data = get_experiment_data(exec_id)
+    #experiment_data = get_cquest_experiment_data(exec_id)
+    experiment_data = None
 
     # get only the data of the metabolite
     if metabolite != 'All':

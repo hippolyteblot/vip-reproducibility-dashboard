@@ -4,7 +4,7 @@ import plotly.express as px
 from flask import request
 from flask_login import current_user
 
-from models.reproduce import get_files_in_folder, read_file_in_folder, read_folder
+from models.cquest_utils import get_txt_files_in_folder, read_cquest_file_in_folder, read_cquest_folder
 
 
 def layout():
@@ -106,8 +106,8 @@ def layout():
 def bind_selects(pathname):
     id1 = request.referrer.split('id1=')[1].split('&')[0]
     id2 = request.referrer.split('id2=')[1]
-    files1 = get_files_in_folder(id1)
-    files2 = get_files_in_folder(id2)
+    files1 = get_txt_files_in_folder(id1)
+    files2 = get_txt_files_in_folder(id2)
     return [{'label': file, 'value': file} for file in files1], [{'label': file, 'value': file} for file in files2], \
         files1[0], files2[0]
 
@@ -128,15 +128,15 @@ def update_chart(file1, file2, aggregate1, aggregate2, normalization):
     id2 = request.referrer.split('id2=')[1]
 
     if aggregate1:
-        data1 = read_folder(id1)
+        data1 = read_cquest_folder(id1)
     else:
-        file1 = file1 if file1 else get_files_in_folder(id1)[0]
-        data1 = read_file_in_folder(id1, file1)
+        file1 = file1 if file1 else get_txt_files_in_folder(id1)[0]
+        data1 = read_cquest_file_in_folder(id1, file1)
     if aggregate2:
-        data2 = read_folder(id2)
+        data2 = read_cquest_folder(id2)
     else:
-        file2 = file2 if file2 else get_files_in_folder(id2)[0]
-        data2 = read_file_in_folder(id2, file2)
+        file2 = file2 if file2 else get_txt_files_in_folder(id2)[0]
+        data2 = read_cquest_file_in_folder(id2, file2)
 
     # delete metabolites water1, water2, water3
     data1 = data1[~data1['Metabolite'].str.contains('water')]

@@ -1,13 +1,13 @@
 import pandas as pd
 
-from models.reproduce import get_data_from_girder, get_parameters_for_spectro
+from models.reproduce import get_cquest_data_from_girder, get_parameters_for_spectro
 from utils.settings import GVC
 
 
 def test_get_data_from_girder():
     execution_id = "42"
     user_id = "1"
-    data = get_data_from_girder(execution_id, user_id)
+    data = get_cquest_data_from_girder(execution_id, user_id)
     assert isinstance(data, pd.DataFrame)
     assert data["Amplitude"].dtype == float
     assert data["SD"].dtype == float

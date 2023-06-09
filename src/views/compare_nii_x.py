@@ -4,10 +4,8 @@ from dash import html, callback, Input, Output, dcc
 import dash_bootstrap_components as dbc
 import plotly.express as px
 from flask import request
-from flask_login import current_user
 
-from models.reproduce import read_file, get_processed_data_from_niftis_folder, get_processed_data_from_niftis, \
-    get_processed_data_from_niftis_folder, build_difference_image
+from models.brats_utils import get_processed_data_from_niftis_folder
 
 
 def layout():

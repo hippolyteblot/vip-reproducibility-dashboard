@@ -5,8 +5,8 @@ import dash_bootstrap_components as dbc
 import plotly.express as px
 from flask import request
 
-from models.reproduce import build_difference_image, build_difference_image_ssim, compute_psnr, \
-    get_processed_data_from_niftis
+from models.brats_utils import get_processed_data_from_niftis, build_difference_image, build_difference_image_ssim, \
+    compute_psnr
 
 
 def layout():
