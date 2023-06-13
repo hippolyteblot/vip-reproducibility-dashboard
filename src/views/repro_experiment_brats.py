@@ -183,45 +183,46 @@ def update_chart(_, file, normalization):
     else:
         experiment_data, files = get_global_brats_experiment_data(exec_id, file=file)
     # Delete row beginning with T1CE
+    print("before")
     experiment_data = experiment_data[~experiment_data['File'].str.contains('T1CE')]
-
+    print("after")
     # put in first row where File contains raw, after rai, after SRI, after SRI_brain
     sorted_experiments = pd.DataFrame()
     # check each row of experiment_data
     for index, row in experiment_data.iterrows():
         # check if File contains raw
-        if 'T1_raw.nii.gz' in row['File']:
+        if '_raw.nii.gz' in row['File']:
             sorted_experiments = sorted_experiments.append(row)
             experiment_data = experiment_data.drop(index)
     # check each row of experiment_data
     for index, row in experiment_data.iterrows():
         # check if File contains rai
-        if 'T1_rai.nii.gz' in row['File']:
+        if '_rai.nii.gz' in row['File']:
             sorted_experiments = sorted_experiments.append(row)
             experiment_data = experiment_data.drop(index)
     # check each row of experiment_data
     for index, row in experiment_data.iterrows():
         # check if File contains rai
-        if 'T1_rai_n4.nii.gz' in row['File']:
+        if '_rai_n4.nii.gz' in row['File']:
             sorted_experiments = sorted_experiments.append(row)
             experiment_data = experiment_data.drop(index)
     # check each row of experiment_data
     for index, row in experiment_data.iterrows():
         # check if File contains SRI
-        if 'T1_to_SRI.nii.gz' in row['File']:
+        if '_to_SRI.nii.gz' in row['File']:
             sorted_experiments = sorted_experiments.append(row)
             experiment_data = experiment_data.drop(index)
     for index, row in experiment_data.iterrows():
         # check if File contains SRI
-        if 'T1_to_SRI_brain.nii.gz' in row['File']:
+        if '_to_SRI_brain.nii.gz' in row['File']:
             sorted_experiments = sorted_experiments.append(row)
             experiment_data = experiment_data.drop(index)
 
     files = [file for file in files]
     files.insert(0, 'All')
 
-    figure = px.box(sorted_experiments, x="File", y="Sigdig_mean",
-                    title="Significant digits mean per file")
+    figure = px.box(sorted_experiments, x="File", y="Mean_sigdigits",
+                    title="Significant digits mean per file", points="all")
     figure.update_layout(
         xaxis_title="Patient",
         yaxis_title="Significant digits mean",
@@ -229,67 +230,6 @@ def update_chart(_, file, normalization):
     )
     return figure, [{'label': file, 'value': file} for file in files]
 
-
-# callback when clicking on a boxplot
-@callback(
-    Output('specific-file-chart-brats-exp', 'figure'),
-    Output('possible-files-brats-exp', 'children'),
-    Output('file-type-brats-exp', 'children'),
-    Output('modal-brats-exp-container', 'style'),
-    Output('specific-file-chart-brats-exp', 'style'),
-    Input('general-chart-brats-exp', 'clickData'),
-    prevent_initial_call=True,
-)
-def update_chart(click_data):
-    if click_data is None:
-        return {}
-    else:
-        file = click_data['points'][0]['x']
-        exec_id = int(request.referrer.split('?')[1].split('=')[1])
-        experiment_data, files = get_global_brats_experiment_data(exec_id)
-        experiment_data = experiment_data[experiment_data['File'] == file]
-        experiment_data = experiment_data.sort_values(by=['Execution'])
-        # scatter where index is used as x and y is the significant digits mean
-        figure = px.box(experiment_data, x=experiment_data["Execution"], y="Sigdig_mean",
-                        title="Significant digits mean for file " + file,
-                        hover_data=['Patient_id'])
-        figure.update_layout(
-            xaxis_title="Execution",
-            yaxis_title="Significant digits",
-            legend_title="Patient",
-        )
-
-        # possible_files is juste file_1, file_2, file_3, ...
-        possible_files = [
-            html.Div(
-                children=[
-                    html.H5("File 1"),
-                    dcc.RadioItems(
-                        id="file-1-brats-exp",
-                        options=[
-                            {'label': "File " + str(i), 'value': i + "/-/" + str(file)}
-                            for i in experiment_data['Execution']
-                        ],
-                    ),
-                ],
-                className='card-body',
-            ),
-            html.Div(
-                children=[
-                    html.H5("File 2"),
-                    dcc.RadioItems(
-                        id="file-2-brats-exp",
-                        options=[
-                            {'label': "File " + str(i), 'value': i + "/-/" + str(file)}
-                            for i in experiment_data['Execution']
-                        ],
-                    ),
-                ],
-                className='card-body',
-            ),
-        ]
-
-        return figure, possible_files, file, {'display': 'block'}, {'display': 'block'}
 
 
 @callback(

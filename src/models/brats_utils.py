@@ -56,7 +56,6 @@ def get_processed_data_from_niftis_folder(folder_id, slider_value, axe, only_mas
     # new frame is the mean of all the pixel of the loaded niftis
     new_frame = np.mean(data, axis=0)
     # convert to rgb
-
     img_rgb = np.stack([(new_frame / max_value) * 255, (new_frame / max_value) * 255, (new_frame / max_value) * 255],
                        axis=-1)
 

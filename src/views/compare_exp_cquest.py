@@ -5,12 +5,21 @@ import plotly.express as px
 from flask import request
 
 from models.cquest_utils import get_cquest_experiment_data
+from models.reproduce import get_experiment_name
 
 
 def layout():
     return html.Div(
         [
-            html.H2('Reproduce an experiment'),
+            html.H2(
+                children=[
+                    'Compare experiments : ',
+                    html.Span(id='experiment1-name-compare', style={'color': 'blue'}),
+                    ' and ',
+                    html.Span(id='experiment2-name-compare', style={'color': 'blue'}),
+                ]
+            ),
+
             # Parameter menu
             html.Div(
                 children=[
@@ -106,12 +115,15 @@ def layout():
     Output('metabolite-name-bland-altman', 'value'),
     Output('signal-selected-bland-altman', 'options'),
     Output('signal-selected-bland-altman', 'value'),
+    Output('experiment1-name-compare', 'children'),
+    Output('experiment2-name-compare', 'children'),
     Input('graph-type-repro-bland-altman', 'value'),
     Input('metabolite-name-bland-altman', 'value'),
     Input('signal-selected-bland-altman', 'value'),
 )
 def update_metabolite_name_bland_altman(graph, metabolite_name, signal_selected):
     exec_id_1 = int(request.referrer.split('?')[1].split('=')[1].split('&')[0])
+    exec_id_2 = int(request.referrer.split('?')[1].split('=')[2])
     experiment_data_1 = get_cquest_experiment_data(exec_id_1)
 
     metabolites = experiment_data_1['Metabolite'].unique()
@@ -138,7 +150,7 @@ def update_metabolite_name_bland_altman(graph, metabolite_name, signal_selected)
     list_signals = [{'label': str(signal_id), 'value': signal_id} for signal_id in signals]
     list_signals.insert(0, {'label': 'All', 'value': 'All'})
     return [{'label': i, 'value': i} for i in metabolites], metabolite_name, list_signals, \
-            signal_selected
+        signal_selected, get_experiment_name(exec_id_1), get_experiment_name(exec_id_2)
 
 
 @callback(
@@ -155,8 +167,8 @@ def update_exp_chart_bland_altman(metabolite_name, signal_selected, normalizatio
     experiment_data_1 = get_cquest_experiment_data(exec_id_1)
     experiment_data_2 = get_cquest_experiment_data(exec_id_2)
     # add a column to experiment_data_1 and experiment_data_2 to identify the sample
-    experiment_data_1['File'] = "File 1"
-    experiment_data_2['File'] = "File 2"
+    experiment_data_1['Experiment'] = get_experiment_name(exec_id_1)
+    experiment_data_2['Experiment'] = get_experiment_name(exec_id_2)
     if metabolite_name != 'All':
         # keep only the metabolite selected
         experiment_data_1 = experiment_data_1[experiment_data_1['Metabolite'] == metabolite_name]
@@ -164,8 +176,8 @@ def update_exp_chart_bland_altman(metabolite_name, signal_selected, normalizatio
 
     if graph_type == 'bland-altman':
         # group by signal and metabolite by computing the mean
-        experiment_data_1 = experiment_data_1.groupby(['Signal', 'Metabolite', 'File']).mean(True).reset_index()
-        experiment_data_2 = experiment_data_2.groupby(['Signal', 'Metabolite', 'File']).mean(True).reset_index()
+        experiment_data_1 = experiment_data_1.groupby(['Signal', 'Metabolite', 'Experiment']).mean(True).reset_index()
+        experiment_data_2 = experiment_data_2.groupby(['Signal', 'Metabolite', 'Experiment']).mean(True).reset_index()
         bland_altman_data = pd.DataFrame(columns=['Mean', 'Difference', '% Difference', 'Sample'])
         # sample is the row Signal
         for sample in experiment_data_1['Signal'].unique():
@@ -231,7 +243,7 @@ def update_exp_chart_bland_altman(metabolite_name, signal_selected, normalizatio
 
         if signal_selected != 'All':
             # keep one value by signal by taking the mean
-            concat_data = concat_data.groupby(['Metabolite', 'Signal', 'File']).mean().reset_index()
+            concat_data = concat_data.groupby(['Metabolite', 'Signal', 'Experiment']).mean().reset_index()
 
         # get only the data of the wanted metabolite
         if metabolite_name != 'All':
@@ -241,7 +253,7 @@ def update_exp_chart_bland_altman(metabolite_name, signal_selected, normalizatio
                 means = concat_data.groupby('Metabolite').mean()['Amplitude']
                 stds = concat_data.groupby('Metabolite').std()['Amplitude']
                 concat_data['Amplitude'] = concat_data.apply(lambda row: (row['Amplitude'] - means[row['Metabolite']]) /
-                                                                          stds[row['Metabolite']], axis=1)
+                                                                         stds[row['Metabolite']], axis=1)
 
             graph = px.box(
                 x=concat_data['Metabolite'],
@@ -251,7 +263,7 @@ def update_exp_chart_bland_altman(metabolite_name, signal_selected, normalizatio
                     'x': 'Metabolite',
                     'y': 'Amplitude',
                 },
-                color=concat_data['File'],
+                color=concat_data['Experiment'],
                 data_frame=concat_data,
                 hover_data=['Signal']
             )
@@ -262,7 +274,7 @@ def update_exp_chart_bland_altman(metabolite_name, signal_selected, normalizatio
                 x=concat_data['Workflow'],
                 y=concat_data['Amplitude'],
                 title='Comparison of metabolite ' + metabolite_name,
-                color=concat_data['File'],
+                color=concat_data['Experiment'],
                 data_frame=concat_data,
                 hover_data=['Signal']
             )
@@ -274,7 +286,7 @@ def update_exp_chart_bland_altman(metabolite_name, signal_selected, normalizatio
                 x=signal_values,
                 y=amplitude_values,
                 title='Comparison',
-                color=concat_data['File'],
+                color=concat_data['Experiment'],
                 data_frame=concat_data,
                 hover_data=['Signal']
             )

@@ -50,29 +50,30 @@ def layout():
                                 ],
                                 width=3,
                                 className='card-body',
-                            )
+                            ),
+                            html.P(
+                                children=[
+                                    'PSNR for the whole image: ',
+                                    html.Span(
+                                        id='psnr-image-value',
+                                    ),
+                                ],
+                            ),
+                            html.P(
+                                children=[
+                                    'PSNR for this slice: ',
+                                    html.Span(
+                                        id='psnr-slice-value',
+                                    ),
+                                ],
+                            ),
                         ],
                         className='card',
                         style={'flexDirection': 'row'},
                     ),
                 ]
             ),
-            html.P(
-                children=[
-                    'PSNR for the whole image: ',
-                    html.Span(
-                        id='psnr-image-value',
-                    ),
-                ],
-            ),
-            html.P(
-                children=[
-                    'PSNR for this slice: ',
-                    html.Span(
-                        id='psnr-slice-value',
-                    ),
-                ],
-            ),
+
             html.Div(
                 children=[
                     html.Div(
@@ -116,7 +117,7 @@ def layout():
             ),
             html.Div(
                 children=[
-                    html.H4(
+                    html.H5(
                         children=[
                             'SSIM: ',
                             html.Span(
@@ -124,7 +125,7 @@ def layout():
                             ),
                         ],
                     ),
-                    html.H4('Parameters for SSIM'),
+                    html.H5('Parameters for SSIM'),
                     html.A(
                         'What is SSIM?',
                         href='https://en.wikipedia.org/wiki/Structural_similarity',
@@ -216,7 +217,7 @@ def show_frames(slider_value, axe, mode, k1, k2, sigma):
         max_slider,
         slider_value,
         style,
-        value,
-        compute_psnr(vol1, vol2),
-        compute_psnr(vol1[slider_value, :, :], vol2[slider_value, :, :]),
+        round(value, 4),
+        round(compute_psnr(vol1, vol2), 4),
+        round(compute_psnr(vol1[slider_value, :, :], vol2[slider_value, :, :]), 4),
     )
