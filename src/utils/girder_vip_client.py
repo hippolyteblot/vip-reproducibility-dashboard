@@ -8,9 +8,13 @@ from girder_client import GirderClient
 
 class GirderVIPClient:
     def __init__(self, raw_folder, processed_folder, source_folder, url=None, key=None):
-        self.client = GirderClient(apiUrl=url+"/api/v1")
+        self.client = GirderClient(apiUrl=url + "/api/v1")
         self.url = url
-        self.client.authenticate(apiKey=key)
+        try:
+            self.client.authenticate(apiKey=key)
+        except:
+            print('Can\'t connect to Girder')
+
         self.raw_folder = raw_folder
         self.processed_folder = processed_folder
         self.source_folder = source_folder

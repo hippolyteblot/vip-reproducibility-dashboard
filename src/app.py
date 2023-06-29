@@ -198,7 +198,7 @@ def insert_json_if_not_exist(workflow_id, workflow_id_db, experiment_id):
         DB.execute(query, (parameter_id, experiment_id))
 
 
-insert_data_from_girder()
+# insert_data_from_girder()
 app = create_app()
 app.run_server(
     host=APP_HOST,

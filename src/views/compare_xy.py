@@ -67,10 +67,10 @@ def layout():
                                     dcc.RadioItems(
                                         id='normalization-compare-xy',
                                         options=[
-                                            {'label': 'No', 'value': False},
-                                            {'label': 'Yes', 'value': True},
-                                            ],
-                                        value=False,
+                                            {'label': 'No', 'value': 'No'},
+                                            {'label': 'Yes', 'value': 'Yes'},
+                                        ],
+                                        value='No',
                                         labelStyle={'display': 'block'},
                                     ),
                                 ],
@@ -151,11 +151,12 @@ def update_chart(file1, file2, aggregate1, aggregate2, normalization):
     # replace the previous line using concat instead of append
     data = pd.concat([data1, data2], ignore_index=True)
 
-    if normalization:
+    if normalization == 'Yes':
         # subtract mean and divide by std by metabolite
         means = data.groupby('Metabolite').mean()['Amplitude']
         stds = data.groupby('Metabolite').std()['Amplitude']
-        data['Amplitude'] = data.apply(lambda row: (row['Amplitude'] - means[row['Metabolite']]) / stds[row['Metabolite']], axis=1)
+        data['Amplitude'] = data.apply(
+            lambda row: (row['Amplitude'] - means[row['Metabolite']]) / stds[row['Metabolite']], axis=1)
 
     fig1 = px.scatter(
         x=data['Metabolite'],

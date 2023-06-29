@@ -182,9 +182,10 @@ def bind_parameters_from_url(execution_id):
     Input('metabolite-name', 'value'),
     Input('signal-selected', 'value'),
     Input('workflow-selected', 'value'),
+    Input('normalization-repro-wf', 'value'),
     prevent_initial_call=True,
 )
-def update_dropdowns(_, metabolite_name, signal_selected, workflow_selected):
+def update_dropdowns(_, metabolite_name, signal_selected, workflow_selected, normalization):
     wf_id = int(request.referrer.split('?')[1].split('=')[1].split('&')[0])
     wf_data = get_cquest_experiment_data(wf_id)
     metabolites = wf_data['Metabolite'].unique()
@@ -240,13 +241,13 @@ def update_dropdowns(_, metabolite_name, signal_selected, workflow_selected):
 
     return list_metabolites, list_signals, list_workflows, metabolite_name, signal_selected, workflow_selected, \
         metadata_structure, get_experiment_name(wf_id), 'update', generate_url(wf_id, metabolite_name, signal_selected,
-                                                                               workflow_selected, 'No')
+                                                                               workflow_selected, normalization)
 
 
-def generate_url(wf_id, metabolite_name, signal_selected, workflow_selected, normalization='No'):
+def generate_url(wf_id, metabolite_name, signal_selected, workflow_selected, normalization='Yes'):
     url = "?execution_id=" + str(wf_id) + "&metabolite_name=" + str(metabolite_name) + "&signal_selected=" + \
-            str(signal_selected) + "&workflow_selected=" + str(workflow_selected) + "&normalization=" + \
-            str(normalization)
+          str(signal_selected) + "&workflow_selected=" + str(workflow_selected) + "&normalization=" + \
+          str(normalization)
     return url
 
 
@@ -263,6 +264,7 @@ def generate_url(wf_id, metabolite_name, signal_selected, workflow_selected, nor
     prevent_initial_call=True,
 )
 def update_chart(_, metabolite, signal, workflow, normalization):
+    print('update chart :', normalization)
     # Get the query string from the url and get the execution id
     wf_id = int(request.referrer.split('?')[1].split('=')[1].split('&')[0])
     # exec_data = get_data_from_girder(wf_id, user_id)
@@ -276,15 +278,17 @@ def update_chart(_, metabolite, signal, workflow, normalization):
         means = wf_data.groupby('Metabolite').mean()['Amplitude']
         stds = wf_data.groupby('Metabolite').std()['Amplitude']
         wf_data['Amplitude'] = wf_data.apply(lambda row: (row['Amplitude'] - means[row['Metabolite']]) /
-                                                         stds[row['Metabolite']], axis=1)
+                                             stds[row['Metabolite']], axis=1)
 
     if signal != 'All':
         # Keep only the wanted signal
         wf_data = wf_data[wf_data['Signal'] == signal]
         wf_children = wf_data['Workflow'].unique()
         label = 'Workflow to highlight'
-        description = "This chart shows the amplitude of the signal " + signal + " for each metabolite. " \
-                                                                                 "Results are computed by cQUEST and their provenance is shown in the table below."
+        description = "This chart shows the amplitude of the signal " + signal + " for each metabolite. Results are " \
+                                                                                 "computed by cQUEST and their " \
+                                                                                 "provenance is shown in the table " \
+                                                                                 "below."
     else:
         wf_children = wf_data['Signal'].unique()
         label = 'Signal to highlight'

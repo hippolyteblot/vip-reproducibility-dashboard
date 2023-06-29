@@ -59,10 +59,10 @@ def layout():
                                     dcc.RadioItems(
                                         id='normalization-repro-bland-altman',
                                         options=[
-                                            {'label': ' No', 'value': False},
-                                            {'label': ' Yes', 'value': True},
+                                            {'label': ' No', 'value': 'No'},
+                                            {'label': ' Yes', 'value': 'Yes'},
                                         ],
-                                        value=False,
+                                        value='No',
                                         labelStyle={'display': 'block'},
                                     ),
                                 ],
@@ -144,7 +144,7 @@ def bind_parameters_from_url(execution_id):
     return 'PCh', 'All', False, 'bland-altman'
 
 
-def generate_url(exp1, exp2, metabolite_name, signal_selected, normalization, graph_type):
+def generate_url(exp1, exp2, metabolite_name, signal_selected, graph_type, normalization):
     url = "?exp1=" + str(exp1) + "&exp2=" + str(exp2) + "&metabolite_name=" + str(metabolite_name) + \
           "&signal_selected=" + str(signal_selected) + "&normalization=" + str(normalization) + \
           "&graph_type=" + str(graph_type)
@@ -163,9 +163,10 @@ def generate_url(exp1, exp2, metabolite_name, signal_selected, normalization, gr
     Input('graph-type-repro-bland-altman', 'value'),
     Input('metabolite-name-bland-altman', 'value'),
     Input('signal-selected-bland-altman', 'value'),
+    Input('normalization-repro-bland-altman', 'value'),
     prevent_initial_call=True,
 )
-def update_metabolite_name_bland_altman(graph, metabolite_name, signal_selected):
+def update_metabolite_name_bland_altman(graph, metabolite_name, signal_selected, normalization):
     exec_id_1 = int(request.referrer.split('?')[1].split('=')[1].split('&')[0].split('&')[0])
     exec_id_2 = int(request.referrer.split('?')[1].split('=')[2].split('&')[0])
     experiment_data_1 = get_cquest_experiment_data(exec_id_1)
@@ -195,7 +196,7 @@ def update_metabolite_name_bland_altman(graph, metabolite_name, signal_selected)
     list_signals.insert(0, {'label': 'All', 'value': 'All'})
     return [{'label': i, 'value': i} for i in metabolites], metabolite_name, list_signals, \
         signal_selected, get_experiment_name(exec_id_1), get_experiment_name(exec_id_2), \
-        generate_url(exec_id_1, exec_id_2, metabolite_name, signal_selected, False, graph), 0
+        generate_url(exec_id_1, exec_id_2, metabolite_name, signal_selected, graph, normalization), 0
 
 
 @callback(
@@ -309,9 +310,9 @@ def update_exp_chart_bland_altman(_, metabolite_name, signal_selected, normaliza
             concat_data = concat_data[concat_data["Metabolite"] == metabolite_name]
         else:
             addon = ''
-            if normalization == 'yes':
-                means = concat_data.groupby('Metabolite').mean()['Amplitude']
-                stds = concat_data.groupby('Metabolite').std()['Amplitude']
+            if normalization == 'Yes':
+                means = concat_data.groupby('Metabolite').mean(numeric_only=True)['Amplitude']
+                stds = concat_data.groupby('Metabolite').std(numeric_only=True)['Amplitude']
                 concat_data['Amplitude'] = concat_data.apply(lambda row: (row['Amplitude'] - means[row['Metabolite']]) /
                                                                          stds[row['Metabolite']], axis=1)
                 addon = 'The metabolites are normalized by subtracting the mean and dividing by the standard deviation.'
@@ -342,7 +343,7 @@ def update_exp_chart_bland_altman(_, metabolite_name, signal_selected, normaliza
                 hover_data=['Signal']
             )
             description = "Boxplot of the amplitude of the metabolite " + metabolite_name + " for the two " \
-                                                                                            "experiments. The amplitude is the area under the curve of the metabolite."
+                          "experiments. The amplitude is the area under the curve of the metabolite."
             return graph, description
         else:
             signal_values = concat_data['Signal']
@@ -356,7 +357,7 @@ def update_exp_chart_bland_altman(_, metabolite_name, signal_selected, normaliza
                 hover_data=['Signal']
             )
             description = "Boxplot of the amplitude of the metabolite " + metabolite_name + " for the two " \
-                                                                                            "experiments for the signal " + signal_selected + ". The amplitude is the area under the " \
-                                                                                                                                              "curve of the metabolite."
+                          "experiments for the signal " + signal_selected + ". The amplitude is the area under the " \
+                          "curve of the metabolite."
 
             return graph, description

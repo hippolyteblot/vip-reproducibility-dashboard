@@ -85,7 +85,7 @@ def layout():
     Output('slider-nii-xy', 'value'),
     Input('url', 'pathname'),
 )
-def bind_components(pathname):
+def bind_components(_):
     folder_id = request.referrer.split('id1=')[1].split('&')[0]
     _, size = get_processed_data_from_niftis_folder(folder_id, 0, "z", False)
 
