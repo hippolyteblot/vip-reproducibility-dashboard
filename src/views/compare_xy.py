@@ -1,13 +1,11 @@
-import os
-import time
-
 import pandas as pd
 from dash import html, callback, Input, Output, dcc
 import dash_bootstrap_components as dbc
 import plotly.express as px
 from flask import request
-from models.reproduce import get_girder_id_of_wf
-from utils.settings import GVC
+from flask_login import current_user
+
+from models.cquest_utils import get_files_in_folder, read_file_in_folder, read_folder
 
 
 def layout():
@@ -23,17 +21,62 @@ def layout():
                         children=[
                             dbc.Col(
                                 children=[
-                                    html.H4('Metabolite'),
+                                    html.H4('File 1'),
                                     dcc.Dropdown(
-                                        id='metabolite-name-bland-altman-upload',
-                                        value='All',
+                                        id='file1-selected-compare',
+                                        options=[
+                                        ],
+                                        value='',
                                         clearable=False,
+                                    ),
+                                    dcc.Checklist(
+                                        id='aggregate-data-compare-1',
+                                        options=[
+                                            {'label': 'Aggregate data', 'value': 'aggregate'},
+                                        ],
+                                        value=[],
                                     ),
                                 ],
                                 width=3,
                                 className='card-body',
                             ),
-
+                            dbc.Col(
+                                children=[
+                                    html.H4('File 2'),
+                                    dcc.Dropdown(
+                                        id='file2-selected-compare',
+                                        options=[
+                                        ],
+                                        value='',
+                                        clearable=False,
+                                    ),
+                                    dcc.Checklist(
+                                        id='aggregate-data-compare-2',
+                                        options=[
+                                            {'label': 'Aggregate data', 'value': 'aggregate'},
+                                        ],
+                                        value=[],
+                                    ),
+                                ],
+                                width=3,
+                                className='card-body',
+                            ),
+                            dbc.Col(
+                                children=[
+                                    html.H4('Normalization'),
+                                    dcc.RadioItems(
+                                        id='normalization-compare-xy',
+                                        options=[
+                                            {'label': 'No', 'value': False},
+                                            {'label': 'Yes', 'value': True},
+                                            ],
+                                        value=False,
+                                        labelStyle={'display': 'block'},
+                                    ),
+                                ],
+                                width=3,
+                                className='card-body',
+                            ),
                         ],
                         className='card',
                         style={'flexDirection': 'row'},
@@ -49,123 +92,81 @@ def layout():
                 ],
                 className='card',
             ),
-
         ]
     )
 
 
 @callback(
-    Output('metabolite-name-bland-altman-upload', 'value'),
-    Input('url', 'value'),
+    Output('file1-selected-compare', 'options'),
+    Output('file2-selected-compare', 'options'),
+    Output('file1-selected-compare', 'value', allow_duplicate=True),
+    Output('file2-selected-compare', 'value', allow_duplicate=True),
+    Input('url', 'pathname'),
+    prevent_initial_call='initial_duplicate',
 )
-def bind_parameters_from_url(execution_id):
-    # check if the url contains parameters
-    if execution_id != 'None' and request.referrer is not None and len(request.referrer.split('&')) > 2:
-        # get the parameters
-        metabolite_name = request.referrer.split('&')[2].split('=')[1]
-
-        return metabolite_name
-    return 'PCh'
+def bind_selects(pathname):
+    id1 = request.referrer.split('id1=')[1].split('&')[0]
+    id2 = request.referrer.split('id2=')[1]
+    files1 = get_files_in_folder(id1)
+    files2 = get_files_in_folder(id2)
+    return [{'label': file, 'value': file} for file in files1], [{'label': file, 'value': file} for file in files2], \
+        files1[0], files2[0]
 
 
 @callback(
     Output('nn-chart-compare', 'figure'),
-    Output('metabolite-name-bland-altman-upload', 'options'),
-    Output('metabolite-name-bland-altman-upload', 'value', allow_duplicate=True),
-    Output('url', 'search'),
-    Input('nn-chart-compare', 'children'),
-    Input('metabolite-name-bland-altman-upload', 'value'),
+    Output('file1-selected-compare', 'value', allow_duplicate=True),
+    Output('file2-selected-compare', 'value', allow_duplicate=True),
+    Input('file1-selected-compare', 'value'),
+    Input('file2-selected-compare', 'value'),
+    Input('aggregate-data-compare-1', 'value'),
+    Input('aggregate-data-compare-2', 'value'),
+    Input('normalization-compare-xy', 'value'),
     prevent_initial_call=True,
 )
-def update_chart(_, metabolite):
+def update_chart(file1, file2, aggregate1, aggregate2, normalization):
     id1 = request.referrer.split('id1=')[1].split('&')[0]
-    id2 = request.referrer.split('id2=')[1].split('&')[0]
+    id2 = request.referrer.split('id2=')[1]
 
-    gid1 = get_girder_id_of_wf(id1)
-    gid2 = get_girder_id_of_wf(id2)
-    path1 = GVC.download_feather_data(gid1)
-    path2 = GVC.download_feather_data(gid2)
+    if aggregate1:
+        data1 = read_folder(id1)
+    else:
+        file1 = file1 if file1 else get_files_in_folder(id1)[0]
+        data1 = read_file_in_folder(id1, file1)
+    if aggregate2:
+        data2 = read_folder(id2)
+    else:
+        file2 = file2 if file2 else get_files_in_folder(id2)[0]
+        data2 = read_file_in_folder(id2, file2)
 
-    meta_name = metabolite
-
-    while not os.path.exists(path1):
-        time.sleep(0.1)
-    while not os.path.exists(path2):
-        time.sleep(0.1)
-
-    data1 = pd.read_feather(path1)
-    data2 = pd.read_feather(path2)
-
-    metabolites = data1['Metabolite'].unique()
-
-    if metabolite is None or metabolite == 'All':
-        metabolite = data1['Metabolite'].unique()[0]
-    # keep only metabolite of interest
-    data1 = data1[data1['Metabolite'] == metabolite]
-    data2 = data2[data2['Metabolite'] == metabolite]
-
-
+    # delete metabolites water1, water2, water3
+    data1 = data1[~data1['Metabolite'].str.contains('water')]
+    data2 = data2[~data2['Metabolite'].str.contains('water')]
 
     data1['Amplitude'] = data1['Amplitude'].apply(lambda x: float(x))
     data2['Amplitude'] = data2['Amplitude'].apply(lambda x: float(x))
+    data1['File'] = 'File 1'
+    data2['File'] = 'File 2'
+    # concat data with pandas.concat
+    # replace the previous line using concat instead of append
+    data = pd.concat([data1, data2], ignore_index=True)
 
-    bland_altman_data = pd.DataFrame(columns=['Mean', 'Difference', '% Difference', 'Sample'])
-    # sample is the row Signal
-    for sample in data1['Signal'].unique():
-        bland_altman_data = pd.concat([
-            bland_altman_data,
-            pd.DataFrame({
-                'Mean': (data1[data1['Signal'] == sample]['Amplitude'].mean() +
-                         data2[data2['Signal'] == sample]['Amplitude'].mean()) / 2,
-                'Difference': data1[data1['Signal'] == sample]['Amplitude'].mean() -
-                              data2[data2['Signal'] == sample]['Amplitude'].mean(),
-                '% Difference': (data1[data1['Signal'] == sample]['Amplitude'].mean() -
-                                 data2[data2['Signal'] == sample]['Amplitude'].mean()) /
-                                ((data1[data1['Signal'] == sample]['Amplitude'].mean() +
-                                  data2[data2['Signal'] == sample][
-                                      'Amplitude'].mean()) / 2),
-                'Sample': sample,
-            }, index=[0]),
-        ], ignore_index=True)
+    if normalization:
+        # subtract mean and divide by std by metabolite
+        means = data.groupby('Metabolite').mean()['Amplitude']
+        stds = data.groupby('Metabolite').std()['Amplitude']
+        data['Amplitude'] = data.apply(lambda row: (row['Amplitude'] - means[row['Metabolite']]) / stds[row['Metabolite']], axis=1)
 
-    fig = px.scatter(
-        bland_altman_data,
-        x='Mean',
-        y='Difference',
-        hover_data=['% Difference', 'Sample'],
-        title='Bland-Altman plot',
+    fig1 = px.scatter(
+        x=data['Metabolite'],
+        y=data['Amplitude'],
+        title='Comparison of metabolites',
+        labels={
+            'x': 'Metabolite',
+            'y': 'Amplitude',
+        },
+        color=data['File'],
     )
-    # add the linear regression
-
-    fig.add_trace(
-        px.scatter(
-            bland_altman_data,
-            x='Mean',
-            y='Difference',
-            trendline='ols',
-            color_discrete_sequence=['black'],
-        ).data[1],
-    )
-
-    upper_bound = bland_altman_data['Difference'].mean() + 1.96 * bland_altman_data['Difference'].std()
-    lower_bound = bland_altman_data['Difference'].mean() - 1.96 * bland_altman_data['Difference'].std()
-
-    # add the upper and lower bound
-    fig.add_trace(
-        px.line(
-            x=[bland_altman_data['Mean'].min(), bland_altman_data['Mean'].max()],
-            y=[upper_bound, upper_bound],
-            color_discrete_sequence=['red'],
-        ).data[0],
-    )
-    fig.add_trace(
-        px.line(
-            x=[bland_altman_data['Mean'].min(), bland_altman_data['Mean'].max()],
-            y=[lower_bound, lower_bound],
-            color_discrete_sequence=['red'],
-        ).data[0],
-    )
-
-    url = '?id1=' + id1 + '&id2=' + id2 + '&metabolite=' + meta_name
-
-    return fig, [{'label': i, 'value': i} for i in metabolites], metabolite, url
+    value_file1 = file1 if not aggregate1 else None
+    value_file2 = file2 if not aggregate2 else None
+    return fig1, value_file1, value_file2

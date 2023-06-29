@@ -54,3 +54,30 @@ def get_metadata_cquest(exp_id: int) -> list:
         metadata.append({'input_name': output['input_name'], 'output_name': output['output_name'],
                          'count': output['count']})
     return metadata
+
+
+def get_files_in_folder(folder_id):
+    """Get the files in a folder from user's folder in local"""
+    path = os.path.join("src", "tmp", "user_compare", str(folder_id))
+    files = os.listdir(path)
+    files = [file for file in files if file.endswith(".txt")]
+    return files
+
+
+def read_file_in_folder(folder, file):
+    """Read the file uploaded by the user using the uuid and return a dataframe"""
+    path = os.path.join("src", "tmp", "user_compare", str(folder), str(file))
+    data = get_quest2(path)
+    return data
+
+
+def read_folder(folder):
+    """Read all the files in a folder and return a dataframe containing all the data"""
+    path = os.path.join("src", "tmp", "user_compare", str(folder))
+    files = os.listdir(path)
+    files = [file for file in files if file.endswith(".txt")]
+    data = pd.DataFrame()
+    for file in files:
+        df = read_file_in_folder(folder, file)
+        data = pd.concat([data, df])
+    return data

@@ -643,68 +643,6 @@ def check_type(data_type, name, app):
         return False
 
 
-@callback(
-    Output('upload-data-2-container', 'style'),
-    Input('data-type-selected-for-upload', 'value'),
-)
-def update_upload_data_2_container(type_selected):
-    if type_selected == 'x':
-        return {'display': 'none'}
-    else:
-        return {'display': 'block'}
-
-
-@callback(
-    Output('compare-btn', 'disabled'),
-    Input('compare-btn', 'href'),
-    State('data-type-uploaded1', 'value'),
-    State('data-type-uploaded2', 'value'),
-    State('application-selected-for-upload', 'value'),
-    State('data-type-selected-for-upload', 'value'),
-    prevent_initial_call=True
-)
-def update_compare_btn(_, type1, type2, app, type_selected):
-    # assert that if type_selected is 1-1, type1 and type2 are txt else zip
-    if type_selected == '1-1' and ((type1 == 'txt' and type2 == 'txt' and app == 'cquest') or
-                                   (type1 == 'nii' and type2 == 'nii' and app == 'brats') or
-                                   (type1 in ['gz', 'nii'] and type2 in ['gz', 'nii']) and app == 'brats'):
-        return False
-    elif type_selected == 'x-y' and type1 == 'zip' and type2 == 'zip':
-        return False
-    elif type_selected == 'x' and type1 == 'zip':
-        return False
-    else:
-        return True
-
-def update_output(content, href, name, date, data_id, data_type, app):
-    if content is not None and check_type(data_type, name, app):
-        file_extension = name.split('.')[-1]
-        if file_extension in ['txt', 'zip', 'nii'] or (name.split('.')[-2] == 'nii' and file_extension == 'gz'):
-            # save the file in the server
-            uuid = save_file_for_comparison(content, name)
-            # get olds values
-            id1 = 'id1=' + href.split('id1=')[1].split('&id2=')[0]
-            id2 = 'id2=' + href.split('id2=')[1]
-            # update the href
-            if data_id == 1:
-                id1 = 'id1=' + str(uuid)
-            else:
-                id2 = 'id2=' + str(uuid)
-            href_begin = href.split('?')[0]
-            href = href_begin + '?' + id1 + '&' + id2
-            return html.Div([
-                html.P('File uploaded: ' + name),
-            ]), str(uuid), href, file_extension
-        else:
-            return html.Div([
-                'Wrong file type, please upload a .txt file'
-            ]), None, href, None
-    else:
-        return html.Div([
-            'Wrong file type, please upload a file according to the selected application and data type',
-        ]), None, href, None
-
-
 def check_type(data_type, name, app):
     ext = name.split('.')[-1]
     if data_type == '1-1' and app == 'cquest':
