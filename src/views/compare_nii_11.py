@@ -108,6 +108,17 @@ def layout():
                     "display": "flex",
                 },
             ),
+            html.Div(
+                children=[
+                    html.H3('Chart description'),
+                    html.P(
+                        children=[
+                            'Description is loading...',
+                        ],
+                        id='description-chart-nii',
+                    ),
+                ],
+            ),
             html.H3('Slice selector'),
             dcc.Slider(
                 min=0,
@@ -155,23 +166,28 @@ def layout():
 
 
 @callback(
-    Output('slider-nii', 'min'),
-    Output('slider-nii', 'max'),
+    Output('axes-nii', 'value'),
+    Output('mode-nii-11', 'value'),
     Output('slider-nii', 'value'),
-    Input('url', 'pathname'),
+    Output('K1-slider', 'value'),
+    Output('K2-slider', 'value'),
+    Output('sigma-slider', 'value'),
+    Input('url', 'value'),
 )
-def bind_components(_):
-    id1 = request.referrer.split('id1=')[1].split('&')[0]
-    id2 = request.referrer.split('id2=')[1]
+def bind_parameters_from_url(url):
+    # check if the url contains parameters
+    if url != 'None' and request.referrer is not None and len(request.referrer.split('&')) > 2:
+        # get the parameters
+        axe = request.referrer.split('&')[2].split('=')[1]
+        mode = request.referrer.split('&')[3].split('=')[1]
+        slice = request.referrer.split('&')[4].split('=')[1]
+        K1 = request.referrer.split('&')[5].split('=')[1]
+        K2 = request.referrer.split('&')[6].split('=')[1]
+        sigma = request.referrer.split('&')[7].split('=')[1]
+        return axe, mode, int(slice), float(K1), float(K2), float(sigma)
+    return 'z', 'pixel', 0, 0.001, 1, 1
 
-    # TODO : lot of data processing here, should be done in a better way
-    _, _, size, _, _ = get_processed_data_from_niftis(id1, id2, 0, 'x')
 
-    return (
-        0,
-        size,
-        0,
-    )
 
 
 @callback(
@@ -185,6 +201,8 @@ def bind_components(_):
     Output('ssim-value', 'children'),
     Output('psnr-image-value', 'children'),
     Output('psnr-slice-value', 'children'),
+    Output('description-chart-nii', 'children'),
+    Output('url', 'search', allow_duplicate=True),
     Input('slider-nii', 'value'),
     Input('axes-nii', 'value'),
     Input('mode-nii-11', 'value'),
@@ -197,15 +215,27 @@ def show_frames(slider_value, axe, mode, k1, k2, sigma):
     id1 = request.referrer.split('id1=')[1].split('&')[0]
     id2 = request.referrer.split('id2=')[1]
 
-    img_rgb1, img_rgb2, max_slider, vol1, vol2 = get_processed_data_from_niftis(id1, id2, slider_value, axe)
+    id1 = "03098b59da9df1edc0f20604ff97b9d2"
+    id2 = "c51628d1a305aa06b1481ff4e034d18f"
+    img_rgb1, img_rgb2, max_slider, vol1, vol2 = get_processed_data_from_niftis(id1, id2, axe, slider_value)
     value = 0
 
     if mode == 'pixel':
+        description = 'Pixel-wise difference between the two images'
         img_mask3 = build_difference_image(img_rgb1, img_rgb2)
         style = {'display': 'none'}
     else:
+        description = 'SSIM difference between the two images'
         img_mask3, value = build_difference_image_ssim(img_rgb1, img_rgb2, k1, k2, sigma)
         style = {'display': 'block'}
+
+    # if value is not an str
+    full_psnr = compute_psnr(vol1, vol2)
+    if not isinstance(full_psnr, str):
+        full_psnr = round(full_psnr, 4)
+    psnr = compute_psnr(vol1[slider_value, :, :], vol2[slider_value, :, :])
+    if not isinstance(psnr, str):
+        psnr = round(psnr, 4)
 
     if slider_value > max_slider:
         slider_value = max_slider
@@ -218,6 +248,8 @@ def show_frames(slider_value, axe, mode, k1, k2, sigma):
         slider_value,
         style,
         round(value, 4),
-        round(compute_psnr(vol1, vol2), 4),
-        round(compute_psnr(vol1[slider_value, :, :], vol2[slider_value, :, :]), 4),
+        full_psnr,
+        psnr,
+        description,
+        f'?id1={id1}&id2={id2}&axe={axe}&mode={mode}&slice={slider_value}&K1={k1}&K2={k2}&sigma={sigma}',
     )

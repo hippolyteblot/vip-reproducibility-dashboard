@@ -15,7 +15,9 @@ from models import save_file_for_comparison
 from utils.settings import GVC, DB
 
 
-def get_processed_data_from_niftis_folder(folder_id, slider_value, axe, only_mask):
+# fonction return an array and an int
+def get_processed_data_from_niftis_folder(folder_id: str, slider_value: int, axe: str,
+                                          only_mask: bool) -> np.ndarray and int:
     """Get the data from the niftis folder"""
     path = os.path.join("src", "tmp", "user_compare", str(folder_id))
     files = os.listdir(path)
@@ -84,7 +86,7 @@ def get_processed_data_from_niftis_folder(folder_id, slider_value, axe, only_mas
     return img_rgb, max_vol
 
 
-def build_difference_image(img_rgb1, img_rgb2, tolerance=0.0):
+def build_difference_image(img_rgb1: np.ndarray, img_rgb2: np.ndarray, tolerance: float = 0.0) -> np.ndarray:
     min_shape0 = min(img_rgb1.shape[0], img_rgb2.shape[0])
     min_shape1 = min(img_rgb1.shape[1], img_rgb2.shape[1])
     img_mask3 = np.zeros(img_rgb1.shape)
@@ -100,11 +102,11 @@ def build_difference_image(img_rgb1, img_rgb2, tolerance=0.0):
     return img_mask3
 
 
-def equal_with_tolerance(val1, val2, tolerance):
+def equal_with_tolerance(val1: int or float, val2: int or float, tolerance: float) -> bool:
     return abs(val1 - val2) <= tolerance
 
 
-def get_global_brats_experiment_data(experiment_id, file=None):
+def get_global_brats_experiment_data(experiment_id: int, file: str = None) -> pd.DataFrame and list:
     """Get the data of a brats experiment from database or local file"""
     # first, get the girder_id of the folder containing the experiment
     query = "SELECT girder_id FROM experiment WHERE id = %s"
@@ -147,7 +149,8 @@ def download_brats_file(execution_number, file, patient_id, experiment_id):
     return md5
 
 
-def build_difference_image_ssim(img1, img2, k1=0.01, k2=0.03, sigma=1.5):
+def build_difference_image_ssim(img1: any, img2: any, k1: float = 0.01, k2: float = 0.03, sigma: float = 1.5) -> \
+                                np.ndarray and float:
     (score, diff) = structural_similarity(img1, img2, full=True, K1=k1, K2=k2, data_range=550,
                                           gaussian_weights=True, sigma=sigma, use_sample_covariance=False,
                                           multichannel=True)
@@ -161,7 +164,7 @@ def build_difference_image_ssim(img1, img2, k1=0.01, k2=0.03, sigma=1.5):
     return heatmap, score
 
 
-def compute_psnr(array1, array2):
+def compute_psnr(array1: np.ndarray, array2: np.ndarray) -> float or str:
     img1 = array1.astype(np.float64) / 255.
     img2 = array2.astype(np.float64) / 255.
     mse = np.mean((img1 - img2) ** 2)
@@ -170,12 +173,14 @@ def compute_psnr(array1, array2):
     return 10 * math.log10(1. / mse)
 
 
-def get_processed_data_from_niftis(id1, id2, slider_value, axe):
+def get_processed_data_from_niftis(id1: str, id2: str, axe: str, slider_value: int) -> np.ndarray and np.ndarray and \
+        int and imageio.core.util.Image and imageio.core.util.Image:
     data1 = "src/tmp/user_compare/" + id1 + ".nii"
     data2 = "src/tmp/user_compare/" + id2 + ".nii"
 
     vol1 = imageio.volread(data1)
     vol2 = imageio.volread(data2)
+
     np.max(vol1)
     np.max(vol2)
 

@@ -1,7 +1,7 @@
 from dash import html, dcc, callback, Output, Input, State
 from dash.exceptions import PreventUpdate
 import dash_bootstrap_components as dbc
-from flask_login import UserMixin, current_user, logout_user, login_user
+from flask_login import current_user, logout_user, login_user
 
 from models.login import check_user
 from utils.settings import GVC
@@ -37,7 +37,7 @@ login_card = dbc.Card(
     ]
 )
 
-login_location = dcc.Location(id='url-login')
+login_location = dcc.Location(id='url-login', refresh=False)
 login_info = html.Div(id='user-status-header')
 logged_in_info = html.Div(
     [

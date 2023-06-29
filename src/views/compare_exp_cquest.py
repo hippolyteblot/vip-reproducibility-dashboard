@@ -11,6 +11,7 @@ from models.reproduce import get_experiment_name
 def layout():
     return html.Div(
         [
+            dcc.Location(id='url', refresh=False),
             html.H2(
                 children=[
                     'Compare experiments : ',
@@ -105,25 +106,68 @@ def layout():
                     )
                 ],
                 className='card',
-            )
+            ),
+            html.Div(
+                children=[
+                    html.H3('Chart description'),
+                    html.P(
+                        children=[
+                            'Description is loading...',
+                        ],
+                        id='description-compare-exp-cquest',
+                    ),
+                ],
+            ),
+            dcc.Input(id='trigger', value=0, type='hidden'),
+            dcc.Input(id='trigger2', value=0, type='hidden'),
         ]
     )
 
 
 @callback(
-    Output('metabolite-name-bland-altman', 'options'),
     Output('metabolite-name-bland-altman', 'value'),
-    Output('signal-selected-bland-altman', 'options'),
     Output('signal-selected-bland-altman', 'value'),
+    Output('normalization-repro-bland-altman', 'value'),
+    Output('graph-type-repro-bland-altman', 'value'),
+    Input('url', 'value'),
+)
+def bind_parameters_from_url(execution_id):
+    # check if the url contains parameters
+    if execution_id != 'None' and request.referrer is not None and len(request.referrer.split('&')) > 2:
+        # get the parameters
+        metabolite_name = request.referrer.split('&')[2].split('=')[1]
+        signal_selected = request.referrer.split('&')[3].split('=')[1]
+        normalization = request.referrer.split('&')[4].split('=')[1]
+        graph_type = request.referrer.split('&')[5].split('=')[1]
+
+        return metabolite_name, signal_selected, normalization, graph_type
+    return 'PCh', 'All', False, 'bland-altman'
+
+
+def generate_url(exp1, exp2, metabolite_name, signal_selected, normalization, graph_type):
+    url = "?exp1=" + str(exp1) + "&exp2=" + str(exp2) + "&metabolite_name=" + str(metabolite_name) + \
+          "&signal_selected=" + str(signal_selected) + "&normalization=" + str(normalization) + \
+          "&graph_type=" + str(graph_type)
+    return url
+
+
+@callback(
+    Output('metabolite-name-bland-altman', 'options'),
+    Output('metabolite-name-bland-altman', 'value', allow_duplicate=True),
+    Output('signal-selected-bland-altman', 'options'),
+    Output('signal-selected-bland-altman', 'value', allow_duplicate=True),
     Output('experiment1-name-compare', 'children'),
     Output('experiment2-name-compare', 'children'),
+    Output('url', 'search', allow_duplicate=True),
+    Output('trigger', 'value'),
     Input('graph-type-repro-bland-altman', 'value'),
     Input('metabolite-name-bland-altman', 'value'),
     Input('signal-selected-bland-altman', 'value'),
+    prevent_initial_call=True,
 )
 def update_metabolite_name_bland_altman(graph, metabolite_name, signal_selected):
-    exec_id_1 = int(request.referrer.split('?')[1].split('=')[1].split('&')[0])
-    exec_id_2 = int(request.referrer.split('?')[1].split('=')[2])
+    exec_id_1 = int(request.referrer.split('?')[1].split('=')[1].split('&')[0].split('&')[0])
+    exec_id_2 = int(request.referrer.split('?')[1].split('=')[2].split('&')[0])
     experiment_data_1 = get_cquest_experiment_data(exec_id_1)
 
     metabolites = experiment_data_1['Metabolite'].unique()
@@ -150,52 +194,55 @@ def update_metabolite_name_bland_altman(graph, metabolite_name, signal_selected)
     list_signals = [{'label': str(signal_id), 'value': signal_id} for signal_id in signals]
     list_signals.insert(0, {'label': 'All', 'value': 'All'})
     return [{'label': i, 'value': i} for i in metabolites], metabolite_name, list_signals, \
-        signal_selected, get_experiment_name(exec_id_1), get_experiment_name(exec_id_2)
+        signal_selected, get_experiment_name(exec_id_1), get_experiment_name(exec_id_2), \
+        generate_url(exec_id_1, exec_id_2, metabolite_name, signal_selected, False, graph), 0
 
 
 @callback(
     Output('exp-chart-bland-altman', 'figure'),
-    Input('metabolite-name-bland-altman', 'value'),
-    Input('signal-selected-bland-altman', 'value'),
-    Input('normalization-repro-bland-altman', 'value'),
-    Input('graph-type-repro-bland-altman', 'value'),
+    Output('description-compare-exp-cquest', 'children'),
+    Input('trigger', 'value'),
+    State('metabolite-name-bland-altman', 'value'),
+    State('signal-selected-bland-altman', 'value'),
+    State('normalization-repro-bland-altman', 'value'),
+    State('graph-type-repro-bland-altman', 'value'),
     prevent_initial_call=True,
 )
-def update_exp_chart_bland_altman(metabolite_name, signal_selected, normalization, graph_type):
-    exec_id_1 = int(request.referrer.split('?')[1].split('=')[1].split('&')[0])
-    exec_id_2 = int(request.referrer.split('?')[1].split('=')[2])
+def update_exp_chart_bland_altman(_, metabolite_name, signal_selected, normalization, graph_type):
+    exec_id_1 = int(request.referrer.split('?')[1].split('=')[1].split('&')[0].split('&')[0])
+    exec_id_2 = int(request.referrer.split('?')[1].split('=')[2].split('&')[0])
     experiment_data_1 = get_cquest_experiment_data(exec_id_1)
     experiment_data_2 = get_cquest_experiment_data(exec_id_2)
-    # add a column to experiment_data_1 and experiment_data_2 to identify the sample
+
+    # Add a column to experiment_data_1 and experiment_data_2 to identify the sample
     experiment_data_1['Experiment'] = get_experiment_name(exec_id_1)
     experiment_data_2['Experiment'] = get_experiment_name(exec_id_2)
+
     if metabolite_name != 'All':
-        # keep only the metabolite selected
+        # Keep only the selected metabolite
         experiment_data_1 = experiment_data_1[experiment_data_1['Metabolite'] == metabolite_name]
         experiment_data_2 = experiment_data_2[experiment_data_2['Metabolite'] == metabolite_name]
 
     if graph_type == 'bland-altman':
-        # group by signal and metabolite by computing the mean
+        # Group by signal and metabolite by computing the mean
         experiment_data_1 = experiment_data_1.groupby(['Signal', 'Metabolite', 'Experiment']).mean(True).reset_index()
         experiment_data_2 = experiment_data_2.groupby(['Signal', 'Metabolite', 'Experiment']).mean(True).reset_index()
+
         bland_altman_data = pd.DataFrame(columns=['Mean', 'Difference', '% Difference', 'Sample'])
-        # sample is the row Signal
+
+        # Sample is the row Signal
         for sample in experiment_data_1['Signal'].unique():
-            bland_altman_data = pd.concat([
-                bland_altman_data,
-                pd.DataFrame({
-                    'Mean': (experiment_data_1[experiment_data_1['Signal'] == sample]['Amplitude'].mean() +
-                             experiment_data_2[experiment_data_2['Signal'] == sample]['Amplitude'].mean()) / 2,
-                    'Difference': experiment_data_1[experiment_data_1['Signal'] == sample]['Amplitude'].mean() -
-                                  experiment_data_2[experiment_data_2['Signal'] == sample]['Amplitude'].mean(),
-                    '% Difference': (experiment_data_1[experiment_data_1['Signal'] == sample]['Amplitude'].mean() -
-                                     experiment_data_2[experiment_data_2['Signal'] == sample]['Amplitude'].mean()) /
-                                    ((experiment_data_1[experiment_data_1['Signal'] == sample]['Amplitude'].mean() +
-                                      experiment_data_2[experiment_data_2['Signal'] == sample][
-                                          'Amplitude'].mean()) / 2),
-                    'Sample': sample,
-                }, index=[0]),
-            ], ignore_index=True)
+            mean_1 = experiment_data_1[experiment_data_1['Signal'] == sample]['Amplitude'].mean()
+            mean_2 = experiment_data_2[experiment_data_2['Signal'] == sample]['Amplitude'].mean()
+
+            diff = mean_1 - mean_2
+            percent_diff = diff / ((mean_1 + mean_2) / 2)
+            bland_altman_data = pd.concat([bland_altman_data, pd.DataFrame({
+                'Mean': (mean_1 + mean_2) / 2,
+                'Difference': diff,
+                '% Difference': percent_diff,
+                'Sample': sample
+            }, index=[0])])
 
         fig = px.scatter(
             bland_altman_data,
@@ -204,8 +251,8 @@ def update_exp_chart_bland_altman(metabolite_name, signal_selected, normalizatio
             hover_data=['% Difference', 'Sample'],
             title='Bland-Altman plot',
         )
-        # add the linear regression
 
+        # Add the linear regression
         fig.add_trace(
             px.scatter(
                 bland_altman_data,
@@ -216,10 +263,12 @@ def update_exp_chart_bland_altman(metabolite_name, signal_selected, normalizatio
             ).data[1],
         )
 
-        upper_bound = bland_altman_data['Difference'].mean() + 1.96 * bland_altman_data['Difference'].std()
-        lower_bound = bland_altman_data['Difference'].mean() - 1.96 * bland_altman_data['Difference'].std()
+        mean_diff = bland_altman_data['Difference'].mean()
+        std_diff = bland_altman_data['Difference'].std()
+        upper_bound = mean_diff + 1.96 * std_diff
+        lower_bound = mean_diff - 1.96 * std_diff
 
-        # add the upper and lower bound
+        # Add the upper and lower bounds
         fig.add_trace(
             px.line(
                 x=[bland_altman_data['Mean'].min(), bland_altman_data['Mean'].max()],
@@ -235,25 +284,37 @@ def update_exp_chart_bland_altman(metabolite_name, signal_selected, normalizatio
             ).data[0],
         )
 
-        return fig
+        description = "Bland-Altman plot of the two experiments. First, the mean of each value " \
+                      "(a metabolite for a signal) is computed for each workflow of an experiment. " \
+                      "Then, the mean of the two experiments is computed. Finally, the difference between the two " \
+                      "experiments is plotted against the mean of the two experiments. The red lines represent the " \
+                      "95% confidence interval of the difference."
+
+        return fig, description
     else:
         concat_data = pd.concat([experiment_data_1, experiment_data_2], ignore_index=True)
-        # delete the row where Metabolite contains 'water'
+
+        # Delete rows where Metabolite contains 'water'
         concat_data = concat_data[~concat_data['Metabolite'].str.contains('water')]
-
+        # keep only the wanted signal
         if signal_selected != 'All':
-            # keep one value by signal by taking the mean
-            concat_data = concat_data.groupby(['Metabolite', 'Signal', 'Experiment']).mean().reset_index()
+            concat_data = concat_data[concat_data['Signal'] == signal_selected]
 
-        # get only the data of the wanted metabolite
+        if signal_selected == 'All':
+            # Keep one value per signal by taking the mean
+            concat_data = concat_data.groupby(['Metabolite', 'Signal', 'Experiment']).mean(numeric_only=True).\
+                reset_index()
+
         if metabolite_name != 'All':
             concat_data = concat_data[concat_data["Metabolite"] == metabolite_name]
         else:
-            if normalization:
+            addon = ''
+            if normalization == 'yes':
                 means = concat_data.groupby('Metabolite').mean()['Amplitude']
                 stds = concat_data.groupby('Metabolite').std()['Amplitude']
                 concat_data['Amplitude'] = concat_data.apply(lambda row: (row['Amplitude'] - means[row['Metabolite']]) /
                                                                          stds[row['Metabolite']], axis=1)
+                addon = 'The metabolites are normalized by subtracting the mean and dividing by the standard deviation.'
 
             graph = px.box(
                 x=concat_data['Metabolite'],
@@ -267,7 +328,9 @@ def update_exp_chart_bland_altman(metabolite_name, signal_selected, normalizatio
                 data_frame=concat_data,
                 hover_data=['Signal']
             )
-            return graph
+            description = "Boxplot of the amplitude of the metabolites for the two experiments. " \
+                          "The amplitude is the area under the curve of the metabolite. " + addon
+            return graph, description
 
         if signal_selected == 'None':
             graph = px.box(
@@ -278,7 +341,9 @@ def update_exp_chart_bland_altman(metabolite_name, signal_selected, normalizatio
                 data_frame=concat_data,
                 hover_data=['Signal']
             )
-            return graph
+            description = "Boxplot of the amplitude of the metabolite " + metabolite_name + " for the two " \
+                                                                                            "experiments. The amplitude is the area under the curve of the metabolite."
+            return graph, description
         else:
             signal_values = concat_data['Signal']
             amplitude_values = concat_data['Amplitude']
@@ -290,5 +355,8 @@ def update_exp_chart_bland_altman(metabolite_name, signal_selected, normalizatio
                 data_frame=concat_data,
                 hover_data=['Signal']
             )
+            description = "Boxplot of the amplitude of the metabolite " + metabolite_name + " for the two " \
+                                                                                            "experiments for the signal " + signal_selected + ". The amplitude is the area under the " \
+                                                                                                                                              "curve of the metabolite."
 
-            return graph
+            return graph, description

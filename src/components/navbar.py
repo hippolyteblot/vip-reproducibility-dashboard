@@ -36,12 +36,6 @@ navbar = dbc.Navbar(
                                 href='/'
                             )
                         ),
-                        dbc.NavItem(
-                            dbc.NavLink(
-                                'Reproducibility',
-                                href='/reproducibility'
-                            )
-                        ),
                         add_experiment,
                         html.Div(
                             login_info,
@@ -60,7 +54,6 @@ navbar = dbc.Navbar(
 )
 
 
-# add callback for toggling the collapse on small screens
 @callback(
     Output('navbar-collapse', 'is_open'),
     Input('navbar-toggler', 'n_clicks'),

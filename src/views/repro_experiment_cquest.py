@@ -67,7 +67,7 @@ def layout():
                     )
                 ],
                 className='card',
-            )
+            ),
         ]
     )
 

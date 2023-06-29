@@ -5,9 +5,6 @@ import os
 import base64
 import shutil
 import zipfile
-from uuid import uuid4
-
-from flask_login import current_user
 
 from utils.settings import DB
 
@@ -101,7 +98,7 @@ def get_available_versions(application_id):
 
 
 def load_wf_from_db():
-    """Load the workflows from the local folder"""
+    """Load the workflows from girder"""
     query = 'SELECT workflow.id as workflow_id, workflow.timestamp as workflow_name, ' \
             'application.name as application_name, app_version.number as application_version, ' \
             'app_version.id as version_id, application.id as application_id, experiment.name as experiment_name ' \
@@ -109,11 +106,26 @@ def load_wf_from_db():
             'INNER JOIN experiment ON workflow.experiment_id = experiment.id ' \
             'INNER JOIN app_version ON experiment.version_id = app_version.id ' \
             'INNER JOIN application ON app_version.application_id = application.id'
-    return build_wf_json_from_db(query)
 
-
-def build_wf_json_from_db(query):
     results = DB.fetch(query)
+    return build_wf_json_from_db(results)
+
+
+def load_app_wf_from_db(app_id):
+    """Load the workflows from girder for a specific application"""
+    query = 'SELECT workflow.id as workflow_id, workflow.timestamp as workflow_name, ' \
+            'application.name as application_name, app_version.number as application_version, ' \
+            'app_version.id as version_id, application.id as application_id, experiment.name as experiment_name ' \
+            'FROM workflow ' \
+            'INNER JOIN experiment ON workflow.experiment_id = experiment.id ' \
+            'INNER JOIN app_version ON experiment.version_id = app_version.id ' \
+            'INNER JOIN application ON app_version.application_id = application.id ' \
+            'WHERE application.id = %s'
+    results = DB.fetch(query, (app_id,))
+    return build_wf_json_from_db(results)
+
+
+def build_wf_json_from_db(results):
     exp_list = []
     for result in results:
         exp_list.append({
@@ -123,7 +135,7 @@ def build_wf_json_from_db(query):
             "experiment_name": result.get("experiment_name"),
             "application_version": result.get("application_version"),
             "application_id": result.get("application_id"),
-            "version_id": result.get("version_id"),
+            "version_id": result.get("version_id")
         })
     return exp_list
 

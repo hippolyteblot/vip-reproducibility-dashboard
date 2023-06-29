@@ -31,23 +31,6 @@ def layout():
                                 width=3,
                                 className='card-body',
                             ),
-
-                            dbc.Col(
-                                children=[
-                                    html.H4('Normalization'),
-                                    dcc.RadioItems(
-                                        id='normalization-brats-exp',
-                                        options=[
-                                            {'label': 'No', 'value': False},
-                                            {'label': 'Yes', 'value': True},
-                                        ],
-                                        value=False,
-                                        labelStyle={'display': 'block'},
-                                    ),
-                                ],
-                                width=3,
-                                className='card-body',
-                            ),
                         ],
                         className='card',
                         style={'flexDirection': 'row'},
@@ -73,6 +56,17 @@ def layout():
                     )
                 ],
                 className='card',
+            ),
+            html.Div(
+                children=[
+                    html.H3('Chart description'),
+                    html.P(
+                        children=[
+                            'Description is loading...',
+                        ],
+                        id='description-exp-brats',
+                    ),
+                ],
             ),
             html.Div(
                 html.Div(
@@ -171,65 +165,37 @@ def toggle_modal(n1, n2):
 @callback(
     Output('general-chart-brats-exp', 'figure'),
     Output('file-brats-exp', 'options'),
+    Output('description-exp-brats', 'children'),
     Input('general-chart-brats-exp', 'figure'),
     Input('file-brats-exp', 'value'),
-    Input('normalization-brats-exp', 'value'),
 )
-def update_chart(_, file, normalization):
+def update_chart(_, file):
     exec_id = int(request.referrer.split('?')[1].split('=')[1])
 
     if file == 'All':
         experiment_data, files = get_global_brats_experiment_data(exec_id)
+        description = 'Significant digits mean per step for each file. Significant digits are computed as with ' \
+                      'https://raw.githubusercontent.com/gkpapers/2020AggregateMCA/master/code/utils.py. ' \
+                      'The mean is computed for each step and each file.'
     else:
         experiment_data, files = get_global_brats_experiment_data(exec_id, file=file)
-    # Delete row beginning with T1CE
-    print("before")
-    experiment_data = experiment_data[~experiment_data['File'].str.contains('T1CE')]
-    print("after")
-    # put in first row where File contains raw, after rai, after SRI, after SRI_brain
-    sorted_experiments = pd.DataFrame()
-    # check each row of experiment_data
-    for index, row in experiment_data.iterrows():
-        # check if File contains raw
-        if '_raw.nii.gz' in row['File']:
-            sorted_experiments = sorted_experiments.append(row)
-            experiment_data = experiment_data.drop(index)
-    # check each row of experiment_data
-    for index, row in experiment_data.iterrows():
-        # check if File contains rai
-        if '_rai.nii.gz' in row['File']:
-            sorted_experiments = sorted_experiments.append(row)
-            experiment_data = experiment_data.drop(index)
-    # check each row of experiment_data
-    for index, row in experiment_data.iterrows():
-        # check if File contains rai
-        if '_rai_n4.nii.gz' in row['File']:
-            sorted_experiments = sorted_experiments.append(row)
-            experiment_data = experiment_data.drop(index)
-    # check each row of experiment_data
-    for index, row in experiment_data.iterrows():
-        # check if File contains SRI
-        if '_to_SRI.nii.gz' in row['File']:
-            sorted_experiments = sorted_experiments.append(row)
-            experiment_data = experiment_data.drop(index)
-    for index, row in experiment_data.iterrows():
-        # check if File contains SRI
-        if '_to_SRI_brain.nii.gz' in row['File']:
-            sorted_experiments = sorted_experiments.append(row)
-            experiment_data = experiment_data.drop(index)
+        description = f'Significant digits mean per step for file {file}. Significant digits are computed with ' \
+                      f'https://raw.githubusercontent.com/gkpapers/2020AggregateMCA/master/code/utils.py. ' \
+                      f'The mean is computed for each step.'
+
 
     files = [file for file in files]
     files.insert(0, 'All')
 
-    figure = px.box(sorted_experiments, x="File", y="Mean_sigdigits",
-                    title="Significant digits mean per file", points="all")
+    figure = px.box(experiment_data, x="File", y="Mean_sigdigits", color="File", facet_col="Image",
+                    title="Significant digits mean per step for each file", points="all",
+                    category_orders={"Step": experiment_data['File'].unique().tolist(),
+                                     "Image": experiment_data['Image'].unique().tolist()},
+                    color_discrete_sequence=px.colors.qualitative.Plotly)
     figure.update_layout(
-        xaxis_title="Patient",
         yaxis_title="Significant digits mean",
-        legend_title="Patient",
     )
-    return figure, [{'label': file, 'value': file} for file in files]
-
+    return figure, [{'label': file, 'value': file} for file in files], description
 
 
 @callback(

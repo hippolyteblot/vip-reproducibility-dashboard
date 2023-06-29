@@ -1,10 +1,10 @@
 import dash
 
-from views.repro_workflow_cquest import layout
+from views.visualize_experiment_cquest import layout
 
 dash.register_page(
     __name__,
-    path='/repro-workflow-cquest',
+    path='/visualize-experiment-cquest',
     title='Reproduce an execution',
 )
 

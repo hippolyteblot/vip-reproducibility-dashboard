@@ -129,7 +129,6 @@ class GirderVIPClient:
             self.downloading_files.append(json_file['name'])
             counter += 1
 
-        print('Downloading ' + str(counter) + ' files')
         thread = threading.Thread(target=self.start_download_inspection, args=())
         thread.start()
         return 'src/tmp/process_jsons/'
@@ -138,14 +137,12 @@ class GirderVIPClient:
         return self.client.listFolder(folder_id)
 
     def start_download_inspection(self):
-        print('Downloading ' + str(len(self.downloading_files)) + ' files')
         while len(self.downloading_files) > 0:
             # check if a file in self.downloading_files is in the folder
             for file in self.downloading_files:
                 if file in os.listdir('src/tmp/process_jsons/'):
                     self.downloading_files.remove(file)
             time.sleep(0.1)
-        print('All files downloaded')
 
     def finished_download(self):
         return len(self.downloading_files) == 0
@@ -213,5 +210,4 @@ class GirderVIPClient:
             if item['name'] == file_name:
                 file = next(self.client.listFile(item['_id']))
                 self.client.downloadFile(file['_id'], 'src/tmp/' + folder_id + '/' + file_name)
-                print('File found and downloaded')
                 return 'src/tmp/' + folder_id + '/' + file_name
