@@ -184,8 +184,8 @@ def flatten_folder(path: str):
     nodes = os.listdir(path)
     while nodes:
         node = nodes.pop()
-        if os.path.isdir(path + "/" + node):
-            for subnode in os.listdir(path + "/" + node):
-                nodes.append(node + "/" + subnode)
+        if os.path.isdir(os.path.join(path, node)):
+            for subnode in os.listdir(os.path.join(path, node)):
+                nodes.append(os.path.join(node, subnode))
         else:
-            shutil.move(path + "/" + node, path)
+            shutil.move(os.path.join(path, node), path)

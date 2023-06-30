@@ -1,5 +1,3 @@
-import imageio
-import numpy as np
 from dash import html, callback, Input, Output, dcc
 import dash_bootstrap_components as dbc
 import plotly.express as px
