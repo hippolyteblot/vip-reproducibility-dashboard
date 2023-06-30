@@ -1,0 +1,2 @@
+[girder.plugin]
+feather_converter = girder_feather_converter:FeatherConverterPlugin
