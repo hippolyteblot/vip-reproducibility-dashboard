@@ -12,14 +12,15 @@ import pandas as pd
 from skimage.metrics import structural_similarity
 
 from models import save_file_for_comparison
-from utils.settings import GVC, DB
+from utils.girder_vip_client import GVC
+from utils.settings import DB, CACHE_FOLDER
 
 
 # fonction return an array and an int
 def get_processed_data_from_niftis_folder(folder_id: str, slider_value: int, axe: str,
                                           only_mask: bool) -> np.ndarray and int:
     """Get the data from the niftis folder"""
-    path = os.path.join("src", "tmp", "user_compare", str(folder_id))
+    path = os.path.join(CACHE_FOLDER, "user_compare", str(folder_id))
     files = os.listdir(path)
 
     # list .nii.gz files
@@ -37,7 +38,7 @@ def get_processed_data_from_niftis_folder(folder_id: str, slider_value: int, axe
     max_vol = 0
     max_value = 0
     for file in files:
-        path = "src/tmp/user_compare/" + str(folder_id) + "/" + file
+        path = CACHE_FOLDER + "/user_compare/" + str(folder_id) + "/" + file
         vol = imageio.volread(path)
         tmp_max = np.max(vol)
         if axe == 'z':
@@ -97,7 +98,7 @@ def build_difference_image(img_rgb1: np.ndarray, img_rgb2: np.ndarray, tolerance
                 img_mask3[i, j] = 0
             else:
                 # absolute difference
-                img_mask3[i, j] = np.abs(img_rgb1[i, j] - img_rgb2[i, j])
+                img_mask3[i, j] = (img_rgb1[i, j] - img_rgb2[i, j])
 
     return img_mask3
 
@@ -175,8 +176,8 @@ def compute_psnr(array1: np.ndarray, array2: np.ndarray) -> float or str:
 
 def get_processed_data_from_niftis(id1: str, id2: str, axe: str, slider_value: int) -> np.ndarray and np.ndarray and \
         int and imageio.core.util.Image and imageio.core.util.Image:
-    data1 = "src/tmp/user_compare/" + id1 + ".nii"
-    data2 = "src/tmp/user_compare/" + id2 + ".nii"
+    data1 = CACHE_FOLDER + "/user_compare/" + id1 + ".nii"
+    data2 = CACHE_FOLDER + "/user_compare/" + id2 + ".nii"
 
     vol1 = imageio.volread(data1)
     vol2 = imageio.volread(data2)

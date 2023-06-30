@@ -1,10 +1,13 @@
 import os
 from time import sleep
+from typing import Tuple
 
 import pandas as pd
+from pandas import DataFrame
 
 from utils.quest2_reader import get_quest2
-from utils.settings import GVC, DB
+from utils.girder_vip_client import GVC
+from utils.settings import DB
 
 
 def get_cquest_experiment_data(experiment_id: int) -> pd.DataFrame:
@@ -27,7 +30,7 @@ def get_cquest_experiment_data(experiment_id: int) -> pd.DataFrame:
     return data
 
 
-def read_cquest_file(file_uuid: str) -> pd.DataFrame:
+def read_cquest_file(file_uuid: str) -> tuple[DataFrame, str]:
     """Read the file uploaded by the user using the uuid and return a dataframe"""
     path = os.path.join("src", "tmp", "user_compare", str(file_uuid) + ".txt")
     data = get_quest2(path)

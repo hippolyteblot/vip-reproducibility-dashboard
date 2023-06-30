@@ -264,7 +264,6 @@ def generate_url(wf_id, metabolite_name, signal_selected, workflow_selected, nor
     prevent_initial_call=True,
 )
 def update_chart(_, metabolite, signal, workflow, normalization):
-    print('update chart :', normalization)
     # Get the query string from the url and get the execution id
     wf_id = int(request.referrer.split('?')[1].split('=')[1].split('&')[0])
     # exec_data = get_data_from_girder(wf_id, user_id)

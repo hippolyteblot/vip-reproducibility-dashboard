@@ -1,7 +1,6 @@
 import os
 from dotenv import load_dotenv
 
-from utils.girder_vip_client import GirderVIPClient
 from utils.database_client import DatabaseClient
 
 cwd = os.getcwd()
@@ -12,6 +11,7 @@ load_dotenv(dotenv_path=dotenv_path, override=True)
 APP_HOST = os.environ.get('HOST')
 APP_PORT = int(os.environ.get('PORT'))
 APP_DEBUG = bool(os.environ.get('DEBUG'))
+CACHE_FOLDER = os.environ.get('CACHE_FOLDER')
 DEV_TOOLS_PROPS_CHECK = bool(os.environ.get('DEV_TOOLS_PROPS_CHECK'))
 API_KEY = os.environ.get('API_KEY', None)
 
@@ -30,7 +30,7 @@ GIRDER_RAW_FOLDER = os.environ.get('GIRDER_RAW_FOLDER')
 GIRDER_PROCESSED_FOLDER = os.environ.get('GIRDER_PROCESSED_FOLDER')
 GIRDER_SOURCE_FOLDER = os.environ.get('GIRDER_SOURCE_FOLDER')
 
-GVC = GirderVIPClient(GIRDER_RAW_FOLDER, GIRDER_PROCESSED_FOLDER, GIRDER_SOURCE_FOLDER, GIRDER_API_URL, GIRDER_API_KEY)
+
 """
 APP_HOST = 'localhost'
 APP_PORT = 8050

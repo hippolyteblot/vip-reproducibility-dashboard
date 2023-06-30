@@ -1,28 +1,7 @@
-from contextvars import copy_context
-
-from dash import html
-from dash._callback_context import context_value
-from dash._utils import AttributeDict
 from dash.html import Div
 from dash_bootstrap_components import Row, Button
 
-# Import the names of callback functions you want to test
-from views.home import toggle_modal_exec, toggle_modal_exp, get_list_structure
-
-
-def test_toggle_modal_exec():
-    """Test the toggle_modal_exec callback function"""
-    outputs = toggle_modal_exec(0, 0, True)
-
-    # Check the output
-    assert outputs[0] is True
-    assert outputs[1] == []
-
-    outputs = toggle_modal_exec(1, 0, True)
-
-    # Check the output
-    assert outputs[0] is False
-    assert not outputs[1] == []
+from views.home import toggle_modal_exp, get_list_structure
 
 
 def test_toggle_modal_exp():

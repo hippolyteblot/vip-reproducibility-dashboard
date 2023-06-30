@@ -2,7 +2,7 @@ from dash import html, callback, Output, Input, State, ctx
 import dash_bootstrap_components as dbc
 
 from models.add_experiment import add_experiment_to_db, get_available_applications, get_available_versions
-from utils.settings import GVC
+from utils.girder_vip_client import GVC
 
 
 def layout():
@@ -266,7 +266,7 @@ def update_fileset_directory(choose_folder_btn, selected_option, girder_path, op
     State('girder-id-path', 'children'),
     prevent_initial_call=True,
 )
-def update_dir_options(open_folder_btn, parent_folder_btn, selected_option, options, girder_path, girder_id_path):
+def update_dir_options(_, __, selected_option, options, girder_path, girder_id_path):
     selected_label = None
 
     trigger = ctx.triggered[0]['prop_id'].split('.')[0]

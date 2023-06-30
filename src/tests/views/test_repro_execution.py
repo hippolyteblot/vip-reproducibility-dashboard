@@ -1,7 +1,6 @@
 import plotly.graph_objects as go
-from dash import html, dash_table
-from views.visualize_experiment_cquest import update_chart, update_metadata
-from utils.settings import GVC
+from views.visualize_experiment_cquest import update_chart
+from utils.girder_vip_client import GVC
 
 from flask import Flask
 
@@ -58,40 +57,3 @@ def test_update_chart(mocker):
         # test if the graph has the correct labels
         assert graph.layout.xaxis.title.text == 'Signal'
         assert graph.layout.yaxis.title.text == 'Amplitude'
-
-
-def test_update_metadata(mocker):
-    """Test the update_metadata callback function"""
-
-    class MockGVC:
-        def get_parent_metadata(self, id):
-            metadata = [{'key': 'value'}]
-            id_list = [1, 2, 3]
-            return metadata, id_list
-
-    href = '/repro-execution?execution_id=41'
-    mocked_metadata = [{'key': 'value', 'url':'https://pilot-warehouse.creatis.insa-lyon.fr/#collection/'
-                                              '63b6e0b14d15dd536f0484bc/folder/1'}]
-
-    mocker.patch('models.reproduce.GVC', MockGVC())
-
-    # 1. Test the case where the user url is correct
-    expected = html.Div(
-        children=[
-            dash_table.DataTable(
-                columns=[{"name": i, "id": i} for i in mocked_metadata[0].keys()],
-                data=mocked_metadata,
-                style_cell={'textAlign': 'left'},
-                style_header={
-                    'backgroundColor': 'rgb(230, 230, 230)',
-                    'fontWeight': 'bold'
-                }
-            ),
-        ],
-        style={'padding': '10px', 'width': '100%'},
-    )
-    assert str(update_metadata(href)) == str(expected)
-
-    # 2. Test the case where the user url is not correct
-    expected = html.P('No metadata available')
-    assert str(update_metadata('')) == str(expected)

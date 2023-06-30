@@ -1,4 +1,3 @@
-# package imports
 import dash
 
 from views.home import layout

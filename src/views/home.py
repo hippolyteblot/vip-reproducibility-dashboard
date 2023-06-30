@@ -885,7 +885,6 @@ def toggle_compare_button(exp1, exp2):
     application_name1 = None
     application_name2 = None
     if exp1 is not None and exp2 is not None:
-        print(exp1)
         application_name1 = exp1.split('/-/')[1]
         application_name2 = exp2.split('/-/')[1]
 

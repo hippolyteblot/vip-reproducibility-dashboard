@@ -10,7 +10,7 @@ def test_add_experiment(mocker):
         id = 1
         role = 'admin'
 
-    def mock_execute(query, params=None):
+    def mock_execute(query):
         if query == 'INSERT INTO experiment (name, version, input, fileset, parameters, results, description, ' \
                     'user_id, project_id, is_public) VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s)':
             return True

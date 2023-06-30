@@ -6,7 +6,7 @@ import base64
 import shutil
 import zipfile
 
-from utils.settings import DB
+from utils.settings import DB, CACHE_FOLDER
 
 
 def get_users():
@@ -63,7 +63,7 @@ def build_json_from_db(query):
         exp_list.append({
             "id": result.get("id"),
             "name": result.get("application_name") + " " + result.get("application_version") + " "
-                    + "(par : " + result.get("username") + ")",
+            + "(par : " + result.get("username") + ")",
         })
     return exp_list
 
@@ -142,7 +142,7 @@ def build_wf_json_from_db(results):
 
 def save_file_for_comparison(content, name):
     """Save the file for comparison"""
-    path = "src/tmp/user_compare/"
+    path = CACHE_FOLDER + "/user_compare/"
     if not os.path.exists(path):
         os.makedirs(path)
 
@@ -189,4 +189,3 @@ def flatten_folder(path: str):
                 nodes.append(node + "/" + subnode)
         else:
             shutil.move(path + "/" + node, path)
-

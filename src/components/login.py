@@ -4,7 +4,7 @@ import dash_bootstrap_components as dbc
 from flask_login import current_user, logout_user, login_user
 
 from models.login import check_user
-from utils.settings import GVC
+from utils.girder_vip_client import GVC
 
 
 login_card = dbc.Card(

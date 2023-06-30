@@ -4,6 +4,16 @@ import threading
 import time
 
 from girder_client import GirderClient
+from utils.settings import CACHE_FOLDER, GIRDER_RAW_FOLDER, GIRDER_PROCESSED_FOLDER, GIRDER_SOURCE_FOLDER, \
+    GIRDER_API_URL, GIRDER_API_KEY
+
+
+def get_jsons_from_local(folder_id):
+    jsons = []
+    for file in os.listdir(CACHE_FOLDER + '/process_jsons/'):
+        with open(CACHE_FOLDER + '/process_jsons/' + file, 'r') as f:
+            jsons.append(json.load(f))
+    return jsons
 
 
 class GirderVIPClient:
@@ -18,7 +28,7 @@ class GirderVIPClient:
         self.raw_folder = raw_folder
         self.processed_folder = processed_folder
         self.source_folder = source_folder
-        self.download_folder = 'src/tmp/'
+        self.download_folder = CACHE_FOLDER
         self.log_request = []
         self.downloading_files = []
 
@@ -129,13 +139,13 @@ class GirderVIPClient:
                 if file['name'].endswith('.json'):
                     json_file = file
                     break
-            self.client.downloadFile(json_file['_id'], 'src/tmp/process_jsons/' + json_file['name'])
+            self.client.downloadFile(json_file['_id'], self.download_folder + '/process_jsons/' + json_file['name'])
             self.downloading_files.append(json_file['name'])
             counter += 1
 
         thread = threading.Thread(target=self.start_download_inspection, args=())
         thread.start()
-        return 'src/tmp/process_jsons/'
+        return self.download_folder + '/process_jsons/'
 
     def get_folders(self, folder_id):
         return self.client.listFolder(folder_id)
@@ -144,7 +154,7 @@ class GirderVIPClient:
         while len(self.downloading_files) > 0:
             # check if a file in self.downloading_files is in the folder
             for file in self.downloading_files:
-                if file in os.listdir('src/tmp/process_jsons/'):
+                if file in os.listdir(self.download_folder + '/process_jsons/'):
                     self.downloading_files.remove(file)
             time.sleep(0.1)
 
@@ -166,22 +176,15 @@ class GirderVIPClient:
                 if file['name'].endswith('.json'):
                     json_file = file
                     break
-            self.client.downloadFile(json_file['_id'], 'src/tmp/process_jsons/' + json_file['name'])
+            self.client.downloadFile(json_file['_id'], self.download_folder + '/process_jsons/' + json_file['name'])
             pending_files.append(json_file['name'])
         while len(pending_files) > 0:
             for file in pending_files:
-                if file in os.listdir('src/tmp/process_jsons/'):
+                if file in os.listdir(self.download_folder + '/process_jsons/'):
                     pending_files.remove(file)
             time.sleep(0.1)
-        for file in os.listdir('src/tmp/process_jsons/'):
-            with open('src/tmp/process_jsons/' + file, 'r') as f:
-                jsons.append(json.load(f))
-        return jsons
-
-    def get_jsons_from_local(self, folder_id):
-        jsons = []
-        for file in os.listdir('src/tmp/process_jsons/'):
-            with open('src/tmp/process_jsons/' + file, 'r') as f:
+        for file in os.listdir(self.download_folder + '/process_jsons/'):
+            with open(self.download_folder + '/process_jsons/' + file, 'r') as f:
                 jsons.append(json.load(f))
         return jsons
 
@@ -202,8 +205,8 @@ class GirderVIPClient:
             if item['name'] == 'data.feather':
                 for file in self.client.listFile(item['_id']):
                     if file['name'] == 'data.feather':
-                        self.client.downloadFile(file['_id'], 'src/tmp/' + folder_id + '/data.feather')
-                        return 'src/tmp/' + folder_id + '/data.feather'
+                        self.client.downloadFile(file['_id'], self.download_folder + folder_id + '/data.feather')
+                        return self.download_folder + folder_id + '/data.feather'
 
         return None
 
@@ -213,5 +216,7 @@ class GirderVIPClient:
         for item in items:
             if item['name'] == file_name:
                 file = next(self.client.listFile(item['_id']))
-                self.client.downloadFile(file['_id'], 'src/tmp/' + folder_id + '/' + file_name)
-                return 'src/tmp/' + folder_id + '/' + file_name
+                self.client.downloadFile(file['_id'], self.download_folder + folder_id + '/' + file_name)
+                return self.download_folder + folder_id + '/' + file_name
+
+GVC = GirderVIPClient(GIRDER_RAW_FOLDER, GIRDER_PROCESSED_FOLDER, GIRDER_SOURCE_FOLDER, GIRDER_API_URL, GIRDER_API_KEY)

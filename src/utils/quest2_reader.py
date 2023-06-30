@@ -1,4 +1,3 @@
-import os
 import warnings
 import pandas as pd
 
@@ -6,7 +5,7 @@ import pandas as pd
 def get_quest2(quest2_path, verbose=False) -> tuple[pd.DataFrame, str]:
     """ A home-made function to import data from CQuest result files : *_quest2.txt"""
 
-    class __LineInfo():
+    class __LineInfo:
         """A finite state machine to control each step while reading the result file"""
 
         def __init__(self):

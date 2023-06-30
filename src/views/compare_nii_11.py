@@ -241,7 +241,7 @@ def show_frames(slider_value, axe, mode, k1, k2, sigma):
         slider_value = max_slider
     return (
         px.imshow(img_rgb1, color_continuous_scale='gray'),
-        px.imshow(img_mask3),
+        px.imshow(img_mask3, color_continuous_scale='Picnic'),
         px.imshow(img_rgb2, color_continuous_scale='gray'),
         0,
         max_slider,

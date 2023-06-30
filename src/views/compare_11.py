@@ -57,7 +57,7 @@ def layout():
     Input('url', 'pathname'),
     Input('normalization-compare-11', 'value'),
 )
-def bind_charts(pathname, normalization):
+def bind_charts(_, normalization):
     id1 = request.referrer.split('id1=')[1].split('&')[0]
     id2 = request.referrer.split('id2=')[1]
     data1 = read_cquest_file(id1)

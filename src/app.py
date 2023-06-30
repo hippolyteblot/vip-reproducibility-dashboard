@@ -7,13 +7,14 @@ from flask import Flask
 from flask_login import LoginManager
 import os
 
+from utils.girder_vip_client import get_jsons_from_local
 # local imports
-from utils.settings import APP_HOST, APP_PORT, APP_DEBUG, DEV_TOOLS_PROPS_CHECK
+from utils.settings import APP_HOST, APP_PORT, APP_DEBUG, DEV_TOOLS_PROPS_CHECK, CACHE_FOLDER
 from components.login import login_location
 from models.login import User
 from components import navbar, footer
 from utils.settings import DB
-from utils.settings import GVC
+from utils.girder_vip_client import GVC
 
 
 def create_app():
@@ -165,7 +166,7 @@ def insert_workflow_if_not_exist(workflow, experiment_id):
 def insert_json_if_not_exist(workflow_id, workflow_id_db, experiment_id):
     """Insert a JSON file into the database if it does not exist"""
     #jsons = GVC.get_jsons(workflow_id)
-    jsons = GVC.get_jsons_from_local(workflow_id)
+    jsons = get_jsons_from_local(workflow_id)
     for json in jsons:
         query = "SELECT * FROM input WHERE md5 = %s"
         result = DB.fetch_one(query, (json['input']['md5'],))
