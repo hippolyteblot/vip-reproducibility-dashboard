@@ -211,7 +211,7 @@ def bind_parameters_from_url(url):
 )
 def show_frames(slider_value, axe, mode, k1, k2, sigma):
     id1 = request.referrer.split('id1=')[1].split('&')[0]
-    id2 = request.referrer.split('id2=')[1]
+    id2 = request.referrer.split('id2=')[1].split('&')[0]
     img_rgb1, img_rgb2, max_slider, vol1, vol2 = get_processed_data_from_niftis(id1, id2, axe, slider_value)
     value = 0
 
