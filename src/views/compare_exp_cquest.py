@@ -220,9 +220,6 @@ def update_exp_chart_bland_altman(_, metabolite_name, signal_selected, normaliza
     experiment_data_1 = get_cquest_experiment_data(exec_id_1)
     experiment_data_2 = get_cquest_experiment_data(exec_id_2)
 
-    # Remove row where signal is Rec002_Vox1
-    experiment_data_1 = experiment_data_1[experiment_data_1['Signal'] != 'Rec002_Vox1_quest2']
-
     # Add a column to experiment_data_1 and experiment_data_2 to identify the sample
     experiment_data_1['Experiment'] = get_experiment_name(exec_id_1)
     experiment_data_2['Experiment'] = get_experiment_name(exec_id_2)
