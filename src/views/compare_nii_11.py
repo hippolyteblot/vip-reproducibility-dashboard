@@ -1,10 +1,11 @@
+import numpy as np
 from dash import html, callback, Input, Output, dcc
 import dash_bootstrap_components as dbc
 import plotly.express as px
 from flask import request
 
 from models.brats_utils import get_processed_data_from_niftis, build_difference_image, build_difference_image_ssim, \
-    compute_psnr
+    compute_psnr, compute_psnr_foreach_slice
 
 
 def layout():
@@ -44,6 +45,22 @@ def layout():
                                         value='pixel',
                                         clearable=False,
                                         id='mode-nii-11',
+                                    ),
+                                ],
+                                width=3,
+                                className='card-body',
+                            ),
+                            dbc.Col(
+                                children=[
+                                    html.H4('Color scale'),
+                                    dcc.RadioItems(
+                                        id='colorscale-nii-11',
+                                        options=[
+                                            {'label': 'Based on the maximum from source images', 'value': 'abs'},
+                                            {'label': 'Based on the maximum from the differences', 'value': 'relative'},
+                                        ],
+                                        value='abs',
+                                        labelStyle={'display': 'block'},
                                     ),
                                 ],
                                 width=3,
@@ -117,12 +134,21 @@ def layout():
                     ),
                 ],
             ),
+
             html.H3('Slice selector'),
             dcc.Slider(
                 min=0,
                 max=1,
                 value=0,
                 id='slider-nii',
+            ),            html.Div(
+                id='gradient-nii-11',
+                style={
+                    'width': '100%',
+                    'height': '5px',
+                    'background': 'linear-gradient(90deg, rgba(255,0,0, 0) 0%, rgba(255,0,0) 20%, rgba(255,0,0) 35%, '
+                                  'rgba(255,0,0,0) 100%)',
+                },
             ),
             html.Div(
                 children=[
@@ -170,6 +196,7 @@ def layout():
     Output('K1-slider', 'value'),
     Output('K2-slider', 'value'),
     Output('sigma-slider', 'value'),
+    Output('colorscale-nii-11', 'value'),
     Input('url', 'value'),
 )
 def bind_parameters_from_url(url):
@@ -182,10 +209,9 @@ def bind_parameters_from_url(url):
         K1 = request.referrer.split('&')[5].split('=')[1]
         K2 = request.referrer.split('&')[6].split('=')[1]
         sigma = request.referrer.split('&')[7].split('=')[1]
-        return axe, mode, int(slice), float(K1), float(K2), float(sigma)
-    return 'z', 'pixel', 0, 0.001, 1, 1
-
-
+        colorscale = request.referrer.split('&')[8].split('=')[1]
+        return axe, mode, int(slice), float(K1), float(K2), float(sigma), colorscale
+    return 'z', 'pixel', 0, 0.001, 1, 1, 'abs'
 
 
 @callback(
@@ -200,6 +226,7 @@ def bind_parameters_from_url(url):
     Output('psnr-image-value', 'children'),
     Output('psnr-slice-value', 'children'),
     Output('description-chart-nii', 'children'),
+    Output('gradient-nii-11', 'style'),
     Output('url', 'search', allow_duplicate=True),
     Input('slider-nii', 'value'),
     Input('axes-nii', 'value'),
@@ -207,12 +234,13 @@ def bind_parameters_from_url(url):
     Input('K1-slider', 'value'),
     Input('K2-slider', 'value'),
     Input('sigma-slider', 'value'),
+    Input('colorscale-nii-11', 'value'),
     prevent_initial_call=True,
 )
-def show_frames(slider_value, axe, mode, k1, k2, sigma):
+def show_frames(slider_value, axe, mode, k1, k2, sigma, colorscale):
     id1 = request.referrer.split('id1=')[1].split('&')[0]
     id2 = request.referrer.split('id2=')[1].split('&')[0]
-    img_rgb1, img_rgb2, max_slider, vol1, vol2 = get_processed_data_from_niftis(id1, id2, axe, slider_value)
+    img_rgb1, img_rgb2, max_slider, vol1, vol2, maximum = get_processed_data_from_niftis(id1, id2, axe, slider_value)
     value = 0
 
     if mode == 'pixel':
@@ -224,19 +252,27 @@ def show_frames(slider_value, axe, mode, k1, k2, sigma):
         img_mask3, value = build_difference_image_ssim(img_rgb1, img_rgb2, k1, k2, sigma)
         style = {'display': 'block'}
 
-    # if value is not an str
+    if colorscale == 'relative':
+        maximum = img_mask3.max()
+        if abs(img_mask3.min()) > maximum:
+            maximum = abs(img_mask3.min())
+
+    # if value is not a str
     full_psnr = compute_psnr(vol1, vol2)
     if not isinstance(full_psnr, str):
         full_psnr = round(full_psnr, 4)
     psnr = compute_psnr(vol1[slider_value, :, :], vol2[slider_value, :, :])
+    psnr_list = compute_psnr_foreach_slice(vol1, vol2, axe)
     if not isinstance(psnr, str):
         psnr = round(psnr, 4)
+
 
     if slider_value > max_slider:
         slider_value = max_slider
     return (
         px.imshow(img_rgb1, color_continuous_scale='gray'),
-        px.imshow(img_mask3, color_continuous_scale='Picnic'),
+        # -1 = red, 0 = white, 1 = green
+        px.imshow(img_mask3, color_continuous_scale='Picnic', range_color=[-maximum, maximum]),
         px.imshow(img_rgb2, color_continuous_scale='gray'),
         0,
         max_slider,
@@ -246,5 +282,24 @@ def show_frames(slider_value, axe, mode, k1, k2, sigma):
         full_psnr,
         psnr,
         description,
-        f'?id1={id1}&id2={id2}&axe={axe}&mode={mode}&slice={slider_value}&K1={k1}&K2={k2}&sigma={sigma}',
+        {'background': build_gradient(psnr_list), 'height': '5px', 'margin-left': '25px', 'margin-right': '25px'},
+        f'?id1={id1}&id2={id2}&axe={axe}&mode={mode}&slice={slider_value}&K1={k1}&K2={k2}&sigma={sigma}&colorscale='
+        f'{colorscale}',
     )
+
+
+def build_gradient(psnr_values):
+    minimum = min(psnr_values)
+    # for each psnr value, add a color to the gradient
+    gradient = 'linear-gradient(to right, '
+    for i in range(psnr_values.size):
+        if psnr_values[i] == np.inf:
+            value = 0
+        else:
+            value = 1-((psnr_values[i]-(minimum*0.8))*0.05)
+        gradient += f'rgba(255, 0, 0, {value}) '
+        if i != psnr_values.size - 1:
+            gradient += ', '
+    gradient += ')'
+    print(gradient)
+    return gradient

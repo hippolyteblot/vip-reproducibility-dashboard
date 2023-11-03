@@ -16,7 +16,6 @@ from utils.girder_vip_client import GVC
 from utils.settings import DB, CACHE_FOLDER
 
 
-# fonction return an array and an int
 def get_processed_data_from_niftis_folder(folder_id: str, slider_value: int, axe: str,
                                           only_mask: bool) -> np.ndarray and int:
     """Get the data from the niftis folder"""
@@ -56,6 +55,8 @@ def get_processed_data_from_niftis_folder(folder_id: str, slider_value: int, axe
             max_value = tmp_max
         data.append(img_mask)
 
+    if max_value == 0:
+        max_value = 1
     # new frame is the mean of all the pixel of the loaded niftis
     new_frame = np.mean(data, axis=0)
     # convert to rgb
@@ -75,18 +76,18 @@ def get_processed_data_from_niftis_folder(folder_id: str, slider_value: int, axe
     diff_mask /= len(data)
     diff_mask /= max_value
     diff_mask *= 255
+
     diff_mask = np.stack([diff_mask, np.zeros(diff_mask.shape), np.zeros(diff_mask.shape)], axis=-1)
 
     if only_mask:
         img_rgb = diff_mask
     else:
         img_rgb += diff_mask
-
     img_rgb = np.clip(img_rgb, 0, 255)
-
     return img_rgb, max_vol
 
 
+# Tested
 def build_difference_image(img_rgb1: np.ndarray, img_rgb2: np.ndarray, tolerance: float = 0.0) -> np.ndarray:
     min_shape0 = min(img_rgb1.shape[0], img_rgb2.shape[0])
     min_shape1 = min(img_rgb1.shape[1], img_rgb2.shape[1])
@@ -103,11 +104,16 @@ def build_difference_image(img_rgb1: np.ndarray, img_rgb2: np.ndarray, tolerance
     return img_mask3
 
 
+# Tested
 def equal_with_tolerance(val1: int or float, val2: int or float, tolerance: float) -> bool:
-    return abs(val1 - val2) <= tolerance
+    value = abs(val1 - val2)
+    # round to the same number of decimals as the tolerance
+    if tolerance != 0:
+        value = round(value, int(math.log10(1 / tolerance)))
+    return value <= tolerance
 
 
-def get_global_brats_experiment_data(experiment_id: int, file: str = None) -> pd.DataFrame and list:
+def get_global_brats_experiment_data(experiment_id: int) -> pd.DataFrame and list:
     """Get the data of a brats experiment from database or local file"""
     # first, get the girder_id of the folder containing the experiment
     query = "SELECT girder_id FROM experiment WHERE id = %s"
@@ -120,13 +126,9 @@ def get_global_brats_experiment_data(experiment_id: int, file: str = None) -> pd
     while not os.path.exists(path):
         sleep(0.1)
 
-    # finally, read the data from the file
     data = pd.read_feather(path)
-    files = data['File'].unique()
-    if file is not None:
-        data = data[data['File'] == file]
 
-    return data, files
+    return data
 
 
 def download_brats_file(execution_number, file, patient_id, experiment_id):
@@ -151,7 +153,7 @@ def download_brats_file(execution_number, file, patient_id, experiment_id):
 
 
 def build_difference_image_ssim(img1: any, img2: any, k1: float = 0.01, k2: float = 0.03, sigma: float = 1.5) -> \
-                                np.ndarray and float:
+        np.ndarray and float:
     (score, diff) = structural_similarity(img1, img2, full=True, K1=k1, K2=k2, data_range=550,
                                           gaussian_weights=True, sigma=sigma, use_sample_covariance=False,
                                           multichannel=True)
@@ -165,17 +167,43 @@ def build_difference_image_ssim(img1: any, img2: any, k1: float = 0.01, k2: floa
     return heatmap, score
 
 
-def compute_psnr(array1: np.ndarray, array2: np.ndarray) -> float or str:
+# Tested
+def compute_psnr(array1: np.ndarray, array2: np.ndarray, authorize_str=True) -> float or str:
     img1 = array1.astype(np.float64) / 255.
     img2 = array2.astype(np.float64) / 255.
     mse = np.mean((img1 - img2) ** 2)
     if mse == 0:
-        return "Infinite"
+        if authorize_str:
+            return "Infinite"
+        else:
+            return np.inf
     return 10 * math.log10(1. / mse)
 
 
+# Tested
+def compute_psnr_foreach_slice(array1: np.ndarray, array2: np.ndarray, axe: str) -> np.ndarray:
+    if axe == 'z':
+        slices = array1.shape[0]
+    elif axe == 'y':
+        slices = array1.shape[1]
+    elif axe == 'x':
+        slices = array1.shape[2]
+    else:
+        raise ValueError("axe must be z, y or x")
+
+    psnr = np.zeros(slices)
+    for i in range(slices):
+        if axe == 'z':
+            psnr[i] = compute_psnr(array1[i, :, :], array2[i, :, :], authorize_str=False)
+        elif axe == 'y':
+            psnr[i] = compute_psnr(array1[:, i, :], array2[:, i, :], authorize_str=False)
+        elif axe == 'x':
+            psnr[i] = compute_psnr(array1[:, :, i], array2[:, :, i], authorize_str=False)
+    return psnr
+
+
 def get_processed_data_from_niftis(id1: str, id2: str, axe: str, slider_value: int) -> np.ndarray and np.ndarray and \
-        int and imageio.core.util.Image and imageio.core.util.Image:
+                                                                                       int and imageio.core.util.Image and imageio.core.util.Image:
     data1 = CACHE_FOLDER + "/user_compare/" + id1 + ".nii"
     data2 = CACHE_FOLDER + "/user_compare/" + id2 + ".nii"
 
@@ -202,4 +230,12 @@ def get_processed_data_from_niftis(id1: str, id2: str, axe: str, slider_value: i
     elif axe == 'z':
         axe_index = 0
 
-    return img_mask1, img_mask2, vol1.shape[axe_index], vol1, vol2
+    # maximum is the max value between img_mask1 and img_mask2
+
+    maximum = 0
+    maximums = [img_mask1.max(), img_mask2.max(), img_mask1.min(), img_mask2.min()]
+    for i in maximums:
+        if maximum < i:
+            maximum = i
+
+    return img_mask1, img_mask2, vol1.shape[axe_index], vol1, vol2, maximum

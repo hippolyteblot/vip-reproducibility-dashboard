@@ -1,12 +1,15 @@
 import os
 from time import sleep
-from typing import Tuple
 
+import dash_bootstrap_components as dbc
+import numpy as np
 import pandas as pd
+import plotly.express as px
+from dash import html
 from pandas import DataFrame
 
-from utils.quest2_reader import get_quest2
 from utils.girder_vip_client import GVC
+from utils.quest2_reader import get_quest2
 from utils.settings import DB
 
 
@@ -15,7 +18,6 @@ def get_cquest_experiment_data(experiment_id: int) -> pd.DataFrame:
     # first, get the girder_id of the folder containing the experiment
     query = "SELECT girder_id FROM experiment WHERE id = %s"
     girder_id = DB.fetch_one(query, (experiment_id,))['girder_id']
-
     # then, get the data from girder
     path = GVC.download_feather_data(girder_id)
     # while the file is not downloaded, wait
@@ -83,4 +85,140 @@ def read_folder(folder):
     for file in files:
         df = read_file_in_folder(folder, file)
         data = pd.concat([data, df])
+    data.reset_index(drop=True, inplace=True)
     return data
+
+
+def normalize(data):
+    means = data.groupby('Metabolite').mean()['Amplitude']
+    stds = data.groupby('Metabolite').std()['Amplitude']
+    data['Amplitude'] = data.apply(lambda row: (row['Amplitude'] - means[row['Metabolite']]) /
+                                   stds[row['Metabolite']], axis=1)
+
+"""
+def normalize(data):
+    means = data.groupby(['Metabolite', 'Signal']).mean()['Amplitude']
+    stds = data.groupby(['Metabolite', 'Signal']).std()['Amplitude']
+    data['Amplitude'] = data.apply(lambda row: (row['Amplitude'] - means[row['Metabolite'], row['Signal']]) /
+                                   stds[row['Metabolite'], row['Signal']], axis=1)
+"""
+
+def get_workflow_id_from_referrer(referrer):
+    query_string = referrer.split('?')[1]
+    wf_id = int(query_string.split('=')[1].split('&')[0])
+    return wf_id
+
+
+def filter_and_normalize_data(wf_data, signal, normalization):
+    wf_data = wf_data.sort_values(by=['Metabolite'])
+    wf_data = wf_data[~wf_data['Metabolite'].str.contains('water')]
+
+    if normalization == 'Yes':
+        normalize(wf_data)
+
+    if signal != 'All':
+        wf_data = wf_data[wf_data['Signal'] == signal]
+
+    return wf_data
+
+
+def get_description_and_label(signal, workflow, metabolite):
+    description = ''
+    if signal != 'All':
+        label = 'Workflow to highlight'
+        description = f"This chart shows the amplitude of the signal {signal} for each metabolite. Results are computed by cQUEST and their provenance is shown in the table below."
+    else:
+        label = 'Signal to highlight'
+        if workflow == 'None' and metabolite == 'All':
+            label = 'Signal to highlight'
+            description = "This chart shows the amplitude of each signal for each metabolite. Results are computed by cQUEST and their provenance is shown in the table below."
+
+    return label, description
+
+
+def create_workflow_group_column(wf_data, workflow):
+    wf_data['Workflow group'] = wf_data['Workflow'].apply(
+        lambda x: str(workflow) if x == workflow else 'Other'
+    )
+
+
+def create_signal_group_column(wf_data, signal):
+    wf_data['Signal group'] = np.where(wf_data['Signal'] == signal, signal, 'Other')
+
+
+def generate_box_plot(wf_data: pd.DataFrame, x_column, y_column, title, color_column=None):
+    # if there is less than 4 values per column, we use a scatter plot
+    if wf_data.groupby(x_column).count()[y_column].max() < 4:
+        graph = px.scatter(
+            x=wf_data[x_column],
+            y=wf_data[y_column],
+            title=title,
+            labels={'x': x_column, 'y': y_column},
+            data_frame=wf_data,
+            hover_data=['Signal'],
+            color=wf_data[color_column] if color_column is not None else None,
+        )
+        return graph
+    if color_column is not None:
+        wf_data = wf_data.sort_values(by=[x_column, color_column])
+    graph = px.box(
+        x=wf_data[x_column],
+        y=wf_data[y_column],
+        title=title,
+        labels={'x': x_column, 'y': y_column},
+        data_frame=wf_data,
+        hover_data=['Signal'],
+        color=wf_data[color_column] if color_column is not None else None,
+    )
+
+    return graph
+
+
+def filter_and_get_unique_values(wf_data):
+    metabolites = wf_data['Metabolite'].unique()
+    metabolites = [metabolite for metabolite in metabolites if 'water' not in metabolite]
+    signals = wf_data['Signal'].unique()
+    return metabolites, signals
+
+
+def create_dropdown_options(values, all_label):
+    options = [{'label': str(value), 'value': value} for value in values]
+    options.insert(0, {'label': all_label, 'value': all_label})
+    return options
+
+
+def create_metadata_structure(metadata):
+    metadata_structure = [
+        dbc.Table(
+            [
+                html.Thead(
+                    html.Tr(
+                        [
+                            html.Th('Signal'),
+                            html.Th('Input name'),
+                            html.Th('Outputs name'),
+                            html.Th('Outputs number'),
+                        ]
+                    )
+                ),
+                html.Tbody(
+                    [
+                        html.Tr(
+                            [
+                                html.Td(i),
+                                html.Td(metadata[i]['input_name']),
+                                html.Td(metadata[i]['output_name']),
+                                html.Td(metadata[i]['count']),
+                            ]
+                        )
+                        for i in range(len(metadata))
+                    ]
+                ),
+            ],
+            bordered=True,
+            hover=True,
+            responsive=True,
+            striped=True,
+        )
+    ]
+    return metadata_structure

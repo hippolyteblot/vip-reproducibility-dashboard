@@ -1,0 +1,19 @@
+{
+    "input": {
+        "file_name": "T1.nii.gz",
+        "girder_id": "646dcb2185f48d3da0718f51",
+        "md5": "9e2e95cebdf12f00c3a43abe3ebff2d4"
+    },
+    "output": {
+        "file_name": "UPENN-GBM-00019",
+        "girder_id": "646f415585f48d3da071909f",
+        "md5": "798fbfac4f6966d65cb10108227afaf7"
+    },
+    "parameters_file": {
+        "file_name": "None",
+        "girder_id": "None",
+        "md5": "None"
+    },
+    "pipeline": "BraTS/1.8.1-fuzzy",
+    "string_param": "hello"
+}

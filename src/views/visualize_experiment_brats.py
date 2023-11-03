@@ -172,23 +172,26 @@ def toggle_modal(n1, n2):
 def update_chart(_, file):
     exec_id = int(request.referrer.split('?')[1].split('=')[1])
 
+    experiment_data = get_global_brats_experiment_data(exec_id)
+    files = experiment_data['File'].unique()
     if file == 'All':
-        experiment_data, files = get_global_brats_experiment_data(exec_id)
         description = 'Significant digits mean per step for each file. Significant digits are computed as with ' \
                       'https://raw.githubusercontent.com/gkpapers/2020AggregateMCA/master/code/utils.py. ' \
                       'The mean is computed for each step and each file.'
+        title = 'Significant digits mean per step for each file'
     else:
-        experiment_data, files = get_global_brats_experiment_data(exec_id, file=file)
+        experiment_data = experiment_data[experiment_data['File'] == file]
         description = f'Significant digits mean per step for file {file}. Significant digits are computed with ' \
                       f'https://raw.githubusercontent.com/gkpapers/2020AggregateMCA/master/code/utils.py. ' \
                       f'The mean is computed for each step.'
-
+        title = f'Significant digits mean per step for file {file}'
 
     files = [file for file in files]
+    print(files)
     files.insert(0, 'All')
 
     figure = px.box(experiment_data, x="File", y="Mean_sigdigits", color="File", facet_col="Image",
-                    title="Significant digits mean per step for each file", points="all",
+                    title=title,
                     category_orders={"Step": experiment_data['File'].unique().tolist(),
                                      "Image": experiment_data['Image'].unique().tolist()},
                     color_discrete_sequence=px.colors.qualitative.Plotly)

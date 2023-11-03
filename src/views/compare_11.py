@@ -1,3 +1,4 @@
+import pandas as pd
 from dash import html, callback, Input, Output, dcc
 import dash_bootstrap_components as dbc
 import plotly.express as px
@@ -70,12 +71,11 @@ def bind_charts(_, normalization):
     data1['File'] = 'File 1'
     data2['File'] = 'File 2'
 
-    data = data1.append(data2)
+    data = pd.concat([data1, data2])
 
     if normalization:
-        # subtract mean and divide by std by metabolite
-        means = data.groupby('Metabolite').mean()['Amplitude']
-        stds = data.groupby('Metabolite').std()['Amplitude']
+        means = data.groupby('Metabolite').mean(numeric_only=True)['Amplitude']
+        stds = data.groupby('Metabolite').std(numeric_only=True)['Amplitude']
         data['Amplitude'] = data.apply(lambda row: (row['Amplitude'] - means[row['Metabolite']]) /
                                        stds[row['Metabolite']], axis=1)
 

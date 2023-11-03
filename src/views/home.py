@@ -8,7 +8,10 @@ from models.home import load_exp_from_db, get_available_applications, get_availa
 def layout():
     return html.Div(
         [
-            html.H1('Welcome on the VIP reproducibility dashboard'),
+            html.H1(
+                children='Welcome on the VIP reproducibility dashboard',
+                id='home-title',
+            ),
             html.Div(
                 children=[
                     html.P(
@@ -114,7 +117,8 @@ def layout():
                                                             dbc.Col(
                                                                 className='card',
                                                                 id='wf-container',
-                                                                style={'flexDirection': 'column'},
+                                                                style={'flexDirection': 'column', 'maxHeight': '450px'
+                                                                          , 'overflowY': 'scroll'},
                                                             ),
                                                         ],
                                                     ),
@@ -740,6 +744,7 @@ def toggle_modal_exp(n1, n2, is_open):
 def update_version_dropdown(app_id):
     versions = get_available_versions(app_id)
     options = [{'label': version['number'], 'value': version['id']} for version in versions]
+    options.sort(key=lambda x: x['label'])
     options.insert(0, {'label': 'All', 'value': 'all'})
     exp_list = load_exp_from_db()
     new_exp_list = []
@@ -765,6 +770,7 @@ def update_version_dropdown(app_id):
 def update_wf_version_dropdown(app_id):
     versions = get_available_versions(app_id)
     options = [{'label': version['number'], 'value': version['id']} for version in versions]
+    options.sort(key=lambda x: x['label'])
     options.insert(0, {'label': 'All', 'value': 'all'})
     wf_list = load_exp_from_db()
     new_wf_list = []

@@ -1,0 +1,19 @@
+{
+    "input": {
+        "file_name": "Rec014_Vox1.mrui",
+        "girder_id": "63e0d4710386da2747642058",
+        "md5": "4e2790fc48d1d4d4b20f59271e9e6f31"
+    },
+    "output": {
+        "file_name": "Rec014_Vox1.mrui--quest_param_117T_B.txt.tgz",
+        "girder_id": "644a5cee85f48d3da0714864",
+        "md5": "a74337a3d11cff065a76b211d62f7640"
+    },
+    "parameters_file": {
+        "file_name": "quest_param_117T_B.txt",
+        "girder_id": "63e0d46c0386da2747642010",
+        "md5": "4480fe6387d7103d356d4a9bb00d6cd7"
+    },
+    "pipeline": "CQUEST/0.1-logs",
+    "string_param": "hello"
+}

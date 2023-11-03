@@ -108,12 +108,10 @@ def bind_components(_):
 )
 def show_frames(slider_value, axe, only_differences):
     folder_id = request.referrer.split('id1=')[1].split('&')[0]
-
     diff_matrix, size = get_processed_data_from_niftis_folder(folder_id, slider_value, axe, only_differences == 'yes')
 
     if slider_value > size:
         slider_value = size
-
     return (
         px.imshow(diff_matrix),
         0,

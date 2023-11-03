@@ -2,7 +2,7 @@ import warnings
 import pandas as pd
 
 
-def get_quest2(quest2_path, verbose=False) -> tuple[pd.DataFrame, str]:
+def get_quest2(quest2_path, verbose=False) -> pd.DataFrame:
     """ A home-made function to import data from CQuest result files : *_quest2.txt"""
 
     class __LineInfo:

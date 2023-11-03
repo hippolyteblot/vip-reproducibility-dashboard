@@ -5,7 +5,7 @@ from utils.settings import APP_HOST, APP_PORT, APP_DEBUG, DEV_TOOLS_PROPS_CHECK
 from app import create_app
 
 
-@pytest.fixture
+@pytest.fixture(scope="module")
 def client():
     app = create_app()
     if __name__ == "__main__":

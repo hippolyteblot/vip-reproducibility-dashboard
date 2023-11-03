@@ -72,6 +72,56 @@ def layout():
     )
 
 
+def get_experiment_data(exec_id, file):
+    experiment_data = get_global_brats_experiment_data(exec_id)
+    files = experiment_data['File'].unique().tolist()
+    if file != 'All':
+        experiment_data = experiment_data[experiment_data['File'] == file]
+
+    experiment_data = experiment_data[~experiment_data['File'].str.contains('T1CE')]
+
+    return experiment_data, files
+
+
+def sort_experiment_data(experiment_data1, experiment_data2):
+    sorted_experiments = pd.DataFrame()
+    files_to_check = ['_raw.nii.gz', '_rai.nii.gz', '_rai_n4.nii.gz', '_to_SRI.nii.gz', '_to_SRI_brain.nii.gz']
+
+    dfs_to_concat = []
+
+    for file_to_check in files_to_check:
+        for index, row in experiment_data1.iterrows():
+            if file_to_check in row['File']:
+                dfs_to_concat.append(row)
+
+        for index, row in experiment_data2.iterrows():
+            if file_to_check in row['File']:
+                dfs_to_concat.append(row)
+
+    if dfs_to_concat:
+        sorted_experiments = pd.concat(dfs_to_concat, axis=1).T
+
+    sorted_experiments.reset_index(drop=True, inplace=True)
+
+    return sorted_experiments
+
+
+def create_box_plot(sorted_experiments, unique_file=False):
+    if unique_file:
+        title = f"Significant digits mean per step for file {sorted_experiments['File'].iloc[0]}"
+    else:
+        title = "Significant digits mean per step for each file"
+    figure = px.box(sorted_experiments, x="File", y="Mean_sigdigits",
+                    title=title, color='Experiment')
+    figure.update_layout(
+        xaxis_title="File",
+        yaxis_title="Significant digits mean",
+        legend_title="Patient",
+    )
+
+    return figure
+
+
 @callback(
     Output('general-chart-brats-exp-compare', 'figure'),
     Output('file-brats-exp-compare', 'options'),
@@ -83,93 +133,22 @@ def update_chart(_, file):
     exec_id1 = int(request.referrer.split('?')[1].split('=')[1].split('&')[0])
     exec_id2 = int(request.referrer.split('?')[1].split('=')[2])
 
-    if file == 'All':
-        experiment_data1, files = get_global_brats_experiment_data(exec_id1)
-        experiment_data2, _ = get_global_brats_experiment_data(exec_id2)
-    else:
-        experiment_data1, files = get_global_brats_experiment_data(exec_id1, file=file)
-        experiment_data2, _ = get_global_brats_experiment_data(exec_id2, file=file)
-    # Delete row beginning with T1CE
-    experiment_data1 = experiment_data1[~experiment_data1['File'].str.contains('T1CE')]
-    experiment_data2 = experiment_data2[~experiment_data2['File'].str.contains('T1CE')]
+    experiment_data1, files = get_experiment_data(exec_id1, file)
+    experiment_data2, _ = get_experiment_data(exec_id2, file)
 
-    files = [file for file in files]
-    files.insert(0, 'All')
-
-    # concat both dataframes but add a column to know which one is which
     experiment_data1['Experiment'] = 'Experiment 1'
     experiment_data2['Experiment'] = 'Experiment 2'
 
-    # put in first row where File contains raw, after rai, after SRI, after SRI_brain
-    sorted_experiments = pd.DataFrame()
-    # check each row of experiment_data
-    for index, row in experiment_data1.iterrows():
-        # check if File contains raw
-        if '_raw.nii.gz' in row['File']:
-            sorted_experiments = sorted_experiments.append(row)
-            experiment_data1 = experiment_data1.drop(index)
-    # check each row of experiment_data
-    for index, row in experiment_data1.iterrows():
-        # check if File contains rai
-        if '_rai.nii.gz' in row['File']:
-            sorted_experiments = sorted_experiments.append(row)
-            experiment_data1 = experiment_data1.drop(index)
-    # check each row of experiment_data
-    for index, row in experiment_data1.iterrows():
-        # check if File contains rai
-        if '_rai_n4.nii.gz' in row['File']:
-            sorted_experiments = sorted_experiments.append(row)
-            experiment_data1 = experiment_data1.drop(index)
-    # check each row of experiment_data
-    for index, row in experiment_data1.iterrows():
-        # check if File contains SRI
-        if '_to_SRI.nii.gz' in row['File']:
-            sorted_experiments = sorted_experiments.append(row)
-            experiment_data1 = experiment_data1.drop(index)
-    for index, row in experiment_data1.iterrows():
-        # check if File contains SRI
-        if '_to_SRI_brain.nii.gz' in row['File']:
-            sorted_experiments = sorted_experiments.append(row)
-            experiment_data1 = experiment_data1.drop(index)
+    sorted_experiments = sort_experiment_data(experiment_data1, experiment_data2)
 
-    for index, row in experiment_data2.iterrows():
-        # check if File contains raw
-        if '_raw.nii.gz' in row['File']:
-            sorted_experiments = sorted_experiments.append(row)
-            experiment_data2 = experiment_data2.drop(index)
-    # check each row of experiment_data
-    for index, row in experiment_data2.iterrows():
-        # check if File contains rai
-        if '_rai.nii.gz' in row['File']:
-            sorted_experiments = sorted_experiments.append(row)
-            experiment_data2 = experiment_data2.drop(index)
-    # check each row of experiment_data
-    for index, row in experiment_data2.iterrows():
-        # check if File contains rai
-        if '_rai_n4.nii.gz' in row['File']:
-            sorted_experiments = sorted_experiments.append(row)
-            experiment_data2 = experiment_data2.drop(index)
-    # check each row of experiment_data
-    for index, row in experiment_data2.iterrows():
-        # check if File contains SRI
-        if '_to_SRI.nii.gz' in row['File']:
-            sorted_experiments = sorted_experiments.append(row)
-            experiment_data2 = experiment_data2.drop(index)
-    for index, row in experiment_data2.iterrows():
-        # check if File contains SRI
-        if '_to_SRI_brain.nii.gz' in row['File']:
-            sorted_experiments = sorted_experiments.append(row)
-            experiment_data2 = experiment_data2.drop(index)
+    figure = create_box_plot(sorted_experiments, file != 'All')
 
-    figure = px.box(sorted_experiments, x="File", y="Mean_sigdigits",
-                    title="Significant digits mean per file", color="Experiment")
-    figure.update_layout(
-        xaxis_title="Patient",
-        yaxis_title="Significant digits mean",
-        legend_title="Patient",
-    )
     description = 'This chart shows the mean of significant digits per file per patient. ' \
                   'The significant digits are calculated by the formula: ' \
                   'significant digits = -ln(|std/mean|). ' \
                   'The mean of significant digits is calculated by using a file per execution.'
+
+    files.insert(0, 'All')
+
     return figure, [{'label': file, 'value': file} for file in files], description
+

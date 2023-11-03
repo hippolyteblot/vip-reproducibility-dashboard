@@ -78,7 +78,7 @@ def layout():
                                             {'label': ' General', 'value': 'general'},
                                             {'label': ' Bland-Altman', 'value': 'bland-altman'},
                                         ],
-                                        value='bland-altman',
+                                        value='general',
                                         labelStyle={'display': 'block'},
                                     ),
                                 ],
@@ -140,6 +140,9 @@ def bind_parameters_from_url(execution_id):
         normalization = request.referrer.split('&')[4].split('=')[1]
         graph_type = request.referrer.split('&')[5].split('=')[1]
 
+        if not normalization:
+            normalization = 'No'
+
         return metabolite_name, signal_selected, normalization, graph_type
     return 'PCh', 'All', False, 'bland-altman'
 
@@ -167,6 +170,8 @@ def generate_url(exp1, exp2, metabolite_name, signal_selected, graph_type, norma
     prevent_initial_call=True,
 )
 def update_metabolite_name_bland_altman(graph, metabolite_name, signal_selected, normalization):
+    if not normalization:
+        normalization = 'No'
     exec_id_1 = int(request.referrer.split('?')[1].split('=')[1].split('&')[0].split('&')[0])
     exec_id_2 = int(request.referrer.split('?')[1].split('=')[2].split('&')[0])
     experiment_data_1 = get_cquest_experiment_data(exec_id_1)
@@ -215,15 +220,21 @@ def update_exp_chart_bland_altman(_, metabolite_name, signal_selected, normaliza
     experiment_data_1 = get_cquest_experiment_data(exec_id_1)
     experiment_data_2 = get_cquest_experiment_data(exec_id_2)
 
+    # Remove row where signal is Rec002_Vox1
+    experiment_data_1 = experiment_data_1[experiment_data_1['Signal'] != 'Rec002_Vox1_quest2']
+
     # Add a column to experiment_data_1 and experiment_data_2 to identify the sample
     experiment_data_1['Experiment'] = get_experiment_name(exec_id_1)
     experiment_data_2['Experiment'] = get_experiment_name(exec_id_2)
+
+    # keep only raws if the field 'Signal' is in both dataframes
+    experiment_data_1 = experiment_data_1[experiment_data_1['Signal'].isin(experiment_data_2['Signal'])]
+    experiment_data_2 = experiment_data_2[experiment_data_2['Signal'].isin(experiment_data_1['Signal'])]
 
     if metabolite_name != 'All':
         # Keep only the selected metabolite
         experiment_data_1 = experiment_data_1[experiment_data_1['Metabolite'] == metabolite_name]
         experiment_data_2 = experiment_data_2[experiment_data_2['Metabolite'] == metabolite_name]
-
     if graph_type == 'bland-altman':
         # Group by signal and metabolite by computing the mean
         experiment_data_1 = experiment_data_1.groupby(['Signal', 'Metabolite', 'Experiment']).mean(True).reset_index()
@@ -295,6 +306,7 @@ def update_exp_chart_bland_altman(_, metabolite_name, signal_selected, normaliza
     else:
         concat_data = pd.concat([experiment_data_1, experiment_data_2], ignore_index=True)
 
+        graph_list = [px.box, px.scatter]
         # Delete rows where Metabolite contains 'water'
         concat_data = concat_data[~concat_data['Metabolite'].str.contains('water')]
         # keep only the wanted signal
@@ -308,6 +320,7 @@ def update_exp_chart_bland_altman(_, metabolite_name, signal_selected, normaliza
 
         if metabolite_name != 'All':
             concat_data = concat_data[concat_data["Metabolite"] == metabolite_name]
+
         else:
             addon = ''
             if normalization == 'Yes':
@@ -317,7 +330,13 @@ def update_exp_chart_bland_altman(_, metabolite_name, signal_selected, normaliza
                                                                          stds[row['Metabolite']], axis=1)
                 addon = 'The metabolites are normalized by subtracting the mean and dividing by the standard deviation.'
 
-            graph = px.box(
+            first_x_value = concat_data['Metabolite'].iloc[0]
+            if len(concat_data[concat_data['Metabolite'] == first_x_value]) < 4:
+                selected_graph = graph_list[1]
+            else:
+                selected_graph = graph_list[0]
+
+            graph = selected_graph(
                 x=concat_data['Metabolite'],
                 y=concat_data['Amplitude'],
                 title='Comparison of metabolites',
@@ -334,7 +353,12 @@ def update_exp_chart_bland_altman(_, metabolite_name, signal_selected, normaliza
             return graph, description
 
         if signal_selected == 'None':
-            graph = px.box(
+            first_x_value = concat_data['Workflow'].iloc[0]
+            if len(concat_data[concat_data['Workflow'] == first_x_value]) < 4:
+                selected_graph = graph_list[1]
+            else:
+                selected_graph = graph_list[0]
+            graph = selected_graph(
                 x=concat_data['Workflow'],
                 y=concat_data['Amplitude'],
                 title='Comparison of metabolite ' + metabolite_name,
@@ -346,9 +370,14 @@ def update_exp_chart_bland_altman(_, metabolite_name, signal_selected, normaliza
                           "experiments. The amplitude is the area under the curve of the metabolite."
             return graph, description
         else:
+            first_x_value = concat_data['Signal'].iloc[0]
+            if len(concat_data[concat_data['Signal'] == first_x_value]) < 4:
+                selected_graph = graph_list[1]
+            else:
+                selected_graph = graph_list[0]
             signal_values = concat_data['Signal']
             amplitude_values = concat_data['Amplitude']
-            graph = px.box(
+            graph = selected_graph(
                 x=signal_values,
                 y=amplitude_values,
                 title='Comparison',

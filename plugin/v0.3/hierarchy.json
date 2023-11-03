@@ -1,0 +1,90 @@
+{
+    "folder": [
+      {
+        "_id": "65327851889e760e6680c70e",
+        "name": "STEAM-vox2",
+        "description": "",
+        "parentCollection": "folder",
+        "baseParentId": "ObjectId('644bd05ed74721fdff4c8487')",
+        "baseParentType": "collection",
+        "parentId": "ObjectId('65327844889e760e6680c70c')",
+        "creatorId": "ObjectId('644bce8f9ca5708b77e9f4d7')",
+        "created": "2023-10-20T12:53:37.278000",
+        "updated": "2023-10-20T14:38:33.637000",
+        "size": 7091,
+        "meta": {
+          "experiment_id": "41"
+        },
+        "public": false,
+        "access": {
+          "groups": [],
+          "users": [
+            {
+              "id": "644bce8f9ca5708b77e9f4d7",
+              "level": 2,
+              "flags": []
+            }
+          ]
+        },
+        "lowerName": "steam-vox2"
+      },
+      {
+        "_id": "65327857889e760e6680c70f",
+        "name": "STEAM-vox2",
+        "description": "",
+        "parentCollection": "folder",
+        "baseParentId": "644bd05ed74721fdff4c8487",
+        "baseParentType": "collection",
+        "parentId": "6532784a889e760e6680c70d",
+        "creatorId": "644bce8f9ca5708b77e9f4d7",
+        "created": "2023-10-20T12:53:43.742000",
+        "updated": "2023-10-20T13:20:51.385000",
+        "size": 7073,
+        "meta": {
+          "experiment_id": "41"
+        },
+        "public": false,
+        "access": {
+          "groups": [],
+          "users": [
+            {
+              "id": "644bce8f9ca5708b77e9f4d7",
+              "level": 2,
+              "flags": []
+            }
+          ]
+        },
+        "lowerName": "steam-vox2"
+      },
+      {
+        "_id": "64510dbb5fedb6182fb2975a",
+        "name": "folder2",
+        "description": "",
+        "parentCollection": "collection",
+        "baseParentId": "644bd05ed74721fdff4c8487",
+        "baseParentType": "collection",
+        "parentId": "644bd05ed74721fdff4c8487",
+        "creatorId": "644bce8f9ca5708b77e9f4d7",
+        "created": "2023-05-02T13:18:51.808000",
+        "updated": "2023-10-25T15:19:48.839000",
+        "size": 0,
+        "meta": {
+          "experiment_id": "41"
+        },
+        "public": false,
+        "access": {
+          "groups": [],
+          "users": [
+            {
+              "id": "644bce8f9ca5708b77e9f4d7",
+              "level": 2,
+              "flags": []
+            }
+          ]
+        },
+        "lowerName": "folder2"
+      }
+    ],
+    "item": []
+  }
+  

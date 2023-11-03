@@ -1,9 +1,8 @@
-import pandas as pd
-from dash import html, callback, Input, Output, dcc
 import dash_bootstrap_components as dbc
+import pandas as pd
 import plotly.express as px
+from dash import html, callback, Input, Output, dcc
 from flask import request
-from flask_login import current_user
 
 from models.cquest_utils import get_files_in_folder, read_file_in_folder, read_folder
 

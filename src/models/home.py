@@ -11,7 +11,7 @@ from utils.settings import DB, CACHE_FOLDER
 
 def get_users():
     """Get the users from the database"""
-    query = 'SELECT * FROM USERS'
+    query = 'SELECT * FROM users'
     users = DB.fetch(query)
     return users
 
@@ -46,14 +46,6 @@ def load_exp_from_db():
             'INNER JOIN app_version ON experiment.version_id = app_version.id ' \
             'INNER JOIN application ON app_version.application_id = application.id'
     return build_json_from_db2(query)
-
-
-def load_exec_from_db():
-    """Load the experiments from the local folder"""
-    query = 'SELECT EXPERIMENTS.id, EXPERIMENTS.application_name, EXPERIMENTS.application_version, U.username ' \
-            'FROM EXPERIMENTS INNER JOIN USERS U ON EXPERIMENTS.user_id = U.id WHERE EXPERIMENTS.single = 1'
-
-    return build_json_from_db(query)
 
 
 def build_json_from_db(query):
@@ -179,7 +171,7 @@ def decode_base64(string: str) -> bytes:
     return base64.b64decode(string)
 
 
-def flatten_folder(path: str):
+def flatten_folder(path):
     """Flatten the folder by moving the files to the top level"""
     nodes = os.listdir(path)
     while nodes:
@@ -189,3 +181,9 @@ def flatten_folder(path: str):
                 nodes.append(os.path.join(node, subnode))
         else:
             shutil.move(os.path.join(path, node), path)
+
+    # remove the subfolders
+    for root, dirs, files in os.walk(path):
+        for dir in dirs:
+            shutil.rmtree(os.path.join(root, dir))
+
