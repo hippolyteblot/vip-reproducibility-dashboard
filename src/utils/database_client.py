@@ -21,29 +21,37 @@ class DatabaseClient:
         self.connection.close()
 
     def execute(self, query, params=None):
+        self.connect()
         cursor = self.connection.cursor()
         cursor.execute(query, params)
         self.connection.commit()
         cursor.close()
+        self.disconnect()
         return cursor.lastrowid
 
     def fetch(self, query, params=None):
+        self.connect()
         cursor = self.connection.cursor(dictionary=True)
         cursor.execute(query, params)
         result = cursor.fetchall()
         cursor.close()
+        self.disconnect()
         return result
 
     def fetch_one(self, query, params=None):
+        self.connect()
         cursor = self.connection.cursor(dictionary=True)
         cursor.execute(query, params)
         result = cursor.fetchone()
         cursor.close()
+        self.disconnect()
         return result
 
     def fetch_many(self, query, params=None):
+        self.connect()
         cursor = self.connection.cursor(dictionary=True)
         cursor.execute(query, params)
         result = cursor.fetchmany()
         cursor.close()
+        self.disconnect()
         return result
