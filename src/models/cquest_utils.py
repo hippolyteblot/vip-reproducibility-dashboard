@@ -183,6 +183,7 @@ def filter_and_get_unique_values(wf_data):
 
 def create_dropdown_options(values, all_label):
     options = [{'label': str(value), 'value': value} for value in values]
+    options.sort(key=lambda x: x['label'])
     options.insert(0, {'label': all_label, 'value': all_label})
     return options
 

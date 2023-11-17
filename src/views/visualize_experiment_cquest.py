@@ -1,10 +1,9 @@
 import dash_bootstrap_components as dbc
-import plotly.express as px
 from dash import html, callback, Input, Output, dcc, State
 from flask import request
 
 from models.cquest_utils import get_cquest_experiment_data, get_metadata_cquest, generate_box_plot, \
-    get_description_and_label, filter_and_normalize_data, get_workflow_id_from_referrer, \
+    get_workflow_id_from_referrer, \
     create_signal_group_column, create_workflow_group_column, create_metadata_structure, create_dropdown_options, \
     filter_and_get_unique_values, normalize
 from models.reproduce import get_experiment_name
@@ -204,7 +203,8 @@ def update_dropdowns(_, metabolite_name, signal_selected, workflow_selected, nor
         workflows = wf_data['Workflow'].unique()
         list_workflows = create_dropdown_options(workflows, 'None')
 
-    metadata = get_metadata_cquest(wf_id)
+    #metadata = get_metadata_cquest(wf_id)
+    metadata = []
     metadata_structure = create_metadata_structure(metadata)
 
     return (list_metabolites, list_signals, list_workflows, metabolite_name, signal_selected, workflow_selected,
@@ -217,57 +217,6 @@ def generate_url(wf_id, metabolite_name, signal_selected, workflow_selected, nor
           str(signal_selected) + "&workflow_selected=" + str(workflow_selected) + "&normalization=" + \
           str(normalization)
     return url
-
-
-"""
-@callback(
-    Output('exec-chart', 'figure'),
-    Output('workflow-selected', 'options', allow_duplicate=True),
-    Output('data-to-highlight-label', 'children'),
-    Output('description-exp-cquest', 'children'),
-    Input('trigger-update', 'children'),
-    State('metabolite-name', 'value'),
-    State('signal-selected', 'value'),
-    State('workflow-selected', 'value'),
-    State('normalization-repro-wf', 'value'),
-    prevent_initial_call=True,
-)
-def update_chart(_, metabolite, signal, workflow, normalization):
-    wf_id = get_workflow_id_from_referrer(request.referrer)
-    wf_data = get_cquest_experiment_data(wf_id)
-
-    wf_data = filter_and_normalize_data(wf_data, signal, normalization)
-
-    label, description = get_description_and_label(signal, workflow, metabolite)
-
-    if signal == 'All':
-        list_workflows = [{'label': str(wf_id), 'value': wf_id} for wf_id in wf_data['Signal'].unique()]
-        list_workflows.insert(0, {'label': 'None', 'value': 'None'})
-    else:
-        list_workflows = [{'label': str(wf_id), 'value': wf_id} for wf_id in wf_data['Workflow'].unique()]
-        list_workflows.insert(0, {'label': 'None', 'value': 'None'})
-
-    if workflow != 'None':
-        create_signal_group_column(wf_data, workflow)
-    elif signal == 'All':
-        create_workflow_group_column(wf_data, workflow)
-
-    if metabolite != 'All':
-        exec_data = wf_data[wf_data["Metabolite"] == metabolite]
-        if signal == 'None':
-            return generate_box_plot(exec_data, 'Workflow', 'Amplitude',
-                                     f'Comparison of metabolite {metabolite}'), list_workflows, label, description
-        else:
-            return generate_box_plot(exec_data, 'Signal', 'Amplitude', f'Comparison of metabolite {metabolite}',
-                                     'Signal group'), list_workflows, label, description
-
-    if signal == 'None' or workflow == 'None':
-        return generate_box_plot(wf_data, 'Metabolite', 'Amplitude',
-                                 'Comparison of metabolites'), list_workflows, label, description
-    else:
-        return generate_box_plot(wf_data, 'Metabolite', 'Amplitude', 'Comparison of metabolites',
-                                 'Signal group'), list_workflows, label, description
-"""
 
 
 # when a point of the graphe is clicked, the callback is called to update the value of the dropdown "Signal"
@@ -317,16 +266,14 @@ def update_chart(_, metabolite, signal, workflow, normalization):
 
     match combination:
         case [True, True, True]:  # Cas 1 : Display everything
-            list_workflows = [{'label': str(signal), 'value': signal} for signal in exp_data['Signal'].unique()]
-            list_workflows.insert(0, {'label': 'None', 'value': 'None'})
+            list_workflows = create_dropdown_options(exp_data['Signal'].unique(), 'All')
             figure = generate_box_plot(exp_data, 'Metabolite', 'Amplitude',
                                        'Comparison of metabolites')
             label = 'Signal to highlight'
             description = ("This chart shows the amplitude of each signal for each metabolite. Results are computed "
                            "by cQUEST and their provenance is shown in the table below.")
         case [True, True, False]:  # Cas 2 : Display everything but highlight a signal
-            list_workflows = [{'label': str(signal), 'value': signal} for signal in exp_data['Signal'].unique()]
-            list_workflows.insert(0, {'label': 'None', 'value': 'None'})
+            list_workflows = create_dropdown_options(exp_data['Signal'].unique(), 'None')
             create_signal_group_column(exp_data, workflow)
             figure = generate_box_plot(exp_data, 'Metabolite', 'Amplitude',
                                        'Comparison of metabolites', 'Signal group')
@@ -334,8 +281,7 @@ def update_chart(_, metabolite, signal, workflow, normalization):
             description = ("This chart shows the amplitude of each signal for each metabolite. Results are computed "
                            "by cQUEST and their provenance is shown in the table below.")
         case [True, False, True]:  # Cas 3 : Filter to keep only the data of the selected signal
-            list_workflows = [{'label': str(wf_id), 'value': wf_id} for wf_id in exp_data['Workflow'].unique()]
-            list_workflows.insert(0, {'label': 'None', 'value': 'None'})
+            list_workflows = create_dropdown_options(exp_data['Workflow'].unique(), 'None')
             exp_data = exp_data[exp_data['Signal'] == signal]
             figure = generate_box_plot(exp_data, 'Metabolite', 'Amplitude',
                                        'Comparison of metabolites')
@@ -343,8 +289,7 @@ def update_chart(_, metabolite, signal, workflow, normalization):
             description = ("This chart shows the amplitude of each signal for each metabolite. Results are computed "
                            "by cQUEST and their provenance is shown in the table below.")
         case [True, False, False]:  # Cas 4 : Filter to keep only the data of the selected signal and highlight a wf
-            list_workflows = [{'label': str(signal), 'value': signal} for signal in exp_data['Workflow'].unique()]
-            list_workflows.insert(0, {'label': 'None', 'value': 'None'})
+            list_workflows = create_dropdown_options(exp_data['Workflow'].unique(), 'None')
             exp_data = exp_data[exp_data['Signal'] == signal]
             create_workflow_group_column(exp_data, workflow)
             figure = generate_box_plot(exp_data, 'Metabolite', 'Amplitude',
@@ -353,8 +298,7 @@ def update_chart(_, metabolite, signal, workflow, normalization):
             description = ("This chart shows the amplitude of each signal for each metabolite. Results are computed "
                            "by cQUEST and their provenance is shown in the table below.")
         case [False, True, True]:  # Cas 5 : Filter to keep only the selected metabolite. Signals on abscissa
-            list_workflows = [{'label': str(signal), 'value': signal} for signal in exp_data['Workflow'].unique()]
-            list_workflows.insert(0, {'label': 'None', 'value': 'None'})
+            list_workflows = create_dropdown_options(exp_data['Workflow'].unique(), 'None')
             exp_data = exp_data[exp_data['Metabolite'] == metabolite]
             figure = generate_box_plot(exp_data, 'Signal', 'Amplitude',
                                        f'Comparison of metabolite {metabolite}')
@@ -362,8 +306,7 @@ def update_chart(_, metabolite, signal, workflow, normalization):
             description = (f"This chart shows the amplitude of the signal {signal} for each metabolite. Results are "
                            "computed by cQUEST and their provenance is shown in the table below.")
         case [False, True, False]:  # Cas 6 : Same as 5 but highlight a wf (not really useful)
-            list_workflows = [{'label': str(wf_id), 'value': wf_id} for wf_id in exp_data['Workflow'].unique()]
-            list_workflows.insert(0, {'label': 'None', 'value': 'None'})
+            list_workflows = create_dropdown_options(exp_data['Workflow'].unique(), 'None')
             exp_data = exp_data[exp_data['Metabolite'] == metabolite]
             create_workflow_group_column(exp_data, workflow)
             figure = generate_box_plot(exp_data, 'Signal', 'Amplitude',
@@ -372,8 +315,7 @@ def update_chart(_, metabolite, signal, workflow, normalization):
             description = (f"This chart shows the amplitude of the signal {signal} for each metabolite. Results are "
                            "computed by cQUEST and their provenance is shown in the table below.")
         case [False, False, True]:  # Cas 7 : Filter to keep only the selected metabolite and signal
-            list_workflows = [{'label': str(wf_id), 'value': wf_id} for wf_id in exp_data['Workflow'].unique()]
-            list_workflows.insert(0, {'label': 'None', 'value': 'None'})
+            list_workflows = create_dropdown_options(exp_data['Workflow'].unique(), 'None')
             exp_data = exp_data[exp_data['Metabolite'] == metabolite]
             exp_data = exp_data[exp_data['Signal'] == signal]
             figure = generate_box_plot(exp_data, 'Workflow', 'Amplitude',
@@ -382,8 +324,7 @@ def update_chart(_, metabolite, signal, workflow, normalization):
             description = (f"This chart shows the amplitude of the signal {signal} for each metabolite. Results are "
                            "computed by cQUEST and their provenance is shown in the table below.")
         case [False, False, False]:  # Cas 8 : Filter to keep only the selected metabolite and signal and highlight a wf
-            list_workflows = [{'label': str(wf_id), 'value': wf_id} for wf_id in exp_data['Workflow'].unique()]
-            list_workflows.insert(0, {'label': 'None', 'value': 'None'})
+            list_workflows = create_dropdown_options(exp_data['Workflow'].unique(), 'None')
             exp_data = exp_data[exp_data['Metabolite'] == metabolite]
             exp_data = exp_data[exp_data['Signal'] == signal]
             create_workflow_group_column(exp_data, workflow)
@@ -393,8 +334,7 @@ def update_chart(_, metabolite, signal, workflow, normalization):
             description = (f"This chart shows the amplitude of the signal {signal} for each metabolite. Results are "
                            "computed by cQUEST and their provenance is shown in the table below.")
         case _:  # Cas 9 : Display everything
-            list_workflows = [{'label': str(signal), 'value': signal} for signal in exp_data['Signal'].unique()]
-            list_workflows.insert(0, {'label': 'None', 'value': 'None'})
+            list_workflows = create_dropdown_options(exp_data['Signal'].unique(), 'All')
             figure = generate_box_plot(exp_data, 'Metabolite', 'Amplitude',
                                        'Comparison of metabolites')
             label = 'Signal to highlight'

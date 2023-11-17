@@ -1,0 +1,18 @@
+#creatis-conversion-rights-tab.tab-pane
+  .g-user-settings-container
+    form#g-user-conversion-rights-form(role="form")
+      .form-group
+
+        .g-conversion-rights-header User conversion rights for the reproducibility dashboard
+        .alert.alert-info.
+          Attention : Giving conversion rights implies that the user will be able to convert experiences even without having access rights to the storage location.
+          You can configure the location of inputs/outputs from the plugin settings.
+
+        label(for="creatis-convert-vip") This account can convert VIP results into a readable format for the reproducibility dashboard
+        input#creatis-convert-vip.input-sm-form-control(type="checkbox", checked=user.get('canConvert'))
+
+      button.btn.btn-default.btn-sm(type="submit")
+        i.icon-edit
+        | Save
+
+      #creatis-conversion-vip-error-msg.g-validation-failed-message

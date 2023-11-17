@@ -175,6 +175,7 @@ def update_metabolite_name_bland_altman(graph, metabolite_name, signal_selected,
     exec_id_1 = int(request.referrer.split('?')[1].split('=')[1].split('&')[0].split('&')[0])
     exec_id_2 = int(request.referrer.split('?')[1].split('=')[2].split('&')[0])
     experiment_data_1 = get_cquest_experiment_data(exec_id_1)
+    experiment_data_2 = get_cquest_experiment_data(exec_id_2)
 
     metabolites = experiment_data_1['Metabolite'].unique()
     metabolites = metabolites.tolist()
@@ -188,6 +189,8 @@ def update_metabolite_name_bland_altman(graph, metabolite_name, signal_selected,
         metabolite_name = metabolites[0]
 
     signals = experiment_data_1['Signal'].unique()
+    # keep only signals that are also in experiment_data_2
+    signals = [signal for signal in signals if signal in experiment_data_2['Signal'].unique()]
     if signal_selected == 'All':
         list_workflows = [{'label': str(signal_id), 'value': signal_id} for signal_id in signals]
         list_workflows.insert(0, {'label': 'None', 'value': 'None'})

@@ -21,6 +21,7 @@ from models.login import User
 from components import navbar, footer
 from utils.settings import DB
 from utils.girder_vip_client import GVC
+import pkg_resources
 
 
 def create_app():
@@ -205,7 +206,17 @@ def insert_json_if_not_exist(workflow_id, workflow_id_db, experiment_id):
         DB.execute(query, (parameter_id, experiment_id))
 
 
-insert_data_from_girder()
+plugins = []
+for entry_point in pkg_resources.iter_entry_points('repro_vip_dashboard.plugins'):
+    plugin = entry_point.load()
+    plugins.append(plugin)
+
+# Utilisez les plugins selon les besoins
+for plugin in plugins:
+    plugin.run()
+
+
+#insert_data_from_girder()
 app = create_app()
 app.run_server(
     host=APP_HOST,
