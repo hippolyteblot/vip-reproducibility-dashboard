@@ -33,8 +33,7 @@ def layout():
                                             id='upload-data-template',
                                             children=html.Div(
                                                 [
-                                                    'Drag and Drop or ',
-                                                    html.A('Select Files'),
+                                                    'Drag and Drop or Select Files',
                                                 ]
                                             ),
                                             style={
@@ -47,6 +46,7 @@ def layout():
                                                 'margin': '10px',
                                             },
                                             multiple=True,
+                                            accept='.feather',
                                         ),
                                     ],
                                 ),
@@ -62,10 +62,8 @@ def layout():
                                         dcc.Upload(
                                             id='upload-template',
                                             children=html.Div(
-                                                [
-                                                    'Drag and Drop or ',
-                                                    html.A('Select Files'),
-                                                ]
+                                                children="Drag and Drop or Select Files",
+                                                id='upload-config-label',
                                             ),
                                             style={
                                                 'height': '60px',
@@ -77,6 +75,7 @@ def layout():
                                                 'margin': '10px',
                                             },
                                             multiple=True,
+                                            accept='.json',
                                         ),
                                     ],
                                 )
@@ -239,12 +238,59 @@ def layout():
                                         Input('apply-filters-btn', 'n_clicks'),
                                         State('filters-container', 'children'),
                                     ),
+
+                                    clientside_callback(
+                                        """
+                                        function(n_clicks, filters_str, filter_template) {
+                                            if (n_clicks === undefined) return "";
+                                            filters_str = filters_str.replace('\\n', '');
+                                            // Read the string and build the filters
+                                            let rows = filters_str.split(',');
+                                            let filters = [];
+                                            for (let i = 0; i < rows.length; i++) {
+                                                let row = rows[i];
+                                                // Search for the operator (>, <, =, !=)
+                                                let operator = '';
+                                                if (row.includes('!=')) {
+                                                    operator = '!=';
+                                                } else if (row.includes('>')) {
+                                                    operator = '>';
+                                                } else if (row.includes('<')) {
+                                                    operator = '<';
+                                                } else if (row.includes('=')) {
+                                                    operator = '=';
+                                                }
+                                                // Split the row
+                                                let [field, value] = row.split(operator);
+                                                
+                                                let clone = JSON.parse(JSON.stringify(filter_template));
+                                                clone = clone[0].props.children[0   ]
+                                                console.log(clone);
+                                                clone.props.children[0].props.children[1].props.value = field;
+                                                clone.props.children[1].props.children[1].props.value = operator;
+                                                clone.props.children[2].props.children[1].props.value = value;
+                                                filters.push(clone);
+                                            }
+                                            console.log(filters);
+                                            return filters;
+                                        }
+                                        """,
+                                        Output('filters-container', 'children', allow_duplicate=True),
+                                        Input('filters-clientside-trigger', 'value'),
+                                        State('filters-template', 'value'),
+                                        State('filter-template', 'children'),
+                                        prevent_initial_call=True,
+                                    ),
                                 ],
                                 className='card-body',
                                 style={'width': 'auto'},
                             ),
                             dcc.Input(
                                 id='filters-template',
+                                type='hidden',
+                            ),
+                            dcc.Input(
+                                id='filters-clientside-trigger',
                                 type='hidden',
                             ),
                             html.Div(
@@ -443,6 +489,9 @@ def update_chart(x_column, y_column, graph_type, color_column, filters):
                 values = values.split('|')
                 data = data[data[column].isin(values)]
 
+    # check that the data is not empty
+    if data.empty:
+        return {}
     graph = charts[graph_type](
         x=data[x_column],
         y=data[y_column],
@@ -488,19 +537,55 @@ def download_config(_, graph_type, x_column, y_column, color_column, filters, de
     Output('y-axis-template', 'value', allow_duplicate=True),
     Output('color-group-template', 'value', allow_duplicate=True),
     Output('filters-template', 'value', allow_duplicate=True),
+    Output('filters-clientside-trigger', 'value'),
     Output('description-exp-template', 'value'),
+    Output('upload-config-label', 'children'),
     Input('upload-template', 'contents'),
     State('upload-template', 'filename'),
+    State('x-axis-template', 'options'),
     prevent_initial_call=True,
 )
-def upload_config(contents, filename):
+def upload_config(contents, filename, fields):
     """Upload the config file"""
+    fields_list = [f['label'] for f in fields]
     if contents is None:
-        return dash.no_update, dash.no_update, dash.no_update, dash.no_update
+        return dash.no_update, dash.no_update, dash.no_update, dash.no_update, dash.no_update, dash.no_update, dash.no_update, 'Drag and Drop or Select Files'
     content_type, content_string = contents[0].split(',')
     if 'json' in filename[0]:
-        config = json.loads(base64.b64decode(content_string).decode('utf-8'))
-        filters_str = '\n'.join(config['filters']).replace('\n', ',\n')
-        return (config['graph_type'], config['x_column'], config['y_column'], config['color_column'], filters_str,
-                config['description'])
-    return dash.no_update, dash.no_update, dash.no_update, dash.no_update, dash.no_update, dash.no_update
+        try:
+            config = json.loads(base64.b64decode(content_string).decode('utf-8'))
+            filters_str = '\n'.join(config['filters']).replace('\n', ',\n')
+            # Check that the fields are still in the data
+            print(config['x_column'], config['y_column'], config['color_column'])
+            print(fields_list)
+            if config['x_column'] not in fields_list or config['y_column'] not in fields_list:
+                print('field not in fields')
+
+            if config['color_column'] not in fields_list and config['color_column'] != 'None':
+                print('field not in fields or None')
+                raise dash.exceptions.PreventUpdate
+            for f in config['filters']:
+                operator = ''
+                if '!=' in f:
+                    operator = '!='
+                elif '>' in f:
+                    operator = '>'
+                elif '<' in f:
+                    operator = '<'
+                elif '=' in f:
+                    operator = '='
+                else:
+                    print('field not in fields FILTERS')
+                    raise dash.exceptions.PreventUpdate
+                field, value = f.split(operator)
+                if field not in fields_list:
+                    print('field not in fields')
+                    raise dash.exceptions.PreventUpdate
+            return (config['graph_type'], config['x_column'], config['y_column'], config['color_column'], filters_str,
+                    0, config['description'], filename[0])
+        except Exception as e:
+            print(e)
+            return (dash.no_update, dash.no_update, dash.no_update, dash.no_update, dash.no_update, dash.no_update,
+                    dash.no_update, 'The config file is not valid or unadapted to the current data')
+    return (dash.no_update, dash.no_update, dash.no_update, dash.no_update, dash.no_update, dash.no_update,
+            dash.no_update, 'Drag and Drop or Select Files')
