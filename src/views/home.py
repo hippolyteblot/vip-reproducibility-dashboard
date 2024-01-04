@@ -308,200 +308,244 @@ def layout():
                 ],
                 style={'display': 'flex', 'gap': '10px', 'flexDirection': 'row'},
             ),
-
             html.Div(
                 children=[
-                    dbc.Row(
+                    html.Div(
                         children=[
-                            html.H3('Compare two VIP results'),
-                            html.Div(
+                            dbc.Row(
                                 children=[
-                                    html.Img(
-                                        src='/assets/images/upload_icon.png',
-                                        style={'width': '140px', 'height': 'fit-content', 'padding': '10px'},
-                                    ),
+                                    html.H3('Compare two VIP results'),
                                     html.Div(
                                         children=[
-                                            html.P(
-                                                'Browse through all the VIP executions and compare their results. '
-                                                'You can also study similarity metrics between them'
+                                            html.Img(
+                                                src='/assets/images/upload_icon.png',
+                                                style={'width': '140px', 'height': 'fit-content', 'padding': '10px'},
                                             ),
-                                            dbc.Button(
-                                                "Compare VIP results",
-                                                id="upload-open",
-                                                n_clicks=0,
-                                                style={'width': 'fit-content', 'marginLeft': '10px'},
-                                                className="mr-1"
-                                            ),
-                                            dbc.Modal(
-                                                [
-                                                    dbc.ModalHeader(dbc.ModalTitle("Upload your own results")),
-                                                    dbc.ModalBody(
-                                                        children=[
-                                                            dbc.Row(
+                                            html.Div(
+                                                children=[
+                                                    html.P(
+                                                        'Browse through all the VIP executions and compare their results. '
+                                                        'You can also study similarity metrics between them.'
+                                                    ),
+                                                    dbc.Button(
+                                                        "Compare VIP results",
+                                                        id="upload-open",
+                                                        n_clicks=0,
+                                                        style={'width': 'fit-content', 'marginLeft': '10px'},
+                                                        className="mr-1"
+                                                    ),
+                                                    dbc.Modal(
+                                                        [
+                                                            dbc.ModalHeader(dbc.ModalTitle("Upload your own results")),
+                                                            dbc.ModalBody(
                                                                 children=[
-                                                                    dbc.Col(
+                                                                    dbc.Row(
                                                                         children=[
-                                                                            html.P('Select the application'),
-                                                                            dbc.Select(
-                                                                                id='application-selected-for-upload',
-                                                                                options=[
-                                                                                    {'label': 'cQuest',
-                                                                                     'value': 'cquest'},
-                                                                                    {'label': 'BraTS',
-                                                                                     'value': 'brats'},
+                                                                            dbc.Col(
+                                                                                children=[
+                                                                                    html.P('Select the application'),
+                                                                                    dbc.Select(
+                                                                                        id='application-selected-for-upload',
+                                                                                        options=[
+                                                                                            {'label': 'cQuest',
+                                                                                             'value': 'cquest'},
+                                                                                            {'label': 'BraTS',
+                                                                                             'value': 'brats'},
+                                                                                        ],
+                                                                                        value='cquest',
+                                                                                        style={'width': '100%'},
+                                                                                    ),
+                                                                                    html.Br(),
+                                                                                    html.P('Select the format'),
+                                                                                    dbc.Select(
+                                                                                        id='data-type-selected-for-upload',
+                                                                                        options=[
+                                                                                            {'label': '1 file to 1 file',
+                                                                                             'value': '1-1'},
+                                                                                            {
+                                                                                                'label': 'x files to y files '
+                                                                                                         '(two zipped folders)',
+                                                                                                'value': 'x-y'},
+                                                                                            {
+                                                                                                'label': 'x files (one zipped '
+                                                                                                         'folder)',
+                                                                                                'value': 'x'},
+                                                                                        ],
+                                                                                        value='1-1',
+                                                                                        style={'width': '100%'},
+                                                                                    ),
                                                                                 ],
-                                                                                value='cquest',
-                                                                                style={'width': '100%'},
+                                                                                className='card-body',
                                                                             ),
-                                                                            html.Br(),
-                                                                            html.P('Select the format'),
-                                                                            dbc.Select(
-                                                                                id='data-type-selected-for-upload',
-                                                                                options=[
-                                                                                    {'label': '1 file to 1 file',
-                                                                                     'value': '1-1'},
-                                                                                    {
-                                                                                        'label': 'x files to y files '
-                                                                                                 '(two zipped folders)',
-                                                                                        'value': 'x-y'},
-                                                                                    {
-                                                                                        'label': 'x files (one zipped '
-                                                                                                 'folder)',
-                                                                                        'value': 'x'},
+                                                                            dbc.Col(
+                                                                                children=[
+                                                                                    html.P('Upload a first file to compare'),
+                                                                                    html.Br(),
+                                                                                    dcc.Upload(
+                                                                                        id='upload-data-1',
+                                                                                        children=html.Div(
+                                                                                            children=[
+                                                                                                'Drag and Drop or ',
+                                                                                                html.A('Select Files')
+                                                                                            ],
+                                                                                            id='upload-data-1-div'
+                                                                                        ),
+                                                                                        style={
+                                                                                            'width': '100%',
+                                                                                            'height': '60px',
+                                                                                            'lineHeight': '60px',
+                                                                                            'borderWidth': '1px',
+                                                                                            'borderStyle': 'dashed',
+                                                                                            'borderRadius': '5px',
+                                                                                            'textAlign': 'center',
+                                                                                            'cursor': 'pointer',
+                                                                                        },
+                                                                                        multiple=False
+                                                                                    ),
+                                                                                    dcc.Input(
+                                                                                        id='data-1-uuid',
+                                                                                        type='hidden',
+                                                                                    ),
+                                                                                    dcc.Input(
+                                                                                        id='data-type-uploaded1',
+                                                                                        type='hidden',
+                                                                                    ),
+                                                                                    html.Br(),
+                                                                                    html.Div(
+                                                                                        id='output-data-upload-1',
+                                                                                        style={'display': 'flex',
+                                                                                               'justifyContent': 'center'}
+                                                                                    ),
                                                                                 ],
-                                                                                value='1-1',
-                                                                                style={'width': '100%'},
+                                                                                className='card-body',
+                                                                            ),
+                                                                            dbc.Col(
+                                                                                children=[
+                                                                                    html.P('Upload a second file to compare'),
+                                                                                    html.Br(),
+                                                                                    dcc.Upload(
+                                                                                        id='upload-data-2',
+                                                                                        children=html.Div(
+                                                                                            children=[
+                                                                                                'Drag and Drop or ',
+                                                                                                html.A('Select Files')
+                                                                                            ],
+                                                                                            id='upload-data-2-div'
+                                                                                        ),
+                                                                                        style={
+                                                                                            'width': '100%',
+                                                                                            'height': '60px',
+                                                                                            'lineHeight': '60px',
+                                                                                            'borderWidth': '1px',
+                                                                                            'borderStyle': 'dashed',
+                                                                                            'borderRadius': '5px',
+                                                                                            'textAlign': 'center',
+                                                                                            'cursor': 'pointer',
+                                                                                        },
+                                                                                        multiple=False
+                                                                                    ),
+                                                                                    dcc.Input(
+                                                                                        id='data-2-uuid',
+                                                                                        type='hidden',
+                                                                                    ),
+                                                                                    dcc.Input(
+                                                                                        id='data-type-uploaded2',
+                                                                                        type='hidden',
+                                                                                    ),
+                                                                                    html.Br(),
+                                                                                    html.Div(
+                                                                                        id='output-data-upload-2',
+                                                                                        style={'display': 'flex',
+                                                                                               'justifyContent': 'center'}
+                                                                                    ),
+                                                                                ],
+                                                                                className='card-body',
+                                                                                id='upload-data-2-container',
+                                                                            ),
+                                                                            dbc.Col(
+                                                                                children=[
+                                                                                    dbc.Button(
+                                                                                        'Compare',
+                                                                                        id='compare-btn',
+                                                                                        style={'width': '100%'},
+                                                                                        className='btn btn-primary',
+                                                                                        href='/compare-11?id1=&id2=',
+                                                                                        disabled=True,
+                                                                                    ),
+                                                                                ],
                                                                             ),
                                                                         ],
-                                                                        className='card-body',
-                                                                    ),
-                                                                    dbc.Col(
-                                                                        children=[
-                                                                            html.P('Upload a first file to compare'),
-                                                                            html.Br(),
-                                                                            dcc.Upload(
-                                                                                id='upload-data-1',
-                                                                                children=html.Div(
-                                                                                    children=[
-                                                                                        'Drag and Drop or ',
-                                                                                        html.A('Select Files')
-                                                                                    ],
-                                                                                    id='upload-data-1-div'
-                                                                                ),
-                                                                                style={
-                                                                                    'width': '100%',
-                                                                                    'height': '60px',
-                                                                                    'lineHeight': '60px',
-                                                                                    'borderWidth': '1px',
-                                                                                    'borderStyle': 'dashed',
-                                                                                    'borderRadius': '5px',
-                                                                                    'textAlign': 'center',
-                                                                                    'cursor': 'pointer',
-                                                                                },
-                                                                                multiple=False
-                                                                            ),
-                                                                            dcc.Input(
-                                                                                id='data-1-uuid',
-                                                                                type='hidden',
-                                                                            ),
-                                                                            dcc.Input(
-                                                                                id='data-type-uploaded1',
-                                                                                type='hidden',
-                                                                            ),
-                                                                            html.Br(),
-                                                                            html.Div(
-                                                                                id='output-data-upload-1',
-                                                                                style={'display': 'flex',
-                                                                                       'justifyContent': 'center'}
-                                                                            ),
-                                                                        ],
-                                                                        className='card-body',
-                                                                    ),
-                                                                    dbc.Col(
-                                                                        children=[
-                                                                            html.P('Upload a second file to compare'),
-                                                                            html.Br(),
-                                                                            dcc.Upload(
-                                                                                id='upload-data-2',
-                                                                                children=html.Div(
-                                                                                    children=[
-                                                                                        'Drag and Drop or ',
-                                                                                        html.A('Select Files')
-                                                                                    ],
-                                                                                    id='upload-data-2-div'
-                                                                                ),
-                                                                                style={
-                                                                                    'width': '100%',
-                                                                                    'height': '60px',
-                                                                                    'lineHeight': '60px',
-                                                                                    'borderWidth': '1px',
-                                                                                    'borderStyle': 'dashed',
-                                                                                    'borderRadius': '5px',
-                                                                                    'textAlign': 'center',
-                                                                                    'cursor': 'pointer',
-                                                                                },
-                                                                                multiple=False
-                                                                            ),
-                                                                            dcc.Input(
-                                                                                id='data-2-uuid',
-                                                                                type='hidden',
-                                                                            ),
-                                                                            dcc.Input(
-                                                                                id='data-type-uploaded2',
-                                                                                type='hidden',
-                                                                            ),
-                                                                            html.Br(),
-                                                                            html.Div(
-                                                                                id='output-data-upload-2',
-                                                                                style={'display': 'flex',
-                                                                                       'justifyContent': 'center'}
-                                                                            ),
-                                                                        ],
-                                                                        className='card-body',
-                                                                        id='upload-data-2-container',
-                                                                    ),
-                                                                    dbc.Col(
-                                                                        children=[
-                                                                            dbc.Button(
-                                                                                'Compare',
-                                                                                id='compare-btn',
-                                                                                style={'width': '100%'},
-                                                                                className='btn btn-primary',
-                                                                                href='/compare-11?id1=&id2=',
-                                                                                disabled=True,
-                                                                            ),
-                                                                        ],
+                                                                        style={'justifyContent': 'center', 'gap': '10px'},
                                                                     ),
                                                                 ],
-                                                                style={'justifyContent': 'center', 'gap': '10px'},
+                                                                className='card',
+                                                                style={'display': 'flex', 'justifyContent': 'center',
+                                                                       'gap': '10px'},
+                                                            ),
+                                                            dbc.ModalFooter(
+                                                                dbc.Button(
+                                                                    "Close", id="upload-close", className="ms-auto", n_clicks=0
+                                                                )
                                                             ),
                                                         ],
-                                                        className='card',
-                                                        style={'display': 'flex', 'justifyContent': 'center',
-                                                               'gap': '10px'},
-                                                    ),
-                                                    dbc.ModalFooter(
-                                                        dbc.Button(
-                                                            "Close", id="upload-close", className="ms-auto", n_clicks=0
-                                                        )
+                                                        id="upload-modal",
+                                                        is_open=False,
                                                     ),
                                                 ],
-                                                id="upload-modal",
-                                                is_open=False,
+                                                style={'display': 'flex', 'gap': '10px', 'flexDirection': 'column'},
                                             ),
                                         ],
-                                        style={'display': 'flex', 'gap': '10px', 'flexDirection': 'column'},
+                                        style={'display': 'flex', 'gap': '10px', 'flexDirection': 'row'},
                                     ),
                                 ],
-                                style={'display': 'flex', 'gap': '10px', 'flexDirection': 'row'},
+                                className='card-body',
                             ),
                         ],
-                        className='card-body',
+                        className='card',
+                        style={'display': 'flex', 'gap': '10px', 'flexDirection': 'column', 'width': '50%'},
+                    ),
+                    html.Div(
+                        children=[
+                            dbc.Row(
+                                children=[
+                                    html.H3('Compare tabular results'),
+                                    html.Div(
+                                        children=[
+                                            html.Img(
+                                                src='/assets/images/tabular_icon.png',
+                                                style={'width': '140px', 'height': 'fit-content', 'padding': '10px'},
+                                            ),
+                                            html.Div(
+                                                children=[
+                                                    html.P(
+                                                        'Compare tabular results using your own settings. '
+                                                        'Choose axis, metrics and data to compare your results. '
+                                                    ),
+                                                    html.A(
+                                                        dbc.Button(
+                                                            "Compare tabular results",
+                                                            id="compare-tabular-button",
+                                                            n_clicks=0,
+                                                            style={'width': 'fit-content', 'marginLeft': '10px'},
+                                                            className="mr-1"
+                                                        ),
+                                                        href='visualize-experiment-template',
+                                                    )
+                                                ],
+                                            )
+                                        ],
+                                        style={'display': 'flex', 'gap': '10px', 'flexDirection': 'row'},
+                                    ),
+                                ],
+                                className='card-body',
+                                style={'display': 'flex', 'gap': '10px', 'flexDirection': 'column'},
+                            ),
+                        ],
+                        className='card',
+                        style={'display': 'flex', 'gap': '10px', 'flexDirection': 'column', 'width': '50%'},
                     ),
                 ],
-                style={'display': 'flex', 'gap': '10px', 'flexDirection': 'column'},
-                className='card',
+                style={'display': 'flex', 'gap': '10px', 'flexDirection': 'row'},
             ),
         ]
     )

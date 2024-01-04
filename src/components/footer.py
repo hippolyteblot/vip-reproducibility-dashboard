@@ -20,5 +20,5 @@ footer = html.Footer(
             ),
         ],
     ),
-    style={'border-top': '2px solid #e5e5e5', 'padding': '1rem 0'},
+    style={'borderTop': '2px solid #e5e5e5', 'padding': '1rem 0'},
 )

@@ -3,7 +3,7 @@ import json
 import dash
 import dash_bootstrap_components as dbc
 import pandas as pd
-from dash import html, dcc, callback
+from dash import html, dcc, callback, clientside_callback, ctx
 from dash.dependencies import Input, Output, State
 import plotly.express as px
 
@@ -152,26 +152,175 @@ def layout():
                             dbc.Col(
                                 children=[
                                     html.H4('Filters'),
-                                    dbc.Textarea(
-                                        id='filters-template',
-                                        placeholder='Enter a filter. Enter conditions separated by a comma such as '
-                                                    '"Signal group=1|4, Signal group!=2", Amplitude>2',
-                                        style={'width': '100%', 'height': 100},
+                                    dbc.Col(
+                                        children=[
+                                            # Filled by the callback
+                                        ],
+                                        id='filters-container',
                                     ),
                                     dbc.Button(
-                                        'Apply filters',
-                                        id='trigger-filters-template',
+                                        'Add filter',
+                                        id='add-filter-btn',
                                         style={'marginTop': 10},
+                                        disabled=True,
+                                    ),
+                                    dbc.Button(
+                                        'Remove filter',
+                                        id='remove-filter-btn',
+                                        style={'marginTop': 10, 'marginLeft': 10},
+                                        className='btn btn-danger',
+                                    ),
+                                    dbc.Button(
+                                        'Apply filter(s)',
+                                        id='apply-filters-btn',
+                                        style={'marginTop': 10, 'marginLeft': 10},
+                                        className='btn btn-success',
+                                    ),
+                                    clientside_callback(
+                                        """
+                                        function(n_clicks, current_content, template) {
+                                            if (n_clicks === undefined) return current_content;
+                                            // Clone the current content to avoid modifying it directly
+                                            let list = JSON.parse(JSON.stringify(current_content));
+                                            
+                                            list.push(template[0].props.children[0]);
+
+                                            // Return the updated content
+                                            return list;
+                                        }
+                                        """,
+                                        Output('filters-container', 'children'),
+                                        Input('add-filter-btn', 'n_clicks'),
+                                        State('filters-container', 'children'),
+                                        State('filter-template', 'children'),
+                                    ),
+                                    clientside_callback(
+                                        """
+                                        function(n_clicks, current_content) {
+                                            // Remove the last filter
+                                            if (n_clicks === undefined) return current_content;
+                                            // Clone the current content to avoid modifying it directly
+                                            let list = JSON.parse(JSON.stringify(current_content));
+                                            list.pop();
+                                            // Return the updated content
+                                            return list;
+                                        }
+                                        """,
+                                        Output('filters-container', 'children', allow_duplicate=True),
+                                        Input('remove-filter-btn', 'n_clicks'),
+                                        State('filters-container', 'children'),
+                                        prevent_initial_call=True,
+                                    ),
+
+                                    clientside_callback(
+                                        """
+                                        function(n_clicks, current_content) {
+                                            if (n_clicks === undefined) return "";
+                                            // Read all the filters and build a string
+
+                                            // Clone the current content to avoid modifying it directly
+                                            let list = JSON.parse(JSON.stringify(current_content));
+
+                                            // Get the filters
+                                            let filters = [];
+                                            for (let i = 0; i < list.length; i++) {
+                                                let filter = list[i].props.children;
+                                                let field = filter[0].props.children[1].props.value;
+                                                let operator = filter[1].props.children[1].props.value;
+                                                let value = filter[2].props.children[1].props.value;
+                                                filters.push(field + operator + value);
+                                            }
+
+                                            // Return the updated content
+                                            return filters.join(',');
+                                        }
+                                        """,
+                                        Output('filters-template', 'value'),
+                                        Input('apply-filters-btn', 'n_clicks'),
+                                        State('filters-container', 'children'),
                                     ),
                                 ],
                                 className='card-body',
                                 style={'width': 'auto'},
                             ),
+                            dcc.Input(
+                                id='filters-template',
+                                type='hidden',
+                            ),
+                            html.Div(
+                                id='filter-template',
+                                children=[
+                                    html.Div(
+                                        children=[
+                                            dbc.Row(
+                                                className='filter-row',
+                                                children=[
+                                                    dbc.Col(
+                                                        children=[
+                                                            html.P(
+                                                                'Field',
+                                                                style={'marginBottom': 0},
+                                                            ),
+                                                            dcc.Dropdown(
+                                                                options=[],  # options are updated in the callback
+                                                                clearable=False,
+                                                                id='field-filter-template',
+                                                            ),
+                                                        ],
+                                                    ),
+                                                    dbc.Col(
+                                                        children=[
+                                                            html.P(
+                                                                'Operator',
+                                                                style={'marginBottom': 0},
+                                                            ),
+                                                            dcc.Dropdown(
+                                                                options=[
+                                                                    {'label': '=', 'value': '='},
+                                                                    {'label': '!=', 'value': '!='},
+                                                                    {'label': '>', 'value': '>'},
+                                                                    {'label': '<', 'value': '<'},
+                                                                ],
+                                                                clearable=False,
+                                                            ),
+                                                        ],
+                                                    ),
+                                                    dbc.Col(
+                                                        children=[
+                                                            html.P(
+                                                                'Value',
+                                                                style={'marginBottom': 0},
+                                                            ),
+                                                            dbc.Input(
+                                                                type='text',
+                                                            ),
+                                                        ],
+                                                    ),
+                                                    dbc.Col(
+                                                        children=[
+                                                            html.P(
+                                                                'Enter the value(s). You can separate them with | to '
+                                                                'allow multiple values.',
+                                                                style={'marginBottom': 0},
+                                                            ),
+                                                        ],
+                                                        style={'display': 'flex', 'alignItems': 'center'},
+                                                    ),
+                                                ],
+                                                style={'display': 'flex', 'flexDirection': 'row'},
+                                            ),
+
+                                        ],
+                                    ),
+                                ],
+                                style={'display': 'none'},
+                            ),
                         ],
                         className='card',
                         style={'flexDirection': 'row'},
                     ),
-                ]
+                ],
+
             ),
             html.Div(
                 children=[
@@ -204,25 +353,30 @@ def layout():
                 'Download',
                 id='download-button-template',
                 style={'marginTop': 10},
+                className='btn btn-success',
             ),
-
-        ]
+        ],
+        style={'margin': 10},
     )
 
 
 @callback(
     Output('x-axis-template', 'options'),
     Output('y-axis-template', 'options'),
+    Output('field-filter-template', 'options'),
     Output('color-group-template', 'options'),
     Output('x-axis-template', 'value'),
     Output('y-axis-template', 'value'),
     Output('color-group-template', 'value'),
+    Output('add-filter-btn', 'disabled'),
     Input('upload-data-template', 'contents'),
 )
 def update_dropdowns(contents):
-    """Update the dropdowns"""
+    triggered_id = ctx.triggered_id
+    if triggered_id is None:
+        raise dash.exceptions.PreventUpdate
     if contents is None:
-        return [], [], [], dash.no_update, dash.no_update, dash.no_update
+        return [], [], [], [], dash.no_update, dash.no_update, dash.no_update, True
     content_type, content_string = contents[0].split(',')
     with open('src/views/data.feather', 'wb') as f:
         f.write(base64.b64decode(content_string))
@@ -230,7 +384,7 @@ def update_dropdowns(contents):
     options = [{'label': column, 'value': column} for column in data.columns]
     options.sort(key=lambda x: x['label'])
     color_options = [{'label': 'None', 'value': 'None'}] + options
-    return options, options, color_options, options[0]['value'], options[1]['value'], 'None'
+    return options, options, options, color_options, options[0]['value'], options[1]['value'], 'None', False
 
 
 @callback(
@@ -239,10 +393,11 @@ def update_dropdowns(contents):
     Input('y-axis-template', 'value'),
     Input('graph-type-template', 'value'),
     Input('color-group-template', 'value'),
-    Input('trigger-filters-template', 'n_clicks'),
-    State('filters-template', 'value'),
+    Input('filters-template', 'value'),
 )
-def update_chart(x_column, y_column, graph_type, color_column, _, filters):
+def update_chart(x_column, y_column, graph_type, color_column, filters):
+    triggered_id = ctx.triggered_id
+    print(triggered_id)
     print(x_column, y_column, graph_type, color_column, filters)
     """Update the chart"""
     if x_column is None or y_column is None:
@@ -332,7 +487,7 @@ def download_config(_, graph_type, x_column, y_column, color_column, filters, de
     Output('x-axis-template', 'value', allow_duplicate=True),
     Output('y-axis-template', 'value', allow_duplicate=True),
     Output('color-group-template', 'value', allow_duplicate=True),
-    Output('filters-template', 'value'),
+    Output('filters-template', 'value', allow_duplicate=True),
     Output('description-exp-template', 'value'),
     Input('upload-template', 'contents'),
     State('upload-template', 'filename'),
