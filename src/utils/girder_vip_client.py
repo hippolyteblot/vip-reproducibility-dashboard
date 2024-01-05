@@ -21,8 +21,7 @@ class GirderVIPClient:
         self.client = GirderClient(apiUrl=url + "/api/v1")
         self.url = url
         try:
-            #self.client.authenticate(apiKey=key)
-            print('Can\'t connect to Girder')
+            self.client.authenticate(apiKey=key)
         except:
             print('Can\'t connect to Girder')
 
