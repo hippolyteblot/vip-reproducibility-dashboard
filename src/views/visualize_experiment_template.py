@@ -32,9 +32,8 @@ def layout():
                                         dcc.Upload(
                                             id='upload-data-template',
                                             children=html.Div(
-                                                [
-                                                    'Drag and Drop or Select Files',
-                                                ]
+                                                children="Drag and Drop or Select Files",
+                                                id='upload-data-label',
                                             ),
                                             style={
                                                 'height': '60px',
@@ -52,15 +51,22 @@ def layout():
                                 ),
                             ],
                             className='card-body',
-                            style={'width': 'auto'},
+                            style={'width': '50%'},
                         ),
                         dbc.Row(
                             children=[
                                 dbc.Col(
                                     children=[
                                         html.H4('Upload a config file'),
+                                        dbc.Alert(
+                                            children='The config file must be a JSON file. You will be able to upload '
+                                            'it after uploading the data file. You can download a config file by '
+                                            'clicking on the download button below.',
+                                            color='info',
+                                            id='config-alert',
+                                        ),
                                         dcc.Upload(
-                                            id='upload-template',
+                                            id='upload-config',
                                             children=html.Div(
                                                 children="Drag and Drop or Select Files",
                                                 id='upload-config-label',
@@ -73,6 +79,7 @@ def layout():
                                                 'borderRadius': '5px',
                                                 'textAlign': 'center',
                                                 'margin': '10px',
+                                                'display': 'none',
                                             },
                                             multiple=True,
                                             accept='.json',
@@ -81,7 +88,7 @@ def layout():
                                 )
                             ],
                             className='card-body',
-                            style={'width': 'auto'},
+                            style={'width': '50%'},
                         )
                     ],
                     style={'display': 'flex', 'flexDirection': 'row'},
@@ -243,6 +250,7 @@ def layout():
                                         """
                                         function(n_clicks, filters_str, filter_template) {
                                             if (n_clicks === undefined) return "";
+                                            console.log(filters_str);
                                             filters_str = filters_str.replace('\\n', '');
                                             // Read the string and build the filters
                                             let rows = filters_str.split(',');
@@ -345,8 +353,8 @@ def layout():
                                                     dbc.Col(
                                                         children=[
                                                             html.P(
-                                                                'Enter the value(s). You can separate them with | to '
-                                                                'allow multiple values.',
+                                                                'Enter the value(s). You can separate them '
+                                                                'with | to allow multiple values.',
                                                                 style={'marginBottom': 0},
                                                             ),
                                                         ],
@@ -415,22 +423,41 @@ def layout():
     Output('y-axis-template', 'value'),
     Output('color-group-template', 'value'),
     Output('add-filter-btn', 'disabled'),
+    Output('upload-data-label', 'children'),
+    Output('upload-config', 'style'),
+    Output('config-alert', 'style'),
+    Output('filters-template', 'value', allow_duplicate=True),
+    Output('filters-clientside-trigger', 'value', allow_duplicate=True),
+    Output('upload-config-label', 'children', allow_duplicate=True),
     Input('upload-data-template', 'contents'),
+    State('upload-data-template', 'filename'),
+    prevent_initial_call=True,
 )
-def update_dropdowns(contents):
+def update_dropdowns(contents, filename):
+    """Update the dropdowns"""
     triggered_id = ctx.triggered_id
     if triggered_id is None:
         raise dash.exceptions.PreventUpdate
     if contents is None:
-        return [], [], [], [], dash.no_update, dash.no_update, dash.no_update, True
+        return ([], [], [], [], dash.no_update, dash.no_update, dash.no_update, True, 'Drag and Drop or Select Files',
+                {'display': 'none'}, {'display': 'block'}, '', 0, 'Drag and Drop or Select Files')
     content_type, content_string = contents[0].split(',')
     with open('src/views/data.feather', 'wb') as f:
         f.write(base64.b64decode(content_string))
-    data = pd.read_feather('src/views/data.feather')
+    try:
+        data = pd.read_feather('src/views/data.feather')
+    except Exception as e:
+        print(e)
+        return ([], [], [], [], dash.no_update, dash.no_update, dash.no_update, True, 'The data file is not valid',
+                {'display': 'none'}, {'display': 'block'}, '', 0, 'Drag and Drop or Select Files')
     options = [{'label': column, 'value': column} for column in data.columns]
     options.sort(key=lambda x: x['label'])
     color_options = [{'label': 'None', 'value': 'None'}] + options
-    return options, options, options, color_options, options[0]['value'], options[1]['value'], 'None', False
+    upload_cpn_style = {'position': 'relative', 'height': '60px', 'lineHeight': '60px', 'borderWidth': '1px',
+                        'borderStyle': 'dashed', 'borderRadius': '5px', 'textAlign': 'center', 'margin': '10px'}
+
+    return (options, options, options, color_options, options[0]['value'], options[1]['value'], 'None', False,
+            filename[0], upload_cpn_style, {'display': 'none'}, '', 0, 'Drag and Drop or Select Files')
 
 
 @callback(
@@ -442,9 +469,6 @@ def update_dropdowns(contents):
     Input('filters-template', 'value'),
 )
 def update_chart(x_column, y_column, graph_type, color_column, filters):
-    triggered_id = ctx.triggered_id
-    print(triggered_id)
-    print(x_column, y_column, graph_type, color_column, filters)
     """Update the chart"""
     if x_column is None or y_column is None:
         return {}
@@ -540,16 +564,18 @@ def download_config(_, graph_type, x_column, y_column, color_column, filters, de
     Output('filters-clientside-trigger', 'value'),
     Output('description-exp-template', 'value'),
     Output('upload-config-label', 'children'),
-    Input('upload-template', 'contents'),
-    State('upload-template', 'filename'),
+    Input('upload-config', 'contents'),
+    State('upload-config', 'filename'),
     State('x-axis-template', 'options'),
     prevent_initial_call=True,
 )
 def upload_config(contents, filename, fields):
+    print('upload config')
     """Upload the config file"""
     fields_list = [f['label'] for f in fields]
     if contents is None:
-        return dash.no_update, dash.no_update, dash.no_update, dash.no_update, dash.no_update, dash.no_update, dash.no_update, 'Drag and Drop or Select Files'
+        return (dash.no_update, dash.no_update, dash.no_update, dash.no_update, dash.no_update, dash.no_update,
+                dash.no_update, 'Drag and Drop or Select Files')
     content_type, content_string = contents[0].split(',')
     if 'json' in filename[0]:
         try:
@@ -565,7 +591,6 @@ def upload_config(contents, filename, fields):
                 print('field not in fields or None')
                 raise dash.exceptions.PreventUpdate
             for f in config['filters']:
-                operator = ''
                 if '!=' in f:
                     operator = '!='
                 elif '>' in f:
@@ -588,4 +613,4 @@ def upload_config(contents, filename, fields):
             return (dash.no_update, dash.no_update, dash.no_update, dash.no_update, dash.no_update, dash.no_update,
                     dash.no_update, 'The config file is not valid or unadapted to the current data')
     return (dash.no_update, dash.no_update, dash.no_update, dash.no_update, dash.no_update, dash.no_update,
-            dash.no_update, 'Drag and Drop or Select Files')
+            dash.no_update, 'The config file is not valid or unadapted to the current data')
