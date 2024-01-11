@@ -1,3 +1,6 @@
+"""
+Controller for the logout page
+"""
 import dash
 from dash import html, dcc
 

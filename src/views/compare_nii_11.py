@@ -6,9 +6,11 @@ from flask import request
 
 from models.brats_utils import get_processed_data_from_niftis, build_difference_image, build_difference_image_ssim, \
     compute_psnr, compute_psnr_foreach_slice
+from models.reproduce import parse_url
 
 
 def layout():
+    """Layout of the page"""
     return html.Div(
         [
             dcc.Location(id='url', refresh=False),
@@ -141,7 +143,8 @@ def layout():
                 max=1,
                 value=0,
                 id='slider-nii',
-            ),            html.Div(
+            ),
+            html.Div(
                 id='gradient-nii-11',
                 style={
                     'width': '100%',
@@ -200,17 +203,12 @@ def layout():
     Input('url', 'value'),
 )
 def bind_parameters_from_url(url):
+    """Bind the parameters from the url to the dropdowns and sliders"""
     # check if the url contains parameters
     if url != 'None' and request.referrer is not None and len(request.referrer.split('&')) > 2:
         # get the parameters
-        axe = request.referrer.split('&')[2].split('=')[1]
-        mode = request.referrer.split('&')[3].split('=')[1]
-        slice = request.referrer.split('&')[4].split('=')[1]
-        K1 = request.referrer.split('&')[5].split('=')[1]
-        K2 = request.referrer.split('&')[6].split('=')[1]
-        sigma = request.referrer.split('&')[7].split('=')[1]
-        colorscale = request.referrer.split('&')[8].split('=')[1]
-        return axe, mode, int(slice), float(K1), float(K2), float(sigma), colorscale
+        axe, mode, slicer, k1, k2, sigma, colorscale = parse_url(request.referrer)
+        return axe, mode, int(slicer), float(k1), float(k2), float(sigma), colorscale
     return 'z', 'pixel', 0, 0.001, 1, 1, 'abs'
 
 
@@ -238,8 +236,7 @@ def bind_parameters_from_url(url):
     prevent_initial_call=True,
 )
 def show_frames(slider_value, axe, mode, k1, k2, sigma, colorscale):
-    id1 = request.referrer.split('id1=')[1].split('&')[0]
-    id2 = request.referrer.split('id2=')[1].split('&')[0]
+    id1, id2 = parse_url(request.referrer)[0:2]
     img_rgb1, img_rgb2, max_slider, vol1, vol2, maximum = get_processed_data_from_niftis(id1, id2, axe, slider_value)
     value = 0
 
@@ -265,7 +262,6 @@ def show_frames(slider_value, axe, mode, k1, k2, sigma, colorscale):
     psnr_list = compute_psnr_foreach_slice(vol1, vol2, axe)
     if not isinstance(psnr, str):
         psnr = round(psnr, 4)
-
 
     if slider_value > max_slider:
         slider_value = max_slider
@@ -296,7 +292,7 @@ def build_gradient(psnr_values):
         if psnr_values[i] == np.inf:
             value = 0
         else:
-            value = 1-((psnr_values[i]-(minimum*0.8))*0.05)
+            value = 1 - ((psnr_values[i] - (minimum * 0.8)) * 0.05)
         gradient += f'rgba(255, 0, 0, {value}) '
         if i != psnr_values.size - 1:
             gradient += ', '

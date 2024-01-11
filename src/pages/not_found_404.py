@@ -1,5 +1,8 @@
+"""
+Controller for the 404 page.
+"""
 import dash
-from dash import html
+from views.not_found_404 import layout
 
 dash.register_page(
     __name__,
@@ -7,11 +10,4 @@ dash.register_page(
     title='404 - Page not found',
 )
 
-layout = html.Div(
-    [
-        html.H1('404 - Page not found'),
-        html.Div(
-            html.A('Return home', href='/')
-        )
-    ]
-)
+layout = layout()

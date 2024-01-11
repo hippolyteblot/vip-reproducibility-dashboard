@@ -1,3 +1,6 @@
+"""
+Controller for the login page.
+"""
 import dash
 
 from views.login import layout

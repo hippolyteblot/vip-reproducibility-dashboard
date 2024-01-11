@@ -8,14 +8,6 @@ import zipfile
 
 from utils.settings import DB, CACHE_FOLDER
 
-
-def get_users():
-    """Get the users from the database"""
-    query = 'SELECT * FROM users'
-    users = DB.fetch(query)
-    return users
-
-
 def load_exec_from_local() -> list:
     """Load the executions from the local folder"""
     folder = "src/data/spectro/"
@@ -184,6 +176,5 @@ def flatten_folder(path):
 
     # remove the subfolders
     for root, dirs, files in os.walk(path):
-        for dir in dirs:
-            shutil.rmtree(os.path.join(root, dir))
-
+        for actual_dir in dirs:
+            shutil.rmtree(os.path.join(root, actual_dir))

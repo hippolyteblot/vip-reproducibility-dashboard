@@ -1,0 +1,16 @@
+dash==2.14.2
+dash_bootstrap_components==1.5.0
+Flask==3.0.0
+Flask_Login==0.6.3
+girder_client==3.1.24
+imageio==2.33.1
+mysql_connector_repackaged==0.3.1
+numpy==1.26.3
+opencv_python==4.9.0.80
+pandas==2.1.4
+plotly==5.18.0
+pytest==7.4.4
+python-dotenv==1.0.0
+python_bcrypt==0.3.2
+setuptools==69.0.3
+scikit-image==0.22.0

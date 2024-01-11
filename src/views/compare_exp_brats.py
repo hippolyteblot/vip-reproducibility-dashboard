@@ -5,6 +5,7 @@ from dash import html, callback, Input, Output, dcc
 from flask import request
 
 from models.brats_utils import get_global_brats_experiment_data
+from models.reproduce import parse_url
 
 
 def layout():
@@ -130,8 +131,7 @@ def create_box_plot(sorted_experiments, unique_file=False):
     Input('file-brats-exp-compare', 'value'),
 )
 def update_chart(_, file):
-    exec_id1 = int(request.referrer.split('?')[1].split('=')[1].split('&')[0])
-    exec_id2 = int(request.referrer.split('?')[1].split('=')[2])
+    exec_id1, exec_id2 = parse_url(request.referrer)
 
     experiment_data1, files = get_experiment_data(exec_id1, file)
     experiment_data2, _ = get_experiment_data(exec_id2, file)
@@ -151,4 +151,3 @@ def update_chart(_, file):
     files.insert(0, 'All')
 
     return figure, [{'label': file, 'value': file} for file in files], description
-

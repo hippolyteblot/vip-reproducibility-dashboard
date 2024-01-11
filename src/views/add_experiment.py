@@ -1,3 +1,4 @@
+"""NOT USED FOR NOW
 from dash import html, callback, Output, Input, State, ctx
 import dash_bootstrap_components as dbc
 
@@ -343,7 +344,7 @@ def add_experiment(n_clicks, application, version, input_to_vary, parameters, ex
             not experiment or not number_of_reminders or not launch_frequency:
         return 'Please fill all the fields', 'alert alert-danger'
     single_run = False
-    alert, alert_type, _ = add_experiment_to_db(application, version, input_to_vary, "a enlever", parameters,
+    alert, alert_type, _ = add_experiment_to_db(application, version, input_to_vary, "a supp", parameters,
                                                 "undefined", experiment, number_of_reminders, launch_frequency,
                                                 single_run)
     return alert, 'alert ' + alert_type
@@ -361,3 +362,4 @@ def load_applications():
 def load_versions(application):
     versions = get_available_versions(application)
     return [{'label': version['number'], 'value': version['id']} for version in versions]
+"""

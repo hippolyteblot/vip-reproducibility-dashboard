@@ -1,2 +1,3 @@
-from .database_client import DatabaseClient
-from .girder_vip_client import GirderVIPClient
+"""
+This module contains all the utils functions used in the application such as the database client or the Girder client.
+"""

@@ -21,7 +21,7 @@ navbar = dbc.Navbar(
                     ],
                     align='center',
                     className='g-0',
-                    style={'fontSize': '1.8rem', 'display': 'flex', 'flexWrap': 'nowrap', 'alignTtems': 'center',
+                    style={'fontSize': '1.8rem', 'display': 'flex', 'flexWrap': 'nowrap', 'alignItems': 'center',
                            'justifyContent': 'center'}
                 ),
                 href='/',

@@ -4,8 +4,8 @@ import dash_bootstrap_components as dbc
 import plotly.express as px
 from flask import request
 
-from models.cquest_utils import get_cquest_experiment_data
-from models.reproduce import get_experiment_name
+from models.cquest_utils import get_cquest_experiment_data, normalize
+from models.reproduce import get_experiment_name, parse_url
 
 
 def layout():
@@ -134,12 +134,7 @@ def layout():
 def bind_parameters_from_url(execution_id):
     # check if the url contains parameters
     if execution_id != 'None' and request.referrer is not None and len(request.referrer.split('&')) > 2:
-        # get the parameters
-        metabolite_name = request.referrer.split('&')[2].split('=')[1]
-        signal_selected = request.referrer.split('&')[3].split('=')[1]
-        normalization = request.referrer.split('&')[4].split('=')[1]
-        graph_type = request.referrer.split('&')[5].split('=')[1]
-
+        metabolite_name, signal_selected, normalization, graph_type = parse_url(request.referrer)
         if not normalization:
             normalization = 'No'
 
@@ -172,8 +167,7 @@ def generate_url(exp1, exp2, metabolite_name, signal_selected, graph_type, norma
 def update_metabolite_name_bland_altman(graph, metabolite_name, signal_selected, normalization):
     if not normalization:
         normalization = 'No'
-    exec_id_1 = int(request.referrer.split('?')[1].split('=')[1].split('&')[0].split('&')[0])
-    exec_id_2 = int(request.referrer.split('?')[1].split('=')[2].split('&')[0])
+    exec_id_1, exec_id_2 = parse_url(request.referrer)
     experiment_data_1 = get_cquest_experiment_data(exec_id_1)
     experiment_data_2 = get_cquest_experiment_data(exec_id_2)
 
@@ -218,12 +212,11 @@ def update_metabolite_name_bland_altman(graph, metabolite_name, signal_selected,
     prevent_initial_call=True,
 )
 def update_exp_chart_bland_altman(_, metabolite_name, signal_selected, normalization, graph_type):
-    exec_id_1 = int(request.referrer.split('?')[1].split('=')[1].split('&')[0].split('&')[0])
-    exec_id_2 = int(request.referrer.split('?')[1].split('=')[2].split('&')[0])
+    exec_id_1, exec_id_2 = parse_url(request.referrer)[0:2]
     experiment_data_1 = get_cquest_experiment_data(exec_id_1)
     experiment_data_2 = get_cquest_experiment_data(exec_id_2)
 
-    # Add a column to experiment_data_1 and experiment_data_2 to identify the sample
+    # Add a column to experiment_data_1 and experiment_data_2 to identify the samples
     experiment_data_1['Experiment'] = get_experiment_name(exec_id_1)
     experiment_data_2['Experiment'] = get_experiment_name(exec_id_2)
 
@@ -249,12 +242,17 @@ def update_exp_chart_bland_altman(_, metabolite_name, signal_selected, normaliza
 
             diff = mean_1 - mean_2
             percent_diff = diff / ((mean_1 + mean_2) / 2)
-            bland_altman_data = pd.concat([bland_altman_data, pd.DataFrame({
-                'Mean': (mean_1 + mean_2) / 2,
-                'Difference': diff,
-                '% Difference': percent_diff,
-                'Sample': sample
-            }, index=[0])])
+            data_to_concat = [
+                bland_altman_data,
+                pd.DataFrame({
+                    'Mean': (mean_1 + mean_2) / 2,
+                    'Difference': diff,
+                    '% Difference': percent_diff,
+                    'Sample': sample
+                }, index=[0])
+            ]
+            data_to_concat = [df.dropna(axis=1, how='all') for df in data_to_concat]
+            bland_altman_data = pd.concat(data_to_concat, ignore_index=True)
 
         fig = px.scatter(
             bland_altman_data,
@@ -264,16 +262,17 @@ def update_exp_chart_bland_altman(_, metabolite_name, signal_selected, normaliza
             title='Bland-Altman plot',
         )
 
-        # Add the linear regression
-        fig.add_trace(
-            px.scatter(
-                bland_altman_data,
-                x='Mean',
-                y='Difference',
-                trendline='ols',
-                color_discrete_sequence=['black'],
-            ).data[1],
-        )
+        # Add the linear regression if the Difference column is not always 0
+        if not bland_altman_data['Difference'].eq(0).all():
+            fig.add_trace(
+                px.scatter(
+                    bland_altman_data,
+                    x='Mean',
+                    y='Difference',
+                    trendline='ols',
+                    color_discrete_sequence=['black'],
+                ).data[1],
+            )
 
         mean_diff = bland_altman_data['Difference'].mean()
         std_diff = bland_altman_data['Difference'].std()
@@ -324,10 +323,7 @@ def update_exp_chart_bland_altman(_, metabolite_name, signal_selected, normaliza
         else:
             addon = ''
             if normalization == 'Yes':
-                means = concat_data.groupby('Metabolite').mean(numeric_only=True)['Amplitude']
-                stds = concat_data.groupby('Metabolite').std(numeric_only=True)['Amplitude']
-                concat_data['Amplitude'] = concat_data.apply(lambda row: (row['Amplitude'] - means[row['Metabolite']]) /
-                                                                         stds[row['Metabolite']], axis=1)
+                normalize(concat_data)
                 addon = 'The metabolites are normalized by subtracting the mean and dividing by the standard deviation.'
 
             first_x_value = concat_data['Metabolite'].iloc[0]

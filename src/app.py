@@ -3,30 +3,30 @@
 # Author      : Hippolyte Blot. <hippolyte.blot@creatis.insa-lyon.fr>
 # Created on  : 2023-10-27
 # -----------------------------------------------------------------------------
+"""
+Main application file. It defines the layout of the application
+"""
 
 import re
-
+import os
 import dash
 from dash import html
 import dash_bootstrap_components as dbc
 from flask import Flask
 from flask_login import LoginManager
-import os
 
-from utils.girder_vip_client import get_jsons_from_local
+from utils.girder_vip_client import get_jsons_from_local, GVC
 # local imports
-from utils.settings import APP_HOST, APP_PORT, APP_DEBUG, DEV_TOOLS_PROPS_CHECK
-from components.login import login_location
+from utils.settings import APP_HOST, APP_PORT, APP_DEBUG, DEV_TOOLS_PROPS_CHECK, DB
 from models.login import User
+from components.login import login_location
 from components import navbar, footer
-from utils.settings import DB
-from utils.girder_vip_client import GVC
-import pkg_resources
 
 
 def create_app():
+    """The create_app function is used to create the Dash app. It is used to create the app in the main.py file."""
     server = Flask(__name__)
-    app = dash.Dash(
+    local_app = dash.Dash(
         __name__,
         server=server,
         use_pages=True,  # turn on Dash pages
@@ -73,9 +73,9 @@ def create_app():
             ]
         )
 
-    app.layout = serve_layout  # set the layout to the serve_layout function
+    local_app.layout = serve_layout  # set the layout to the serve_layout function
 
-    return app
+    return local_app
 
 
 def insert_data_from_girder():
@@ -121,9 +121,8 @@ def get_girder_folders(parent_folder_id, regex=None):
     """Get folders from Girder given a parent folder ID"""
     if regex is None:
         return GVC.get_folders(parent_folder_id)
-    else:
-        folders = GVC.get_folders(parent_folder_id)
-        return [folder for folder in folders if regex.match(folder['name'])]
+    folders = GVC.get_folders(parent_folder_id)
+    return [folder for folder in folders if regex.match(folder['name'])]
 
 
 def insert_application_if_not_exist(application):
@@ -133,8 +132,7 @@ def insert_application_if_not_exist(application):
     if result is None:
         query = "INSERT INTO application (name, girder_id) VALUES (%s, %s)"
         return DB.execute(query, (application['name'], application['_id']))
-    else:
-        return result['id']
+    return result['id']
 
 
 def insert_version_if_not_exist(version, application_id):
@@ -144,8 +142,7 @@ def insert_version_if_not_exist(version, application_id):
     if result is None:
         query = "INSERT INTO app_version (number, application_id, girder_id) VALUES (%s, %s, %s)"
         return DB.execute(query, (version['name'], application_id, version['_id']))
-    else:
-        return result['id']
+    return result['id']
 
 
 def insert_experiment_if_not_exist(experiment, version_id):
@@ -155,8 +152,7 @@ def insert_experiment_if_not_exist(experiment, version_id):
     if result is None:
         query = "INSERT INTO experiment (name, version_id, girder_id) VALUES (%s, %s, %s)"
         return DB.execute(query, (experiment['name'], version_id, experiment['_id']))
-    else:
-        return result['id']
+    return result['id']
 
 
 def insert_workflow_if_not_exist(workflow, experiment_id):
@@ -166,8 +162,7 @@ def insert_workflow_if_not_exist(workflow, experiment_id):
     if result is None:
         query = "INSERT INTO workflow (timestamp, experiment_id, girder_id) VALUES (%s, %s, %s)"
         return DB.execute(query, (workflow['name'], experiment_id, workflow['_id']))
-    else:
-        return result['id']
+    return result['id']
 
 
 def insert_json_if_not_exist(workflow_id, workflow_id_db, experiment_id):
@@ -206,17 +201,7 @@ def insert_json_if_not_exist(workflow_id, workflow_id_db, experiment_id):
         DB.execute(query, (parameter_id, experiment_id))
 
 
-plugins = []
-for entry_point in pkg_resources.iter_entry_points('repro_vip_dashboard.plugins'):
-    plugin = entry_point.load()
-    plugins.append(plugin)
-
-# Utilisez les plugins selon les besoins
-for plugin in plugins:
-    plugin.run()
-
-
-#insert_data_from_girder()
+# insert_data_from_girder()
 app = create_app()
 app.run_server(
     host=APP_HOST,
@@ -224,9 +209,3 @@ app.run_server(
     debug=APP_DEBUG,
     dev_tools_props_check=DEV_TOOLS_PROPS_CHECK
 )
-
-
-def get_app():
-    """Get the Dash app"""
-    global app
-    return app

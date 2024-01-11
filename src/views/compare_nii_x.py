@@ -6,6 +6,7 @@ import plotly.express as px
 from flask import request
 
 from models.brats_utils import get_processed_data_from_niftis_folder
+from models.reproduce import parse_url
 
 
 def layout():
@@ -86,7 +87,7 @@ def layout():
     Input('url', 'pathname'),
 )
 def bind_components(_):
-    folder_id = request.referrer.split('id1=')[1].split('&')[0]
+    folder_id = parse_url(request.referrer)[0]
     _, size = get_processed_data_from_niftis_folder(folder_id, 0, "z", False)
 
     return (
@@ -107,7 +108,7 @@ def bind_components(_):
     prevent_initial_call=True,
 )
 def show_frames(slider_value, axe, only_differences):
-    folder_id = request.referrer.split('id1=')[1].split('&')[0]
+    folder_id = parse_url(request.referrer)[0]
     diff_matrix, size = get_processed_data_from_niftis_folder(folder_id, slider_value, axe, only_differences == 'yes')
 
     if slider_value > size:

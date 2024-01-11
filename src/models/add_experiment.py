@@ -1,3 +1,4 @@
+"""UNUSED FOR NOW
 from utils.settings import DB
 from flask_login import current_user
 
@@ -5,7 +6,7 @@ from flask_login import current_user
 def add_experiment_to_db(application: str, version: str, input_to_vary: str, fileset_dir: str, parameters: str,
                          results_dir: str, experiment: str, number_of_reminders: int, launch_frequency: int,
                          single_run: bool):
-    """Add an experiment to the database"""
+    '''Add an experiment to the database'''
     # Check if the user is logged in
     if not current_user.is_authenticated:
         message = 'You are not logged in'
@@ -30,14 +31,16 @@ def add_experiment_to_db(application: str, version: str, input_to_vary: str, fil
 
 
 def get_available_applications():
-    """Get the list of available applications"""
+    '''Get the list of available applications'''
     query = 'SELECT * FROM application'
     applications = DB.fetch(query)
     return applications
 
 
 def get_available_versions(application_id):
-    """Get the list of available versions"""
+    '''Get the list of available versions'''
     query = 'SELECT * FROM app_version WHERE application_id = %s'
     versions = DB.fetch(query, (application_id,))
     return versions
+
+"""

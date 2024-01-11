@@ -1,3 +1,6 @@
+"""
+This file contains all the settings of the application. Constants must be defined as environment variables.
+"""
 import os
 from dotenv import load_dotenv
 

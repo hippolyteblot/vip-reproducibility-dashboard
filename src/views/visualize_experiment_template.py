@@ -1,11 +1,13 @@
 import base64
+import hashlib
 import json
 import dash
 import dash_bootstrap_components as dbc
-import pandas as pd
 from dash import html, dcc, callback, clientside_callback, ctx
 from dash.dependencies import Input, Output, State
 import plotly.express as px
+
+from models.visualize_experiment_template import read_file
 
 
 def layout():
@@ -45,7 +47,42 @@ def layout():
                                                 'margin': '10px',
                                             },
                                             multiple=True,
-                                            accept='.feather',
+                                            accept='.feather, .csv, .xlsx',
+                                        ),
+                                        dcc.Input(
+                                            id='user-filename',
+                                            type='hidden',
+                                        ),
+                                        dbc.Button(
+                                            children='View raw data',
+                                            id='view-raw-data-btn',
+                                            style={'marginTop': 10},
+                                            className='btn btn-primary',
+                                            disabled=True,
+                                        ),
+                                        dbc.Modal(
+                                            children=[
+                                                dbc.ModalHeader(
+                                                    children=[
+                                                        'Raw data',
+                                                    ],
+                                                ),
+                                                dbc.ModalBody(
+                                                    children=[
+                                                        html.P(
+                                                            children=[
+                                                                'The raw data is displayed below. Only the first 100 '
+                                                                'rows are displayed.',
+                                                            ],
+                                                        ),
+                                                        html.Div(
+                                                            id='raw-data-container',
+                                                        ),
+                                                    ],
+                                                ),
+                                            ],
+                                            id='raw-data-modal',
+                                            size='xl',
                                         ),
                                     ],
                                 ),
@@ -60,8 +97,8 @@ def layout():
                                         html.H4('Upload a config file'),
                                         dbc.Alert(
                                             children='The config file must be a JSON file. You will be able to upload '
-                                            'it after uploading the data file. You can download a config file by '
-                                            'clicking on the download button below.',
+                                                     'it after uploading the data file. You can download a config '
+                                                     'file by clicking on the download button below.',
                                             color='info',
                                             id='config-alert',
                                         ),
@@ -89,7 +126,7 @@ def layout():
                             ],
                             className='card-body',
                             style={'width': '50%'},
-                        )
+                        ),
                     ],
                     style={'display': 'flex', 'flexDirection': 'row'},
                     className='card',
@@ -415,6 +452,59 @@ def layout():
 
 
 @callback(
+    Output('raw-data-modal', 'is_open'),
+    Output('raw-data-container', 'children'),
+    Input('view-raw-data-btn', 'n_clicks'),
+    State('raw-data-modal', 'is_open'),
+    State('user-filename', 'value'),
+    prevent_initial_call=True,
+)
+def toggle_modal(n1, is_open, filename):
+    """Toggle the raw data modal"""
+    # Read the data
+    data = read_file(filename)
+    # keep only the first 100 rows
+    data = data.head(100)
+    # Convert the data to a table
+    table = dbc.Table(
+        children=[
+            html.Thead(
+                children=[
+                    html.Tr(
+                        children=[
+                            html.Th(
+                                children=column,
+                            )
+                            for column in data.columns
+                        ],
+                    ),
+                ],
+            ),
+            html.Tbody(
+                children=[
+                    html.Tr(
+                        children=[
+                            html.Td(
+                                children=data[column][i],
+                            )
+                            for column in data.columns
+                        ],
+                    )
+                    for i in range(len(data))
+                ],
+            ),
+        ],
+        bordered=True,
+        hover=True,
+        responsive=True,
+        striped=True,
+    )
+    if n1:
+        return not is_open, table
+    return is_open, table
+
+
+@callback(
     Output('x-axis-template', 'options'),
     Output('y-axis-template', 'options'),
     Output('field-filter-template', 'options'),
@@ -429,6 +519,8 @@ def layout():
     Output('filters-template', 'value', allow_duplicate=True),
     Output('filters-clientside-trigger', 'value', allow_duplicate=True),
     Output('upload-config-label', 'children', allow_duplicate=True),
+    Output('user-filename', 'value'),
+    Output('view-raw-data-btn', 'disabled'),
     Input('upload-data-template', 'contents'),
     State('upload-data-template', 'filename'),
     prevent_initial_call=True,
@@ -440,16 +532,20 @@ def update_dropdowns(contents, filename):
         raise dash.exceptions.PreventUpdate
     if contents is None:
         return ([], [], [], [], dash.no_update, dash.no_update, dash.no_update, True, 'Drag and Drop or Select Files',
-                {'display': 'none'}, {'display': 'block'}, '', 0, 'Drag and Drop or Select Files')
+                {'display': 'none'}, {'display': 'block'}, '', 0, 'Drag and Drop or Select Files', '', True)
     content_type, content_string = contents[0].split(',')
-    with open('src/views/data.feather', 'wb') as f:
+    b64 = base64.b64encode(content_string.encode('utf-8'))
+    md5 = hashlib.md5(b64).hexdigest()
+    ext = filename[0].split('.')[-1]
+    new_filename = md5 + '.' + ext
+    with open('src/tmp/' + new_filename, 'wb') as f:
         f.write(base64.b64decode(content_string))
     try:
-        data = pd.read_feather('src/views/data.feather')
+        data = read_file(new_filename)
     except Exception as e:
         print(e)
         return ([], [], [], [], dash.no_update, dash.no_update, dash.no_update, True, 'The data file is not valid',
-                {'display': 'none'}, {'display': 'block'}, '', 0, 'Drag and Drop or Select Files')
+                {'display': 'none'}, {'display': 'block'}, '', 0, 'Drag and Drop or Select Files', '', True)
     options = [{'label': column, 'value': column} for column in data.columns]
     options.sort(key=lambda x: x['label'])
     color_options = [{'label': 'None', 'value': 'None'}] + options
@@ -457,7 +553,8 @@ def update_dropdowns(contents, filename):
                         'borderStyle': 'dashed', 'borderRadius': '5px', 'textAlign': 'center', 'margin': '10px'}
 
     return (options, options, options, color_options, options[0]['value'], options[1]['value'], 'None', False,
-            filename[0], upload_cpn_style, {'display': 'none'}, '', 0, 'Drag and Drop or Select Files')
+            filename[0], upload_cpn_style, {'display': 'none'}, '', 0, 'Drag and Drop or Select Files', new_filename,
+            False)
 
 
 @callback(
@@ -467,12 +564,13 @@ def update_dropdowns(contents, filename):
     Input('graph-type-template', 'value'),
     Input('color-group-template', 'value'),
     Input('filters-template', 'value'),
+    State('user-filename', 'value'),
 )
-def update_chart(x_column, y_column, graph_type, color_column, filters):
+def update_chart(x_column, y_column, graph_type, color_column, filters, filename):
     """Update the chart"""
     if x_column is None or y_column is None:
         return {}
-    data = pd.read_feather('src/views/data.feather')
+    data = read_file(filename)
     charts = {
         'bar': px.bar,
         'scatter': px.scatter,
@@ -486,7 +584,7 @@ def update_chart(x_column, y_column, graph_type, color_column, filters):
             except ValueError:
                 pass
 
-    if filters is not None:
+    if filters is not None or filters != '':
         filters = filters.split(',')
         filters = [f.replace('\n', '') for f in filters]
         for f in filters:
@@ -590,22 +688,24 @@ def upload_config(contents, filename, fields):
             if config['color_column'] not in fields_list and config['color_column'] != 'None':
                 print('field not in fields or None')
                 raise dash.exceptions.PreventUpdate
-            for f in config['filters']:
-                if '!=' in f:
-                    operator = '!='
-                elif '>' in f:
-                    operator = '>'
-                elif '<' in f:
-                    operator = '<'
-                elif '=' in f:
-                    operator = '='
-                else:
-                    print('field not in fields FILTERS')
-                    raise dash.exceptions.PreventUpdate
-                field, value = f.split(operator)
-                if field not in fields_list:
-                    print('field not in fields')
-                    raise dash.exceptions.PreventUpdate
+            print('filters: ', config['filters'])
+            if config['filters'] != ['']:
+                for f in config['filters']:
+                    if '!=' in f:
+                        operator = '!='
+                    elif '>' in f:
+                        operator = '>'
+                    elif '<' in f:
+                        operator = '<'
+                    elif '=' in f:
+                        operator = '='
+                    else:
+                        print('field not in fields FILTERS')
+                        raise dash.exceptions.PreventUpdate
+                    field, value = f.split(operator)
+                    if field not in fields_list:
+                        print('field not in fields')
+                        raise dash.exceptions.PreventUpdate
             return (config['graph_type'], config['x_column'], config['y_column'], config['color_column'], filters_str,
                     0, config['description'], filename[0])
         except Exception as e:

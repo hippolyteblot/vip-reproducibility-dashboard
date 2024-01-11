@@ -14,7 +14,8 @@ from views.compare_exp_cquest import update_exp_chart_bland_altman
         ('box', 'box', 'Rec021_Vox2_quest2', 'Signal', 'Amplitude'),
     ])
 @patch('views.compare_exp_cquest.get_cquest_experiment_data')
-def test_update_chart(mock_get_data, graph_type, expected_graph_type, signal, x_label, y_label):
+@patch('views.compare_exp_cquest.get_experiment_name')
+def test_update_chart(mock_get_exp_name, mock_get_data, graph_type, expected_graph_type, signal, x_label, y_label):
     # Configuration of the environment
     app = Flask(__name__)
 
@@ -27,6 +28,7 @@ def test_update_chart(mock_get_data, graph_type, expected_graph_type, signal, x_
     feather_data = pd.read_feather('src/tests/data/sample_data_exp_cquest_cmp.feather')
 
     mock_get_data.return_value = feather_data.copy()
+    mock_get_exp_name.return_value = 'Exp1'
 
     ctx = app.test_request_context()
 

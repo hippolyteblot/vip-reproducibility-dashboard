@@ -1,3 +1,6 @@
+"""
+Controller for the compare_xy page. Allows to compare the results of two zipped workflows of cQUEST.
+"""
 import dash
 
 from views.compare_xy import layout

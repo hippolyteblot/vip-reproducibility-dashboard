@@ -2,11 +2,10 @@ import dash_bootstrap_components as dbc
 from dash import html, callback, Input, Output, dcc, State
 from flask import request
 
-from models.cquest_utils import get_cquest_experiment_data, get_metadata_cquest, generate_box_plot, \
-    get_workflow_id_from_referrer, \
-    create_signal_group_column, create_workflow_group_column, create_metadata_structure, create_dropdown_options, \
-    filter_and_get_unique_values, normalize
-from models.reproduce import get_experiment_name
+from models.cquest_utils import (get_cquest_experiment_data, generate_box_plot, create_signal_group_column,
+                                 create_workflow_group_column, create_metadata_structure, create_dropdown_options,
+                                 filter_and_get_unique_values, normalize)
+from models.reproduce import get_experiment_name, parse_url
 
 
 def layout():
@@ -162,10 +161,7 @@ def bind_parameters_from_url(execution_id):
     # check if the url contains parameters
     if execution_id != 'None' and request.referrer is not None and len(request.referrer.split('&')) > 1:
         # get the parameters
-        metabolite_name = request.referrer.split('&')[1].split('=')[1]
-        signal_selected = request.referrer.split('&')[2].split('=')[1]
-        workflow_selected = request.referrer.split('&')[3].split('=')[1]
-        normalization = request.referrer.split('&')[4].split('=')[1]
+        metabolite_name, signal_selected, workflow_selected, normalization = parse_url(request.referrer)
         return metabolite_name, signal_selected, workflow_selected, normalization
     return 'All', 'All', 'None', 'No'
 
@@ -189,7 +185,7 @@ def bind_parameters_from_url(execution_id):
     prevent_initial_call=True,
 )
 def update_dropdowns(_, metabolite_name, signal_selected, workflow_selected, normalization):
-    wf_id = get_workflow_id_from_referrer(request.referrer)
+    wf_id = int(parse_url(request.referrer)[0])
     wf_data = get_cquest_experiment_data(wf_id)
 
     metabolites, signals = filter_and_get_unique_values(wf_data)
@@ -203,7 +199,7 @@ def update_dropdowns(_, metabolite_name, signal_selected, workflow_selected, nor
         workflows = wf_data['Workflow'].unique()
         list_workflows = create_dropdown_options(workflows, 'None')
 
-    #metadata = get_metadata_cquest(wf_id)
+    # metadata = get_metadata_cquest(wf_id)
     metadata = []
     metadata_structure = create_metadata_structure(metadata)
 
@@ -252,7 +248,7 @@ def update_chart(_, metabolite, signal, workflow, normalization):
         workflow == 'None',
     ]
 
-    exp_id = get_workflow_id_from_referrer(request.referrer)
+    exp_id = int(parse_url(request.referrer)[0])
     exp_data = get_cquest_experiment_data(exp_id)
 
     # suppress metabolite that start with water

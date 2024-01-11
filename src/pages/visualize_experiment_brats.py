@@ -1,3 +1,6 @@
+"""
+Controller for the page that allows to visualize the results of a BraTS experiment.
+"""
 import dash
 
 from views.visualize_experiment_brats import layout

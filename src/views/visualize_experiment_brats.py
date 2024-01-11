@@ -5,6 +5,7 @@ from dash import html, callback, Input, Output, dcc
 from flask import request
 
 from models.brats_utils import get_global_brats_experiment_data, download_brats_file
+from models.reproduce import parse_url
 
 
 def layout():
@@ -170,7 +171,7 @@ def toggle_modal(n1, n2):
     Input('file-brats-exp', 'value'),
 )
 def update_chart(_, file):
-    exec_id = int(request.referrer.split('?')[1].split('=')[1])
+    exec_id = int(parse_url(request.referrer)[0])
 
     experiment_data = get_global_brats_experiment_data(exec_id)
     files = experiment_data['File'].unique()

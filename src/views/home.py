@@ -520,6 +520,7 @@ def layout():
                                                     html.P(
                                                         'Compare tabular results using your own settings. '
                                                         'Choose axis, metrics and data to compare your results. '
+                                                        'You can also share your settings with other users.'
                                                     ),
                                                     html.A(
                                                         dbc.Button(

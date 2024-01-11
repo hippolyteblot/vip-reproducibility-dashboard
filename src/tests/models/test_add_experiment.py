@@ -1,7 +1,8 @@
+
+"""
 from models import add_experiment_to_db
 from utils.settings import DB
 
-"""
 def test_add_experiment_to_db(mocker):
 
     class MockUser:

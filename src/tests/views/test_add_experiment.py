@@ -1,8 +1,9 @@
-from views.add_experiment import add_experiment
+
 
 
 # TODO : Correct this
 """
+from views.add_experiment import add_experiment
 def test_add_experiment(mocker):
     class MockUser:
         is_authenticated = True

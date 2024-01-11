@@ -1,3 +1,6 @@
+"""
+Controller for the compare-11 page. Allows to compare the results of two executions of cQUEST.
+"""
 import dash
 
 from views.compare_11 import layout

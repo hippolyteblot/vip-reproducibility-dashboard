@@ -32,7 +32,7 @@ def get_cquest_experiment_data(experiment_id: int) -> pd.DataFrame:
     return data
 
 
-def read_cquest_file(file_uuid: str) -> tuple[DataFrame, str]:
+def read_cquest_file(file_uuid: str) -> DataFrame:
     """Read the file uploaded by the user using the uuid and return a dataframe"""
     path = os.path.join("src", "tmp", "user_compare", str(file_uuid) + ".txt")
     data = get_quest2(path)
@@ -90,23 +90,13 @@ def read_folder(folder):
 
 
 def normalize(data):
-    means = data.groupby('Metabolite').mean()['Amplitude']
-    stds = data.groupby('Metabolite').std()['Amplitude']
-    data['Amplitude'] = data.apply(lambda row: (row['Amplitude'] - means[row['Metabolite']]) /
-                                   stds[row['Metabolite']], axis=1)
+    data['Amplitude'] = pd.to_numeric(data['Amplitude'], errors='coerce')
+    data.dropna(subset=['Amplitude'], inplace=True)
 
-"""
-def normalize(data):
-    means = data.groupby(['Metabolite', 'Signal']).mean()['Amplitude']
-    stds = data.groupby(['Metabolite', 'Signal']).std()['Amplitude']
-    data['Amplitude'] = data.apply(lambda row: (row['Amplitude'] - means[row['Metabolite'], row['Signal']]) /
-                                   stds[row['Metabolite'], row['Signal']], axis=1)
-"""
+    means = data.groupby('Metabolite')['Amplitude'].transform('mean')
+    stds = data.groupby('Metabolite')['Amplitude'].transform('std')
 
-def get_workflow_id_from_referrer(referrer):
-    query_string = referrer.split('?')[1]
-    wf_id = int(query_string.split('=')[1].split('&')[0])
-    return wf_id
+    data['Amplitude'] = (data['Amplitude'] - means) / stds
 
 
 def filter_and_normalize_data(wf_data, signal, normalization):
@@ -126,12 +116,14 @@ def get_description_and_label(signal, workflow, metabolite):
     description = ''
     if signal != 'All':
         label = 'Workflow to highlight'
-        description = f"This chart shows the amplitude of the signal {signal} for each metabolite. Results are computed by cQUEST and their provenance is shown in the table below."
+        description = (f"This chart shows the amplitude of the signal {signal} for each metabolite. Results are "
+                       f"computed by cQUEST and their provenance is shown in the table below.")
     else:
         label = 'Signal to highlight'
         if workflow == 'None' and metabolite == 'All':
             label = 'Signal to highlight'
-            description = "This chart shows the amplitude of each signal for each metabolite. Results are computed by cQUEST and their provenance is shown in the table below."
+            description = ("This chart shows the amplitude of each signal for each metabolite. Results are computed by "
+                           "cQUEST and their provenance is shown in the table below.")
 
     return label, description
 
@@ -223,3 +215,19 @@ def create_metadata_structure(metadata):
         )
     ]
     return metadata_structure
+
+
+def preprocess_cquest_data_compare(data1, data2):
+    # Créer des copies explicites des DataFrames
+    data1 = data1[~data1['Metabolite'].str.contains('water')].copy()
+    data2 = data2[~data2['Metabolite'].str.contains('water')].copy()
+
+    # Appliquer la conversion en float aux colonnes 'Amplitude'
+    data1['Amplitude'] = data1['Amplitude'].apply(lambda x: float(x))
+    data2['Amplitude'] = data2['Amplitude'].apply(lambda x: float(x))
+
+    # Ajouter la colonne 'File' avec les valeurs correspondantes
+    data1['File'] = 'File 1'
+    data2['File'] = 'File 2'
+
+    return data1, data2

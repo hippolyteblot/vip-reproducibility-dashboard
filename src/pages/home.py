@@ -1,3 +1,6 @@
+"""
+Controller for the home page.
+"""
 import dash
 
 from views.home import layout

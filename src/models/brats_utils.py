@@ -1,3 +1,6 @@
+"""
+This file contains the functions used to compare niftis files and more generally to compare the results of BraTS
+"""
 import base64
 import gzip
 import math
@@ -11,7 +14,7 @@ import numpy as np
 import pandas as pd
 from skimage.metrics import structural_similarity
 
-from models import save_file_for_comparison
+from models.home import save_file_for_comparison
 from utils.girder_vip_client import GVC
 from utils.settings import DB, CACHE_FOLDER
 
@@ -202,8 +205,10 @@ def compute_psnr_foreach_slice(array1: np.ndarray, array2: np.ndarray, axe: str)
     return psnr
 
 
-def get_processed_data_from_niftis(id1: str, id2: str, axe: str, slider_value: int) -> np.ndarray and np.ndarray and \
-                                                                                       int and imageio.core.util.Image and imageio.core.util.Image:
+def get_processed_data_from_niftis(id1: str, id2: str, axe: str, slider_value: int) -> (np.ndarray and np.ndarray and
+                                                                                       int and imageio.core.util.Image
+                                                                                        and imageio.core.util.Image):
+    """Get the data from the niftis files in the cache folder"""
     data1 = CACHE_FOLDER + "/user_compare/" + id1 + ".nii"
     data2 = CACHE_FOLDER + "/user_compare/" + id2 + ".nii"
 

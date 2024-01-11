@@ -1,3 +1,6 @@
+"""
+Controller for the page that allows to compare the results of a two BraTS experiments.
+"""
 import dash
 
 from views.compare_exp_brats import layout

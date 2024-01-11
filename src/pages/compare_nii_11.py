@@ -1,3 +1,6 @@
+"""
+Controller for the compare-nii-11 page. This page allows the user to compare the results of two NIfTI files.
+"""
 import dash
 
 from views.compare_nii_11 import layout

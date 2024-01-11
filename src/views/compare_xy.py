@@ -4,7 +4,9 @@ import plotly.express as px
 from dash import html, callback, Input, Output, dcc
 from flask import request
 
-from models.cquest_utils import get_files_in_folder, read_file_in_folder, read_folder
+from models.cquest_utils import (get_files_in_folder, read_file_in_folder, read_folder, preprocess_cquest_data_compare,
+                                 normalize)
+from models.reproduce import parse_url
 
 
 def layout():
@@ -103,9 +105,8 @@ def layout():
     Input('url', 'pathname'),
     prevent_initial_call='initial_duplicate',
 )
-def bind_selects(pathname):
-    id1 = request.referrer.split('id1=')[1].split('&')[0]
-    id2 = request.referrer.split('id2=')[1]
+def bind_selects(_):
+    id1, id2 = parse_url(request.referrer)
     files1 = get_files_in_folder(id1)
     files2 = get_files_in_folder(id2)
     return [{'label': file, 'value': file} for file in files1], [{'label': file, 'value': file} for file in files2], \
@@ -124,8 +125,7 @@ def bind_selects(pathname):
     prevent_initial_call=True,
 )
 def update_chart(file1, file2, aggregate1, aggregate2, normalization):
-    id1 = request.referrer.split('id1=')[1].split('&')[0]
-    id2 = request.referrer.split('id2=')[1]
+    id1, id2 = parse_url(request.referrer)
 
     if aggregate1:
         data1 = read_folder(id1)
@@ -139,23 +139,13 @@ def update_chart(file1, file2, aggregate1, aggregate2, normalization):
         data2 = read_file_in_folder(id2, file2)
 
     # delete metabolites water1, water2, water3
-    data1 = data1[~data1['Metabolite'].str.contains('water')]
-    data2 = data2[~data2['Metabolite'].str.contains('water')]
-
-    data1['Amplitude'] = data1['Amplitude'].apply(lambda x: float(x))
-    data2['Amplitude'] = data2['Amplitude'].apply(lambda x: float(x))
-    data1['File'] = 'File 1'
-    data2['File'] = 'File 2'
+    data1, data2 = preprocess_cquest_data_compare(data1, data2)
     # concat data with pandas.concat
     # replace the previous line using concat instead of append
     data = pd.concat([data1, data2], ignore_index=True)
 
     if normalization == 'Yes':
-        # subtract mean and divide by std by metabolite
-        means = data.groupby('Metabolite').mean()['Amplitude']
-        stds = data.groupby('Metabolite').std()['Amplitude']
-        data['Amplitude'] = data.apply(
-            lambda row: (row['Amplitude'] - means[row['Metabolite']]) / stds[row['Metabolite']], axis=1)
+        normalize(data)
 
     fig1 = px.scatter(
         x=data['Metabolite'],
