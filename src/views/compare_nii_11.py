@@ -297,5 +297,4 @@ def build_gradient(psnr_values):
         if i != psnr_values.size - 1:
             gradient += ', '
     gradient += ')'
-    print(gradient)
     return gradient

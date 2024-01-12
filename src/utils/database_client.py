@@ -20,6 +20,7 @@ class DatabaseClient:
             user=self.user,
             password=self.password,
             database=self.database,
+            auth_plugin='mysql_native_password'
         )
 
     def disconnect(self):
