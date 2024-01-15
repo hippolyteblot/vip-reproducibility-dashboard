@@ -3,7 +3,7 @@ from dash import html, callback, Input, Output, dcc, State
 from flask import request
 
 from models.cquest_utils import (get_cquest_experiment_data, generate_box_plot, create_signal_group_column,
-                                 create_workflow_group_column, create_metadata_structure, create_dropdown_options,
+                                 create_workflow_group_column, create_dropdown_options,
                                  filter_and_get_unique_values, normalize)
 from models.reproduce import get_experiment_name, parse_url
 
@@ -118,31 +118,6 @@ def layout():
                 ],
             ),
             html.Div(
-                children=[
-                    dbc.Row(
-                        children=[
-                            dbc.Col(
-                                children=[
-                                    html.H4('Metadata'),
-                                    html.Div(
-                                        id='metadata',
-                                        children=[
-                                            html.P('No metadata available'),
-                                        ],
-                                        style={'display': 'flex', 'flexDirection': 'row', 'overflow': 'auto',
-                                               'gap': '10px'},
-                                    ),
-                                ],
-                                width=3,
-                                className='card-body',
-                            ),
-                        ],
-                        className='card',
-                        style={'flexDirection': 'row'},
-                    ),
-                ],
-            ),
-            html.Div(
                 id='trigger-update',
                 style={'display': 'none'},
             ),
@@ -173,7 +148,6 @@ def bind_parameters_from_url(execution_id):
     Output('metabolite-name', 'value', allow_duplicate=True),
     Output('signal-selected', 'value', allow_duplicate=True),
     Output('workflow-selected', 'value', allow_duplicate=True),
-    Output('metadata', 'children'),
     Output('experiment-name', 'children'),
     Output('trigger-update', 'children'),
     Output('url', 'search', allow_duplicate=True),
@@ -199,13 +173,9 @@ def update_dropdowns(_, metabolite_name, signal_selected, workflow_selected, nor
         workflows = wf_data['Workflow'].unique()
         list_workflows = create_dropdown_options(workflows, 'None')
 
-    # metadata = get_metadata_cquest(wf_id)
-    metadata = []
-    metadata_structure = create_metadata_structure(metadata)
-
     return (list_metabolites, list_signals, list_workflows, metabolite_name, signal_selected, workflow_selected,
-            metadata_structure, get_experiment_name(wf_id), 'update',
-            generate_url(wf_id, metabolite_name, signal_selected, workflow_selected, normalization))
+            get_experiment_name(wf_id), 'update', generate_url(wf_id, metabolite_name, signal_selected,
+                                                               workflow_selected, normalization))
 
 
 def generate_url(wf_id, metabolite_name, signal_selected, workflow_selected, normalization='Yes'):

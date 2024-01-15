@@ -100,7 +100,7 @@ def extract_tgz(tgz_file, destination_dir):
     with tarfile.open(tgz_file, 'r:gz') as tar:
         tar.extractall(path=destination_dir)
 
-def aggregate_workflow_without_folder_logic(path, output_path):
+def aggregate_workflow_without_folder_logic(path, output_path, wf_id):
     print('Aggregating workflow')
     # get quest2 while adding a column named 'Iteration' with the iteration number
     i = 0
@@ -118,7 +118,7 @@ def aggregate_workflow_without_folder_logic(path, output_path):
         # keep the file ending with _quest2.txt in f[:-4]
         quest2_f = [f for f in os.listdir(f[:-4]) if f.endswith('_quest2.txt')][0]
         df = get_quest2(f[:-4] + '/' + quest2_f)
-        df['Iteration'] = i
+        df['Signal'] = quest2_f.split('.')[0]
         data_list.append(df)
         i += 1
         
@@ -127,6 +127,7 @@ def aggregate_workflow_without_folder_logic(path, output_path):
         data = pd.concat(data_list, ignore_index=True)
         id = str(uuid.uuid4())
         path = output_path + id
+        data['Workflow'] = wf_id
         # save the buffer into the path in local storage
         data.to_feather(path)
         print('Workflow aggregation done')
@@ -161,7 +162,7 @@ def process_hierarchy(path):
     for workflow in os.listdir(path + '/' + exp_name):
         # Get the workflow id
         print(path + exp_name + '/' + workflow)
-        result_path = aggregate_workflow_without_folder_logic(path + exp_name + '/' + workflow, path)
+        result_path = aggregate_workflow_without_folder_logic(path + exp_name + '/' + workflow, path, workflow)
         if result_path:
             out_json[exp_name][workflow] = {}
             out_json[exp_name][workflow]["data.feather"] = result_path

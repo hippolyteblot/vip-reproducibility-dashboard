@@ -13,7 +13,8 @@ from flask import Flask
 
 
 @patch('views.compare_exp_cquest.get_cquest_experiment_data')
-def test_update_chart(mock_get_data):
+@patch('models.cquest_utils.get_quest2')
+def test_update_chart(mock_get_data, mock_get_cquest_data):
     # Configuration of the environment
     app = Flask(__name__)
 
@@ -22,9 +23,10 @@ def test_update_chart(mock_get_data):
         environ = {'HTTP_HOST': 'localhost'}
         blueprints = 'compare-11'
 
-    feather_data = pd.read_feather('src/tests/data/sample_data_exp_brats.feather')
+    feather_data = pd.read_feather('src/tests/data/sample_data_exp_cquest.feather')
 
     mock_get_data.return_value = feather_data.copy()
+    mock_get_cquest_data.return_value = feather_data.copy()
 
     ctx = app.test_request_context()
 
@@ -32,7 +34,7 @@ def test_update_chart(mock_get_data):
         ctx.request = MockRequest()
         graph = bind_charts(None, 'no')
         assert isinstance(graph, go.Figure)
-        assert graph.data[0].type == 'scatter'
+        assert graph.data[0].type == 'scattergl'
         assert graph.layout.xaxis.title.text == 'Metabolite'
         assert graph.layout.yaxis.title.text == 'Amplitude'
         assert len(graph.data) == 2

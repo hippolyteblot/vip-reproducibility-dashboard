@@ -17,7 +17,7 @@ from flask_login import LoginManager
 
 from utils.girder_vip_client import get_jsons_from_local, GVC
 # local imports
-from utils.settings import APP_HOST, APP_PORT, APP_DEBUG, DEV_TOOLS_PROPS_CHECK, DB
+from utils.settings import APP_HOST, APP_PORT, APP_DEBUG, DEV_TOOLS_PROPS_CHECK, DB, GIRDER_PROCESSED_FOLDER
 from models.login import User
 from components.login import login_location
 from components import navbar, footer
@@ -80,7 +80,7 @@ def create_app():
 
 def insert_data_from_girder():
     """Insert data from Girder to the database"""
-    applications = get_girder_folders('6448f4f685f48d3da071350b')
+    applications = get_girder_folders(GIRDER_PROCESSED_FOLDER)
     for application in applications:
         insert_application_from_girder(application)
 
@@ -114,7 +114,7 @@ def insert_experiment_from_girder(experiment, version_id):
 def insert_workflow_from_girder(workflow, experiment_id):
     """Insert a workflow from Girder to the database"""
     workflow_id = insert_workflow_if_not_exist(workflow, experiment_id)
-    insert_json_if_not_exist(workflow['_id'], workflow_id, experiment_id)
+    #insert_json_if_not_exist(workflow['_id'], workflow_id, experiment_id)
 
 
 def get_girder_folders(parent_folder_id, regex=None):
