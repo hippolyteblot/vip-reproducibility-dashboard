@@ -20,13 +20,9 @@ jobs:
         python -m pip install --upgrade pip
         pip install pylint
 
-    - name: Run Pylint
-      run: |
-        pylint src --ignore=tests --max-line-length=120 --exit-zero
-
     - name: Check Pylint score
       run: |
-        pylint_score=$(pylint src --score=n | grep -oP 'Your code has been rated at \K\d+\.\d+/10')
+        pylint_score=$(pylint src --ignore=tests --max-line-length=120 --exit-zero | grep -oP 'Your code has been rated at \K\d+\.\d+/10')
         if (( $(echo "$pylint_score >= 8" | bc -l) )); then
           echo "Pylint score is acceptable: $pylint_score"
         else
