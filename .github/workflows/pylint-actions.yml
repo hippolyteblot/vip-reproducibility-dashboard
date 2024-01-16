@@ -22,7 +22,7 @@ jobs:
 
     - name: Run Pylint
       run: |
-        pylint src --ignore=tests --max-line-length=120
+        pylint src --ignore=tests --max-line-length=120 --exit-zero
 
     - name: Check Pylint score
       run: |
