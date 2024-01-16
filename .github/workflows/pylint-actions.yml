@@ -1,9 +1,6 @@
 name: Pylint Check
 
-on:
-  pull_request:
-    paths:
-      - 'src/**'
+on: [push]
 
 jobs:
   pylint:
