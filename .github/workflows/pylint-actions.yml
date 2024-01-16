@@ -27,10 +27,11 @@ jobs:
     - name: Check Pylint score
       run: |
         pylint_score=$(pylint src --ignore=tests --max-line-length=120 --exit-zero --disable=import-error | grep -oP 'Your code has been rated at \K\d+\.\d+/10')
-        if [ $(echo "$pylint_score >= 8" | bc -l) -eq 1 ]; then
+        if (( $(echo "$pylint_score >= 8" | bc -l) )); then
           echo "Pylint score is acceptable: $pylint_score"
         else
           echo "Pylint score is too low: $pylint_score"
           exit 1
         fi
+
 
