@@ -13,7 +13,7 @@ jobs:
     - name: Set up Python
       uses: actions/setup-python@v2
       with:
-        python-version: '3.x'
+        python-version: '3.11'
 
     - name: Install dependencies
       run: |
@@ -22,7 +22,7 @@ jobs:
 
     - name: Run Pylint
       run: |
-        pylint src --exit-zero-even-if-errors --score=n
+        pylint src --ignore=tests --max-line-length=120
 
     - name: Check Pylint score
       run: |
