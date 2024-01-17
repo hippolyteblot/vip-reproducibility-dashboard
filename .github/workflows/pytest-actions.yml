@@ -5,6 +5,24 @@ on: [push]
 jobs:
   test:
     runs-on: ubuntu-latest
+    env:
+      HOST: '0.0.0.0'
+      PORT: 5000
+      DEBUG: 'True'
+      DEV_TOOLS_PROPS_CHECK: 'True'
+      API_KEY: 'test'
+      SECRET_KEY: 'test'
+
+      DB_HOST: 'test'
+      DB_USER: 'test'
+      DB_PASSWORD: 'test'
+      DB_NAME: 'test'
+
+      GIRDER_API_KEY: 'test'
+      GIRDER_API_URL: 'test'
+      GIRDER_RAW_FOLDER: 'test'
+      GIRDER_PROCESSED_FOLDER: 'test'
+
 
     steps:
     - name: Checkout code
