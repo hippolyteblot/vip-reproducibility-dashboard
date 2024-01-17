@@ -1,6 +1,15 @@
 import os
+import pytest
 
 from models.home import flatten_folder, build_wf_json_from_db, decode_base64
+from unittest.mock import MagicMock
+from utils.settings import GVC
+
+
+@pytest.fixture
+def mock_girder_client():
+    mock_girder_client = MagicMock(spec=GVC)
+    return mock_girder_client
 
 
 def test_flatten_folder(tmp_path):

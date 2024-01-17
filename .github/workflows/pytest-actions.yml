@@ -19,7 +19,7 @@ jobs:
       DB_NAME: 'test'
 
       GIRDER_API_KEY: 'test'
-      GIRDER_API_URL: 'test'
+      GIRDER_API_URL: 'http://test:8080'
       GIRDER_RAW_FOLDER: 'test'
       GIRDER_PROCESSED_FOLDER: 'test'
 
