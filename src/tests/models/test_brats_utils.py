@@ -3,7 +3,7 @@ from unittest.mock import MagicMock
 import numpy as np
 import pytest
 
-from utils.settings import DB
+from utils.settings import DB, GVC
 from models import brats_utils
 
 
@@ -12,14 +12,21 @@ def mock_database():
     mock_db = MagicMock(spec=DB)
     return mock_db
 
+
+@pytest.fixture
+def mock_girder_client():
+    mock_girder_client = MagicMock(spec=GVC)
+    return mock_girder_client
+
+
 def test_compute_psnr_foreach_slice(mock_database):
     """Test the add_experiment_to_db function"""
     array1 = np.array([[[1, 2, 3], [4, 5, 6], [7, 8, 9]],
-                          [[1, 2, 3], [4, 5, 6], [7, 8, 9]],
-                            [[1, 2, 3], [4, 5, 6], [7, 8, 9]]])
+                       [[1, 2, 3], [4, 5, 6], [7, 8, 9]],
+                       [[1, 2, 3], [4, 5, 6], [7, 8, 9]]])
     array2 = np.array([[[1, 2, 3], [4, 5, 6], [7, 8, 9]],
-                            [[1, 2, 3], [4, 5, 6], [7, 8, 9]],
-                            [[1, 2, 3], [4, 5, 6], [7, 8, 9]]])
+                       [[1, 2, 3], [4, 5, 6], [7, 8, 9]],
+                       [[1, 2, 3], [4, 5, 6], [7, 8, 9]]])
 
     axe = 'z'
     psnr = brats_utils.compute_psnr_foreach_slice(array1, array2, axe)
@@ -39,11 +46,11 @@ def test_compute_psnr_foreach_slice(mock_database):
     with pytest.raises(IndexError):
         brats_utils.compute_psnr_foreach_slice(array1, array2, axe)
     array1 = np.array([[[9, 8, 7], [6, 5, 4], [3, 2, 1]],
-                            [[9, 8, 7], [6, 5, 4], [3, 2, 1]],
-                            [[9, 8, 7], [6, 5, 4], [3, 2, 1]]])
+                       [[9, 8, 7], [6, 5, 4], [3, 2, 1]],
+                       [[9, 8, 7], [6, 5, 4], [3, 2, 1]]])
     array2 = np.array([[[1, 2, 3], [4, 5, 6], [7, 8, 9]],
-                            [[1, 2, 3], [4, 5, 6], [7, 8, 9]],
-                            [[1, 2, 3], [4, 5, 6], [7, 8, 9]]])
+                       [[1, 2, 3], [4, 5, 6], [7, 8, 9]],
+                       [[1, 2, 3], [4, 5, 6], [7, 8, 9]]])
     axe = 'z'
     psnr = brats_utils.compute_psnr_foreach_slice(array1, array2, axe)
     psnr = np.round(psnr, 8)
@@ -52,21 +59,21 @@ def test_compute_psnr_foreach_slice(mock_database):
 
 def test_compute_psnr():
     array1 = np.array([[[1, 2, 3], [4, 5, 6], [7, 8, 9]],
-                            [[1, 2, 3], [4, 5, 6], [7, 8, 9]],
-                            [[1, 2, 3], [4, 5, 6], [7, 8, 9]]])
+                       [[1, 2, 3], [4, 5, 6], [7, 8, 9]],
+                       [[1, 2, 3], [4, 5, 6], [7, 8, 9]]])
     array2 = np.array([[[1, 2, 3], [4, 5, 6], [7, 8, 9]],
-                            [[1, 2, 3], [4, 5, 6], [7, 8, 9]],
-                            [[1, 2, 3], [4, 5, 6], [7, 8, 9]]])
+                       [[1, 2, 3], [4, 5, 6], [7, 8, 9]],
+                       [[1, 2, 3], [4, 5, 6], [7, 8, 9]]])
     psnr = brats_utils.compute_psnr(array1, array2, authorize_str=False)
     assert psnr == np.inf
     psnr = brats_utils.compute_psnr(array1, array2, authorize_str=True)
     assert psnr == 'Infinite'
     array1 = np.array([[[9, 8, 7], [6, 5, 4], [3, 2, 1]],
-                            [[9, 8, 7], [6, 5, 4], [3, 2, 1]],
-                            [[9, 8, 7], [6, 5, 4], [3, 2, 1]]])
+                       [[9, 8, 7], [6, 5, 4], [3, 2, 1]],
+                       [[9, 8, 7], [6, 5, 4], [3, 2, 1]]])
     array2 = np.array([[[1, 2, 3], [4, 5, 6], [7, 8, 9]],
-                            [[1, 2, 3], [4, 5, 6], [7, 8, 9]],
-                            [[1, 2, 3], [4, 5, 6], [7, 8, 9]]])
+                       [[1, 2, 3], [4, 5, 6], [7, 8, 9]],
+                       [[1, 2, 3], [4, 5, 6], [7, 8, 9]]])
     psnr = brats_utils.compute_psnr(array1, array2)
     assert psnr == 33.87111628595629
 
@@ -102,6 +109,8 @@ def build_difference_image(img_rgb1: np.ndarray, img_rgb2: np.ndarray, tolerance
 
     return img_mask3
     """
+
+
 def test_build_difference_image():
     image1 = np.array([
         [1, 2, 3],

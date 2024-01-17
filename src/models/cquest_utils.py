@@ -8,7 +8,7 @@ import plotly.express as px
 from dash import html
 from pandas import DataFrame
 
-from utils.girder_vip_client import GVC
+from utils.settings import GVC
 from utils.quest2_reader import get_quest2
 from utils.settings import DB
 

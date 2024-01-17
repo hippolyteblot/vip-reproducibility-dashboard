@@ -5,6 +5,7 @@ import os
 from dotenv import load_dotenv
 
 from utils.database_client import DatabaseClient
+from utils.girder_vip_client import GirderVIPClient
 
 cwd = os.getcwd()
 dotenv_path = os.path.join(cwd, os.getenv('ENVIRONMENT_FILE', '.env'))
@@ -31,6 +32,9 @@ GIRDER_API_KEY = os.environ.get('GIRDER_API_KEY')
 GIRDER_RAW_FOLDER = os.environ.get('GIRDER_RAW_FOLDER')
 GIRDER_PROCESSED_FOLDER = os.environ.get('GIRDER_PROCESSED_FOLDER')
 GIRDER_SOURCE_FOLDER = os.environ.get('GIRDER_SOURCE_FOLDER')
+
+
+GVC = GirderVIPClient(GIRDER_RAW_FOLDER, GIRDER_PROCESSED_FOLDER, CACHE_FOLDER, GIRDER_API_URL, GIRDER_API_KEY)
 
 
 """

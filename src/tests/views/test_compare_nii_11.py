@@ -8,7 +8,7 @@ from numpy import array_equal
 import imageio
 
 from views.compare_nii_11 import show_frames, build_gradient
-from utils.girder_vip_client import GVC
+from utils.settings import GVC
 
 from flask import Flask
 

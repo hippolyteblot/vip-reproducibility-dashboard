@@ -8,21 +8,11 @@ import time
 
 import requests.exceptions
 from girder_client import GirderClient, AuthenticationError
-from utils.settings import CACHE_FOLDER, GIRDER_RAW_FOLDER, GIRDER_PROCESSED_FOLDER, GIRDER_API_URL, GIRDER_API_KEY
-
-
-def get_jsons_from_local(_):
-    """Return jsons files from the local cache"""
-    jsons = []
-    for file in os.listdir(CACHE_FOLDER + '/process_jsons/'):
-        with open(CACHE_FOLDER + '/process_jsons/' + file, 'r', encoding='utf-8') as f:
-            jsons.append(json.load(f))
-    return jsons
 
 
 class GirderVIPClient:
     """This class is used to interact with Girder"""
-    def __init__(self, raw_folder, processed_folder, url=None, key=None):
+    def __init__(self, raw_folder, processed_folder, cache_folder, url=None, key=None):
         self.client = GirderClient(apiUrl=url + "/api/v1")
         self.url = url
         try:
@@ -34,7 +24,7 @@ class GirderVIPClient:
 
         self.raw_folder = raw_folder
         self.processed_folder = processed_folder
-        self.download_folder = CACHE_FOLDER
+        self.download_folder = cache_folder
         self.log_request = []
         self.downloading_files = []
 
@@ -111,6 +101,3 @@ class GirderVIPClient:
                 self.client.downloadFile(file['_id'], self.download_folder + folder_id + '/' + file_name)
                 return self.download_folder + folder_id + '/' + file_name
         return None
-
-
-GVC = GirderVIPClient(GIRDER_RAW_FOLDER, GIRDER_PROCESSED_FOLDER, GIRDER_API_URL, GIRDER_API_KEY)

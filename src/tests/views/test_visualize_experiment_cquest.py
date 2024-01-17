@@ -8,7 +8,7 @@ import pytest
 from numpy import array_equal
 
 from views.visualize_experiment_cquest import update_chart
-from utils.girder_vip_client import GVC
+from utils.settings import GVC
 
 from flask import Flask
 

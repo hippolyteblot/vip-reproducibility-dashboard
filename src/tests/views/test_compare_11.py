@@ -7,7 +7,7 @@ import pytest
 from numpy import array_equal
 
 from views.compare_11 import bind_charts
-from utils.girder_vip_client import GVC
+from utils.settings import GVC
 
 from flask import Flask
 

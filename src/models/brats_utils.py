@@ -15,7 +15,7 @@ import pandas as pd
 from skimage.metrics import structural_similarity
 
 from models.home import save_file_for_comparison
-from utils.girder_vip_client import GVC
+from utils.settings import GVC
 from utils.settings import DB, CACHE_FOLDER
 
 

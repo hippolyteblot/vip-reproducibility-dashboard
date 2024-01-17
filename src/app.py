@@ -15,7 +15,7 @@ import dash_bootstrap_components as dbc
 from flask import Flask
 from flask_login import LoginManager
 
-from utils.girder_vip_client import get_jsons_from_local, GVC
+from utils.settings import GVC
 # local imports
 from utils.settings import APP_HOST, APP_PORT, APP_DEBUG, DEV_TOOLS_PROPS_CHECK, DB, GIRDER_PROCESSED_FOLDER
 from models.login import User
