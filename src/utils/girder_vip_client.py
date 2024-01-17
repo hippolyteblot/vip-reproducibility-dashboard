@@ -25,7 +25,7 @@ class GirderVIPClient:
         self.client = GirderClient(apiUrl=url + "/api/v1")
         self.url = url
         try:
-            #self.client.authenticate(apiKey=key)
+            self.client.authenticate(apiKey=key)
             pass
         except AuthenticationError as e:
             print("Authentication failed: " + str(e))
