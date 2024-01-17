@@ -6,6 +6,7 @@ import json
 import os
 import time
 
+import requests.exceptions
 from girder_client import GirderClient, AuthenticationError
 from utils.settings import CACHE_FOLDER, GIRDER_RAW_FOLDER, GIRDER_PROCESSED_FOLDER, GIRDER_API_URL, GIRDER_API_KEY
 
@@ -26,9 +27,10 @@ class GirderVIPClient:
         self.url = url
         try:
             self.client.authenticate(apiKey=key)
-            pass
         except AuthenticationError as e:
             print("Authentication failed: " + str(e))
+        except requests.exceptions.ConnectTimeout as e:
+            print("Connection timeout: " + str(e))
 
         self.raw_folder = raw_folder
         self.processed_folder = processed_folder
