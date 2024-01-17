@@ -1,11 +1,17 @@
+from unittest.mock import patch
+
 from dash.html import Div
 from dash_bootstrap_components import Row, Button
 
 from views.home import toggle_modal_exp, get_list_structure
 
 
-def test_toggle_modal_exp():
+@patch('views.home.load_exp_from_db')
+@patch('views.home.get_available_applications')
+def test_toggle_modal_exp(mock_load_exp_from_db, mock_get_available_applications):
     """Test the toggle_modal_exp callback function"""
+    mock_load_exp_from_db.return_value = [{'id': 1, 'name': 'app'}]
+    mock_get_available_applications.return_value = [{'id': 1, 'application_name': 'exp', 'name': 'exp'}]
     outputs = toggle_modal_exp(0, 0, True)
 
     # Check the output

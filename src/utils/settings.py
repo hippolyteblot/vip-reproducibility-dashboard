@@ -24,7 +24,6 @@ DB_USER = os.environ.get('DB_USER')
 DB_PASSWORD = os.environ.get('DB_PASSWORD')
 DB_NAME = os.environ.get('DB_NAME')
 DB = DatabaseClient(DB_HOST, DB_USER, DB_PASSWORD, DB_NAME)
-DB.connect()
 
 # girder credentials
 GIRDER_API_URL = os.environ.get('GIRDER_API_URL')

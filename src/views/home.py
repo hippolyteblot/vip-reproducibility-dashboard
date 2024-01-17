@@ -774,9 +774,10 @@ def toggle_modal_exp(n1, n2, is_open):
                        exp_list]
         applications = get_available_applications()
         options = [{'label': app['name'], 'value': str(app['id']) + '/-/' + app['name']} for app in applications]
+        print(exp_options)
         return not is_open, exp_options, exp_options, options, options[0]['value']
 
-    return is_open, [], []
+    return is_open, [], [], [], []
 
 
 @callback(

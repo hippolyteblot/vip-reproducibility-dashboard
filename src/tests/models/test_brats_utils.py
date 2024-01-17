@@ -1,10 +1,18 @@
+from unittest.mock import MagicMock
+
 import numpy as np
 import pytest
 
+from utils.settings import DB
 from models import brats_utils
 
 
-def test_compute_psnr_foreach_slice():
+@pytest.fixture
+def mock_database():
+    mock_db = MagicMock(spec=DB)
+    return mock_db
+
+def test_compute_psnr_foreach_slice(mock_database):
     """Test the add_experiment_to_db function"""
     array1 = np.array([[[1, 2, 3], [4, 5, 6], [7, 8, 9]],
                           [[1, 2, 3], [4, 5, 6], [7, 8, 9]],
