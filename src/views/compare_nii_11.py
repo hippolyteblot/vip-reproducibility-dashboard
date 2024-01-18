@@ -1,5 +1,5 @@
 import numpy as np
-from dash import html, callback, Input, Output, dcc
+from dash import html, callback, Input, Output, dcc, State
 import dash_bootstrap_components as dbc
 import plotly.express as px
 from flask import request
@@ -207,7 +207,7 @@ def bind_parameters_from_url(url):
     # check if the url contains parameters
     if url != 'None' and request.referrer is not None and len(request.referrer.split('&')) > 2:
         # get the parameters
-        axe, mode, slicer, k1, k2, sigma, colorscale = parse_url(request.referrer)
+        id1, id2, axe, mode, slicer, k1, k2, sigma, colorscale = parse_url(request.referrer)
         return axe, mode, int(slicer), float(k1), float(k2), float(sigma), colorscale
     return 'z', 'pixel', 0, 0.001, 1, 1, 'abs'
 
@@ -221,10 +221,8 @@ def bind_parameters_from_url(url):
     Output('slider-nii', 'value', allow_duplicate=True),
     Output('parameters-ssim', 'style'),
     Output('ssim-value', 'children'),
-    Output('psnr-image-value', 'children'),
     Output('psnr-slice-value', 'children'),
     Output('description-chart-nii', 'children'),
-    Output('gradient-nii-11', 'style'),
     Output('url', 'search', allow_duplicate=True),
     Input('slider-nii', 'value'),
     Input('axes-nii', 'value'),
@@ -254,12 +252,7 @@ def show_frames(slider_value, axe, mode, k1, k2, sigma, colorscale):
         if abs(img_mask3.min()) > maximum:
             maximum = abs(img_mask3.min())
 
-    # if value is not a str
-    full_psnr = compute_psnr(vol1, vol2)
-    if not isinstance(full_psnr, str):
-        full_psnr = round(full_psnr, 4)
     psnr = compute_psnr(vol1[slider_value, :, :], vol2[slider_value, :, :])
-    psnr_list = compute_psnr_foreach_slice(vol1, vol2, axe)
     if not isinstance(psnr, str):
         psnr = round(psnr, 4)
 
@@ -275,12 +268,30 @@ def show_frames(slider_value, axe, mode, k1, k2, sigma, colorscale):
         slider_value,
         style,
         round(value, 4),
-        full_psnr,
         psnr,
         description,
-        {'background': build_gradient(psnr_list), 'height': '5px', 'margin-left': '25px', 'margin-right': '25px'},
         f'?id1={id1}&id2={id2}&axe={axe}&mode={mode}&slice={slider_value}&K1={k1}&K2={k2}&sigma={sigma}&colorscale='
         f'{colorscale}',
+    )
+
+
+@callback(
+    Output('gradient-nii-11', 'style'),
+    Output('psnr-image-value', 'children'),
+    Input('url', 'value'),
+    State('axes-nii', 'value'),
+    State('slider-nii', 'value'),
+)
+def update_one_time(_, axe, slicer):
+    id1, id2 = parse_url(request.referrer)[0:2]
+    img_rgb1, img_rgb2, max_slider, vol1, vol2, maximum = get_processed_data_from_niftis(id1, id2, axe, slicer)
+    psnr_list = compute_psnr_foreach_slice(vol1, vol2, axe)
+    full_psnr = compute_psnr(vol1, vol2)
+    if not isinstance(full_psnr, str):
+        full_psnr = round(full_psnr, 4)
+    return (
+        {'background': build_gradient(psnr_list), 'height': '5px', 'margin-left': '25px', 'margin-right': '25px'},
+        full_psnr,
     )
 
 
