@@ -52,8 +52,6 @@ def test_update_chart(mock_get_data, metabolite, signal, wf, expected_groups, ti
     with ctx:
         ctx.request = MockRequest()
         graph = update_chart(None, metabolite, signal, wf, 'No')[0]
-        print(graph)
-        GVC.clean_user_download_folder(MockUser().id)
 
         assert isinstance(graph, go.Figure)
         assert graph.data[0].type == graph_type
