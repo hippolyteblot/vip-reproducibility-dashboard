@@ -13,13 +13,10 @@ import dash
 from dash import html
 import dash_bootstrap_components as dbc
 from flask import Flask
-from flask_login import LoginManager
 
 from utils.settings import GVC
 # local imports
 from utils.settings import APP_HOST, APP_PORT, APP_DEBUG, DEV_TOOLS_PROPS_CHECK, DB, GIRDER_PROCESSED_FOLDER
-from models.login import User
-from components.login import login_location
 from components import navbar, footer
 
 
@@ -46,24 +43,11 @@ def create_app():
 
     server.config.update(SECRET_KEY=os.getenv('SECRET_KEY'))
 
-    # Login manager object will be used to log in / logout users
-    login_manager = LoginManager()
-    login_manager.init_app(server)
-    login_manager.login_view = '/login'
-
-    @login_manager.user_loader
-    def load_user(user_id):
-        query = "SELECT * FROM users WHERE id = %s"
-        result = DB.fetch_one(query, (user_id,))
-        if result is None:
-            return None
-        return User(user_id, result['username'], result['role'])
 
     def serve_layout():
         """Define the layout of the application"""
         return html.Div(
             [
-                login_location,
                 navbar,
                 dbc.Container(
                     dash.page_container,
@@ -164,41 +148,6 @@ def insert_workflow_if_not_exist(workflow, experiment_id):
         return DB.execute(query, (workflow['name'], experiment_id, workflow['_id']))
     return result['id']
 
-
-def insert_json_if_not_exist(workflow_id, workflow_id_db, experiment_id):
-    """Insert a JSON file into the database if it does not exist"""
-    # jsons = GVC.get_jsons(workflow_id)
-    jsons = get_jsons_from_local(workflow_id)
-    for json in jsons:
-        query = "SELECT * FROM input WHERE md5 = %s"
-        result = DB.fetch_one(query, (json['input']['md5'],))
-        if result is None:
-            query = "INSERT INTO input (md5, girder_id, name) VALUES (%s, %s, %s)"
-            input_id = DB.execute(query, (json['input']['md5'], json['input']['girder_id'],
-                                          json['input']['file_name']))
-        else:
-            input_id = result['id']
-        query = "SELECT * FROM output WHERE md5 = %s"
-        result = DB.fetch_one(query, (json['output']['md5'],))
-        if result is None:
-            query = "INSERT INTO output (md5, workflow_id, girder_id, name, input_id) VALUES (%s, %s, %s, %s, %s)"
-            DB.execute(query, (json['output']['md5'], workflow_id_db, json['output']['girder_id'],
-                               json['output']['file_name'], input_id))
-    # check if the experiment already has a parameter attached to it
-    query = "SELECT * FROM parameter WHERE md5 = %s"
-    result = DB.fetch_one(query, (jsons[0]['parameters_file']['md5'],))
-    if result is None:
-        query = "INSERT INTO parameter (md5, girder_id, name) VALUES (%s, %s, %s)"
-        parameter_id = DB.execute(query, (jsons[0]['parameters_file']['md5'],
-                                          jsons[0]['parameters_file']['girder_id'],
-                                          jsons[0]['parameters_file']['file_name']))
-    else:
-        parameter_id = result['id']
-    query = "SELECT * FROM experiment WHERE id = %s"
-    result = DB.fetch_one(query, (experiment_id,))
-    if result['parameter_id'] is None:
-        query = "UPDATE experiment SET parameter_id = %s WHERE id = %s"
-        DB.execute(query, (parameter_id, experiment_id))
 
 
 # insert_data_from_girder()

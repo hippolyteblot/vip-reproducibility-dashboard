@@ -22,6 +22,10 @@ class GirderVIPClient:
             print("Authentication failed: " + str(e))
         except requests.exceptions.ConnectTimeout as e:
             print("Connection timeout: " + str(e))
+        except requests.exceptions.ConnectionError as e:
+            print("Connection error: " + str(e))
+        except requests.exceptions.HTTPError as e:
+            print("HTTP error: " + str(e))
 
         self.raw_folder = raw_folder
         self.processed_folder = processed_folder
