@@ -43,7 +43,6 @@ def create_app():
 
     server.config.update(SECRET_KEY=os.getenv('SECRET_KEY'))
 
-
     def serve_layout():
         """Define the layout of the application"""
         return html.Div(
@@ -98,7 +97,7 @@ def insert_experiment_from_girder(experiment, version_id):
 def insert_workflow_from_girder(workflow, experiment_id):
     """Insert a workflow from Girder to the database"""
     workflow_id = insert_workflow_if_not_exist(workflow, experiment_id)
-    #insert_json_if_not_exist(workflow['_id'], workflow_id, experiment_id)
+    # insert_json_if_not_exist(workflow['_id'], workflow_id, experiment_id)
 
 
 def get_girder_folders(parent_folder_id, regex=None):
@@ -149,13 +148,14 @@ def insert_workflow_if_not_exist(workflow, experiment_id):
     return result['id']
 
 
-
 # insert_data_from_girder()
+context = ('src/server-cert.pem', 'src/server-key.pem')
 app = create_app()
 app.run_server(
     host=APP_HOST,
     port=APP_PORT,
     debug=APP_DEBUG,
-    dev_tools_props_check=DEV_TOOLS_PROPS_CHECK
+    dev_tools_props_check=DEV_TOOLS_PROPS_CHECK,
+    ssl_context=context
 )
 DB.connect()
