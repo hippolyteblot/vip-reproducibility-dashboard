@@ -243,4 +243,8 @@ def get_processed_data_from_niftis(id1: str, id2: str, axe: str, slider_value: i
         if maximum < i:
             maximum = i
 
-    return img_mask1, img_mask2, vol1.shape[axe_index], vol1, vol2, maximum
+    max_slide = vol1.shape[axe_index]
+    if max_slide > vol2.shape[axe_index]:
+        max_slide = vol2.shape[axe_index]
+
+    return img_mask1, img_mask2, max_slide-1, vol1, vol2, maximum

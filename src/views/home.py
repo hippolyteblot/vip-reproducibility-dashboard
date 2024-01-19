@@ -47,7 +47,7 @@ def layout():
                                                         'compare them with adapted charts and metrics.'
                                                     ),
                                                     dbc.Button(
-                                                        "Compare VIP results",
+                                                        "Compare your results",
                                                         id="upload-open",
                                                         n_clicks=0,
                                                         style={'width': 'fit-content', 'marginLeft': '10px'},
@@ -62,20 +62,21 @@ def layout():
                                                                         children=[
                                                                             dbc.Col(
                                                                                 children=[
-                                                                                    html.P('Select the application'),
+                                                                                    html.P('Select the results format'),
                                                                                     dbc.Select(
                                                                                         id='application-selected-for-upload',
                                                                                         options=[
-                                                                                            {'label': 'cQuest',
+                                                                                            {'label': 'cQuest results (quest2.txt)',
                                                                                              'value': 'cquest'},
-                                                                                            {'label': 'BraTS',
-                                                                                             'value': 'brats'},
+                                                                                            {'label': 'NIfTI files',
+                                                                                             'value': 'nifti'},
                                                                                         ],
                                                                                         value='cquest',
                                                                                         style={'width': '100%'},
                                                                                     ),
                                                                                     html.Br(),
-                                                                                    html.P('Select the format'),
+                                                                                    html.P('Select how you want to '
+                                                                                             'compare your results'),
                                                                                     dbc.Select(
                                                                                         id='data-type-selected-for-upload',
                                                                                         options=[
@@ -599,7 +600,7 @@ def update_compare_btn(_, type1, type2, app, type_selected):
     # assert that if type_selected is 1-1, type1 and type2 are txt else zip
     if type_selected == '1-1' and ((type1 == 'txt' and type2 == 'txt' and app == 'cquest') or
                                    (type1 == 'nii' and type2 == 'nii' and app == 'brats') or
-                                   (type1 in ['gz', 'nii'] and type2 in ['gz', 'nii']) and app == 'brats'):
+                                   (type1 in ['gz', 'nii'] and type2 in ['gz', 'nii']) and app == 'nifti'):
         return False
     elif type_selected == 'x-y' and type1 == 'zip' and type2 == 'zip':
         return False
@@ -649,7 +650,7 @@ def update_output2(content, href, name, type_selected, app):
 )
 def update_href(app, data_type, href):
     app_str = 'compare'
-    if app == 'brats':
+    if app == 'nifti':
         app_str = 'compare-nii'
     data_type_str = '11'
     if data_type == 'x-y':
@@ -694,7 +695,7 @@ def check_type(data_type, name, app):
     ext = name.split('.')[-1]
     if data_type == '1-1' and app == 'cquest':
         return ext == 'txt'
-    elif data_type == '1-1' and app == 'brats':
+    elif data_type == '1-1' and app == 'nifti':
         return (ext == 'nii') or (name.split('.')[-2] == 'nii' and ext == 'gz')
     elif data_type == 'x-y' or data_type == 'x':
         return ext == 'zip'
@@ -985,13 +986,14 @@ def update_upload_options(app_id):
     prevent_initial_call=True
 )
 def toggle_upload_compare_button(wf1, wf2, app_id, options):
+    print(wf1, wf2, app_id, options)
     if wf1 is not None and wf2 is not None:
         application_name = None
         for option in options:
             if int(option['value']) == int(app_id):
                 application_name = option['label'].split(' ')[0].lower()
         extension = ''
-        if application_name == 'brats':
+        if application_name == 'nifti':
             extension = 'compare-nii-11'
         elif application_name == 'cquest':
             extension = 'compare-xy'
