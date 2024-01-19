@@ -38,7 +38,7 @@ def test_update_chart(mock_get_data, index_slider, mode, axe, expected_psnr_slic
 
     with (ctx):
         ctx.request = MockRequest()
-        img_1, img_cmp, img2, min_slider, min_slider, value_slider, param_ssim, value_ssim, psnr_vol, psnr_slice, description, gradient, url = show_frames(
+        img_1, img_cmp, img2, min_slider, min_slider, value_slider, param_ssim, value_ssim, psnr_slice, description, url = show_frames(
             index_slider, axe, mode, k1, k2, sigma, 'abs')
         if mode == 'ssim':
             assert value_ssim == expected_ssim
@@ -50,12 +50,9 @@ def test_update_chart(mock_get_data, index_slider, mode, axe, expected_psnr_slic
         assert isinstance(value_slider, int)
         assert isinstance(param_ssim, dict)
         assert isinstance(value_ssim, int | float)
-        assert isinstance(psnr_vol, float)
-        assert psnr_vol == 27.7729
         assert psnr_slice == expected_psnr_slice
         assert isinstance(psnr_slice, float | str)
         assert isinstance(description, str)
-        assert isinstance(gradient, dict)
         assert isinstance(url, str)
 
 
