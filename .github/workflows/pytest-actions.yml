@@ -1,12 +1,6 @@
 name: Python Tests
 
-on:
-  push:
-    branches:
-      - main
-  pull_request:
-    types:
-      - closed
+on: [push, pull_request]
 
 jobs:
   test:
@@ -29,10 +23,18 @@ jobs:
       GIRDER_RAW_FOLDER: 'test'
       GIRDER_PROCESSED_FOLDER: 'test'
 
-
     steps:
     - name: Checkout code
       uses: actions/checkout@v2
+
+    - name: Cache dependencies
+      uses: actions/cache@v2
+      with:
+        path: |
+          ~/.cache/pip
+        key: ${{ runner.os }}-pip-${{ hashFiles('src/requirements.txt') }}
+        restore-keys: |
+          ${{ runner.os }}-pip-
 
     - name: Set up Python
       uses: actions/setup-python@v2
