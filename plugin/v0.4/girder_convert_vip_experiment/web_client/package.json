@@ -1,0 +1,14 @@
+{
+    "name": "@girder/convert-vip-experiment",
+    "version": "1.0.0",
+    "peerDepencencies": {
+        "@girder/core": "*"
+    },
+    "dependencies": {
+        "@girder/core": "^3.0.0-alpha.0.2"
+    },
+    "girderPlugin": {
+        "name": "conversion",
+        "main": "./main.js"
+    }
+}

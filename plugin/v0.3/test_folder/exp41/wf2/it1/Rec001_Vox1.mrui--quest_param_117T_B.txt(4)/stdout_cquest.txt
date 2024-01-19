@@ -1,0 +1,454 @@
+/cquest_exec::/usr/lib/:/cquest_exec
+/var/www/html/workflows/workflow-APUheP/CQUEST.sh-5002569926559151
+numberofFrames= 1
+nop= 2048.0
+Loading frame 1 of 1 from file.
+Data was loaded without problem
+/var/www/html/workflows/workflow-APUheP/CQUEST.sh-5002569926559151/Rec001_Vox1.mrui is loaded...
+before
+after
+Load ... PCh_117T_STEAM3_lc.mrui
+numberofFrames= 1
+nop= 2048.0
+Loading frame 1 of 1 from file.
+Data was loaded without problem
+using .mrui file for metabolite => no t0 estimate
+Load ... NAAG_117T_STEAM3_lc.mrui
+numberofFrames= 1
+nop= 2048.0
+Loading frame 1 of 1 from file.
+Data was loaded without problem
+Load ... NAA_117T_STEAM3_lc.mrui
+numberofFrames= 1
+nop= 2048.0
+Loading frame 1 of 1 from file.
+Data was loaded without problem
+Load ... GPC_117T_STEAM3_lc.mrui
+numberofFrames= 1
+nop= 2048.0
+Loading frame 1 of 1 from file.
+Data was loaded without problem
+Load ... Tau_117T_STEAM3_lc.mrui
+numberofFrames= 1
+nop= 2048.0
+Loading frame 1 of 1 from file.
+Data was loaded without problem
+Load ... Asp_117T_STEAM3_lc.mrui
+numberofFrames= 1
+nop= 2048.0
+Loading frame 1 of 1 from file.
+Data was loaded without problem
+Load ... PE_117T_STEAM3_lc.mrui
+numberofFrames= 1
+nop= 2048.0
+Loading frame 1 of 1 from file.
+Data was loaded without problem
+Load ... Lac_117T_STEAM3_lc.mrui
+numberofFrames= 1
+nop= 2048.0
+Loading frame 1 of 1 from file.
+Data was loaded without problem
+Load ... Ala_117T_STEAM3_lc.mrui
+numberofFrames= 1
+nop= 2048.0
+Loading frame 1 of 1 from file.
+Data was loaded without problem
+Load ... Gly_117T_STEAM3_lc.mrui
+numberofFrames= 1
+nop= 2048.0
+Loading frame 1 of 1 from file.
+Data was loaded without problem
+Load ... mI_117T_STEAM3_lc.mrui
+numberofFrames= 1
+nop= 2048.0
+Loading frame 1 of 1 from file.
+Data was loaded without problem
+Load ... GABA_117T_STEAM3_lc.mrui
+numberofFrames= 1
+nop= 2048.0
+Loading frame 1 of 1 from file.
+Data was loaded without problem
+Load ... Gln_117T_STEAM3_lc.mrui
+numberofFrames= 1
+nop= 2048.0
+Loading frame 1 of 1 from file.
+Data was loaded without problem
+Load ... Glu_117T_STEAM3_lc.mrui
+numberofFrames= 1
+nop= 2048.0
+Loading frame 1 of 1 from file.
+Data was loaded without problem
+Load ... Glc_alpha_117T_STEAM3_lc.mrui
+numberofFrames= 1
+nop= 2048.0
+Loading frame 1 of 1 from file.
+Data was loaded without problem
+Load ... PCr_117T_STEAM3_lc.mrui
+numberofFrames= 1
+nop= 2048.0
+Loading frame 1 of 1 from file.
+Data was loaded without problem
+Load ... Cre_117T_STEAM3_lc.mrui
+numberofFrames= 1
+nop= 2048.0
+Loading frame 1 of 1 from file.
+Data was loaded without problem
+Load ... water1_lc.mrui
+numberofFrames= 1
+nop= 2048.0
+Loading frame 1 of 1 from file.
+Data was loaded without problem
+Load ... water2_lc.mrui
+numberofFrames= 1
+nop= 2048.0
+Loading frame 1 of 1 from file.
+Data was loaded without problem
+Load ... water3_lc.mrui
+numberofFrames= 1
+nop= 2048.0
+Loading frame 1 of 1 from file.
+Data was loaded without problem
+Load ... MM09_lc.mrui
+numberofFrames= 1
+nop= 2048.0
+Loading frame 1 of 1 from file.
+Data was loaded without problem
+Load ... MM12_lc.mrui
+numberofFrames= 1
+nop= 2048.0
+Loading frame 1 of 1 from file.
+Data was loaded without problem
+Load ... MM14_lc.mrui
+numberofFrames= 1
+nop= 2048.0
+Loading frame 1 of 1 from file.
+Data was loaded without problem
+Load ... MM19_lc.mrui
+numberofFrames= 1
+nop= 2048.0
+Loading frame 1 of 1 from file.
+Data was loaded without problem
+Load ... MM20_lc.mrui
+numberofFrames= 1
+nop= 2048.0
+Loading frame 1 of 1 from file.
+Data was loaded without problem
+Load ... MM22_lc.mrui
+numberofFrames= 1
+nop= 2048.0
+Loading frame 1 of 1 from file.
+Data was loaded without problem
+Load ... MM27_lc.mrui
+numberofFrames= 1
+nop= 2048.0
+Loading frame 1 of 1 from file.
+Data was loaded without problem
+Load ... MM30_lc.mrui
+numberofFrames= 1
+nop= 2048.0
+Loading frame 1 of 1 from file.
+Data was loaded without problem
+Load ... MM32_lc.mrui
+numberofFrames= 1
+nop= 2048.0
+Loading frame 1 of 1 from file.
+Data was loaded without problem
+Load ... MM37_lc.mrui
+numberofFrames= 1
+nop= 2048.0
+Loading frame 1 of 1 from file.
+Data was loaded without problem
+Load ... MM39_lc.mrui
+numberofFrames= 1
+nop= 2048.0
+Loading frame 1 of 1 from file.
+Data was loaded without problem
+Load ... MM079_lc.mrui
+numberofFrames= 1
+nop= 2048.0
+Loading frame 1 of 1 from file.
+Data was loaded without problem
+Load ... MM087_lc.mrui
+numberofFrames= 1
+nop= 2048.0
+Loading frame 1 of 1 from file.
+Data was loaded without problem
+Load ... MM167_lc.mrui
+numberofFrames= 1
+nop= 2048.0
+Loading frame 1 of 1 from file.
+Data was loaded without problem
+Load ... MM181_lc.mrui
+numberofFrames= 1
+nop= 2048.0
+Loading frame 1 of 1 from file.
+Data was loaded without problem
+Boolean str values=true
+Boolean str values2=true
+choiceDamping lue=true
+NbTRunc =11
+nb of Truncated Point 10
+lastPoint  1024
+iwbeg_0    1
+iwend_0    20
+sel        0
+t0     0.0
+t0upp  10.0
+t0low  -10.0
+opt0_i 0
+phi0     0.0
+phi0upp  180.0
+phi0low  -180.0
+phi0_i   0
+ backsel 2
+ nbTest 20
+ modulus 0
+nbIteration 2
+nbPointLeft 0
+isDataEcho false
+lastPoint  1024
+Quantifying signal 1 out of 1...
+!!!!!!!!!!!!!!!!signal 01.0090977123784801
+--------------  ITERATION 1
+--------------  nb of Truncated point: 10
+--------------   # Use Starting Value File #false
+--------------   # Metabolites= 35
+ INFO : option Background Handling is on
+Min-Max Damping set up by the user 20.0 30.0
+freqSV in fillBounds 0.0
+wfreqlow in fillBounds -8.0
+wfrequpp in fillBounds 8.0
+freq low -0.008
+freq upp 0.008
+ENTER IN CHOICEDAMPING
+meta1=MM087 meta2=MM09  value=30.0  32
+paramlow=0.7
+paramupp=1.3
+meta1=MM079 meta2=MM09  value=30.0  31
+paramlow=0.7
+paramupp=1.3
+meta1=MM181 meta2=MM167  value=5.0  34
+paramlow=0.95
+paramupp=1.05
+meta1=MM37 meta2=MM09  value=20.0  29
+paramlow=0.8
+paramupp=1.2
+meta1=MM39 meta2=MM09  value=20.0  30
+paramlow=0.8
+paramupp=1.2
+meta1=MM20 meta2=MM09  value=20.0  24
+paramlow=0.8
+paramupp=1.2
+meta1=MM12 meta2=MM09  value=20.0  21
+paramlow=0.8
+paramupp=1.2
+meta1=MM14 meta2=MM09  value=20.0  22
+paramlow=0.8
+paramupp=1.2
+meta1=NAAG_117T_STEAM3 meta2=NAA_117T_STEAM3  value=80.0  1
+paramlow=0.19999999999999996
+paramupp=1.8
+meta1=PCr meta2=Cre_117T_STEAM3  value=10.0  15
+paramlow=0.9
+paramupp=1.1
+meta1=GPC_117T_STEAM3 meta2=PCh_117T_STEAM3  value=10.0  3
+paramlow=0.9
+paramupp=1.1
+meta1=Gly_117T_STEAM3 meta2=mI_117T_STEAM3  value=80.0  9
+paramlow=0.19999999999999996
+paramupp=1.8
+ Metabolite water1
+Phasing Metabolite water1
+metListSize 35
+name1 water1
+ Metabolite water2
+Phasing Metabolite water2
+metListSize 35
+name1 water2
+ Metabolite water3
+Phasing Metabolite water3
+metListSize 35
+name1 water3
+Read Data
+Read Sig and Prior
+Enter into minimization procedure ...
+liv= 8
+WARNING= false or singular convergence 
+Calculate the signal RESIDUE ......
+Background SVD Modelling using user supplied parameters
+meanDamping=90.0 threshold set up by the user  
+ Hankel Matrix nb Points 1024 nb Row 512 nb Component 10
+iteration === 1nbIteration
+java.library.path=/cquest_exec:/cquest_exec::/usr/lib/:/cquest_exec
+!!Launch HLSVD Propack Method !!
+Energy of signal to model by SVD =0.9500862083564154
+Energy SVD Obtained= -0.09028940764788831
+--------------  ITERATION 2
+--------------  nb of Truncated point: 0
+--------------   # Use Starting Value File #false
+--------------   # Metabolites= 35
+ INFO : option Background Handling is on
+freqSV in fillBounds 0.0
+wfreqlow in fillBounds -8.0
+wfrequpp in fillBounds 8.0
+freq low -0.008
+freq upp 0.008
+ENTER IN CHOICEDAMPING
+meta1=MM087 meta2=MM09  value=30.0  32
+paramlow=0.7
+paramupp=1.3
+meta1=MM079 meta2=MM09  value=30.0  31
+paramlow=0.7
+paramupp=1.3
+meta1=MM181 meta2=MM167  value=5.0  34
+paramlow=0.95
+paramupp=1.05
+meta1=MM37 meta2=MM09  value=20.0  29
+paramlow=0.8
+paramupp=1.2
+meta1=MM39 meta2=MM09  value=20.0  30
+paramlow=0.8
+paramupp=1.2
+meta1=MM20 meta2=MM09  value=20.0  24
+paramlow=0.8
+paramupp=1.2
+meta1=MM12 meta2=MM09  value=20.0  21
+paramlow=0.8
+paramupp=1.2
+meta1=MM14 meta2=MM09  value=20.0  22
+paramlow=0.8
+paramupp=1.2
+meta1=NAAG_117T_STEAM3 meta2=NAA_117T_STEAM3  value=80.0  1
+paramlow=0.19999999999999996
+paramupp=1.8
+meta1=PCr meta2=Cre_117T_STEAM3  value=10.0  15
+paramlow=0.9
+paramupp=1.1
+meta1=GPC_117T_STEAM3 meta2=PCh_117T_STEAM3  value=10.0  3
+paramlow=0.9
+paramupp=1.1
+meta1=Gly_117T_STEAM3 meta2=mI_117T_STEAM3  value=80.0  9
+paramlow=0.19999999999999996
+paramupp=1.8
+ Metabolite water1
+Phasing Metabolite water1
+metListSize 35
+name1 water1
+ Metabolite water2
+Phasing Metabolite water2
+metListSize 35
+name1 water2
+ Metabolite water3
+Phasing Metabolite water3
+metListSize 35
+name1 water3
+Writing Data after Fortran work
+launch hlsvdpwRead Data
+Read Sig and Prior
+Enter into minimization procedure ...
+liv= 4
+Macro Name List to take into account
+indice?0a 10.1817356685251648
+Save File: /var/www/html/workflows/workflow-APUheP/CQUEST.sh-5002569926559151/Rec001_Vox1_quest2.txt
+ loop q=            1
+ OUT flag:            4
+ update best fit 
+ loop q=            2
+ OUT flag:            9
+ loop q=            3
+ OUT flag:            4
+ loop q=            4
+ OUT flag:            4
+ loop q=            5
+ OUT flag:            4
+ loop q=            6
+ OUT flag:            8
+ update best fit 
+ loop q=            7
+ OUT flag:            8
+ update best fit 
+ loop q=            8
+ OUT flag:            4
+ loop q=            9
+ OUT flag:            4
+ loop q=           10
+ OUT flag:            8
+ loop q=           11
+ OUT flag:            8
+ loop q=           12
+ OUT flag:            8
+ loop q=           13
+ OUT flag:            4
+ loop q=           14
+ OUT flag:            8
+ loop q=           15
+ OUT flag:            8
+ loop q=           16
+ OUT flag:            4
+ loop q=           17
+ OUT flag:            8
+ loop q=           18
+ OUT flag:            4
+ loop q=           19
+ OUT flag:            4
+ loop q=           20
+ OUT flag:            4
+ ivfinal=   8.0000000000000000     
+  startval            0
+  startval            0
+  startval            0
+  startval            0
+  startval            0
+ call finderror 
+ fortran end
+ loop q=            1
+ OUT flag:            4
+ update best fit 
+ loop q=            2
+ OUT flag:            4
+ loop q=            3
+ OUT flag:            4
+ update best fit 
+ loop q=            4
+ OUT flag:            4
+ loop q=            5
+ OUT flag:            4
+ loop q=            6
+ OUT flag:            4
+ loop q=            7
+ OUT flag:            4
+ loop q=            8
+ OUT flag:            4
+ loop q=            9
+ OUT flag:            4
+ loop q=           10
+ OUT flag:            4
+ loop q=           11
+ OUT flag:            4
+ loop q=           12
+ OUT flag:            4
+ loop q=           13
+ OUT flag:            4
+ loop q=           14
+ OUT flag:            4
+ loop q=           15
+ OUT flag:            4
+ loop q=           16
+ OUT flag:            4
+ loop q=           17
+ OUT flag:            8
+ loop q=           18
+ OUT flag:            4
+ loop q=           19
+ OUT flag:            4
+ loop q=           20
+ OUT flag:            4
+ ivfinal=   4.0000000000000000     
+  startval            0
+  startval            0
+  startval            0
+  startval            0
+  startval            0
+ call finderror 
+ fortran end
+Writing Data after Fortran work
