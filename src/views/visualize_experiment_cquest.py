@@ -230,81 +230,80 @@ def update_chart(_, metabolite, signal, workflow, normalization):
     if normalization == 'Yes':
         normalize(exp_data)
 
-    match combination:
-        case [True, True, True]:  # Cas 1 : Display everything
-            list_workflows = create_dropdown_options(exp_data['Signal'].unique(), 'All')
-            figure = generate_box_plot(exp_data, 'Metabolite', 'Amplitude',
-                                       'Comparison of metabolites')
-            label = 'Signal to highlight'
-            description = ("This chart shows the amplitude of each signal for each metabolite. Results are computed "
-                           "by cQUEST and their provenance is shown in the table below.")
-        case [True, True, False]:  # Cas 2 : Display everything but highlight a signal
-            list_workflows = create_dropdown_options(exp_data['Signal'].unique(), 'None')
-            create_signal_group_column(exp_data, workflow)
-            figure = generate_box_plot(exp_data, 'Metabolite', 'Amplitude',
-                                       'Comparison of metabolites', 'Signal group')
-            label = 'Signal to highlight'
-            description = ("This chart shows the amplitude of each signal for each metabolite. Results are computed "
-                           "by cQUEST and their provenance is shown in the table below.")
-        case [True, False, True]:  # Cas 3 : Filter to keep only the data of the selected signal
-            list_workflows = create_dropdown_options(exp_data['Workflow'].unique(), 'None')
-            exp_data = exp_data[exp_data['Signal'] == signal]
-            figure = generate_box_plot(exp_data, 'Metabolite', 'Amplitude',
-                                       'Comparison of metabolites')
-            label = 'Workflow to highlight'
-            description = ("This chart shows the amplitude of each signal for each metabolite. Results are computed "
-                           "by cQUEST and their provenance is shown in the table below.")
-        case [True, False, False]:  # Cas 4 : Filter to keep only the data of the selected signal and highlight a wf
-            list_workflows = create_dropdown_options(exp_data['Workflow'].unique(), 'None')
-            exp_data = exp_data[exp_data['Signal'] == signal]
-            create_workflow_group_column(exp_data, workflow)
-            figure = generate_box_plot(exp_data, 'Metabolite', 'Amplitude',
-                                       'Comparison of metabolites', 'Workflow group')
-            label = 'Workflow to highlight'
-            description = ("This chart shows the amplitude of each signal for each metabolite. Results are computed "
-                           "by cQUEST and their provenance is shown in the table below.")
-        case [False, True, True]:  # Cas 5 : Filter to keep only the selected metabolite. Signals on abscissa
-            list_workflows = create_dropdown_options(exp_data['Workflow'].unique(), 'None')
-            exp_data = exp_data[exp_data['Metabolite'] == metabolite]
-            figure = generate_box_plot(exp_data, 'Signal', 'Amplitude',
-                                       f'Comparison of metabolite {metabolite}')
-            label = 'Workflow to highlight'
-            description = (f"This chart shows the amplitude of the signal {signal} for each metabolite. Results are "
-                           "computed by cQUEST and their provenance is shown in the table below.")
-        case [False, True, False]:  # Cas 6 : Same as 5 but highlight a wf (not really useful)
-            list_workflows = create_dropdown_options(exp_data['Workflow'].unique(), 'None')
-            exp_data = exp_data[exp_data['Metabolite'] == metabolite]
-            create_workflow_group_column(exp_data, workflow)
-            figure = generate_box_plot(exp_data, 'Signal', 'Amplitude',
-                                       f'Comparison of metabolite {metabolite}', 'Workflow group')
-            label = 'Workflow to highlight'
-            description = (f"This chart shows the amplitude of the signal {signal} for each metabolite. Results are "
-                           "computed by cQUEST and their provenance is shown in the table below.")
-        case [False, False, True]:  # Cas 7 : Filter to keep only the selected metabolite and signal
-            list_workflows = create_dropdown_options(exp_data['Workflow'].unique(), 'None')
-            exp_data = exp_data[exp_data['Metabolite'] == metabolite]
-            exp_data = exp_data[exp_data['Signal'] == signal]
-            figure = generate_box_plot(exp_data, 'Workflow', 'Amplitude',
-                                       f'Comparison of metabolite {metabolite}')
-            label = 'Workflow to highlight'
-            description = (f"This chart shows the amplitude of the signal {signal} for each metabolite. Results are "
-                           "computed by cQUEST and their provenance is shown in the table below.")
-        case [False, False, False]:  # Cas 8 : Filter to keep only the selected metabolite and signal and highlight a wf
-            list_workflows = create_dropdown_options(exp_data['Workflow'].unique(), 'None')
-            exp_data = exp_data[exp_data['Metabolite'] == metabolite]
-            exp_data = exp_data[exp_data['Signal'] == signal]
-            create_workflow_group_column(exp_data, workflow)
-            figure = generate_box_plot(exp_data, 'Workflow', 'Amplitude',
-                                       f'Comparison of metabolite {metabolite}', 'Workflow group')
-            label = 'Workflow to highlight'
-            description = (f"This chart shows the amplitude of the signal {signal} for each metabolite. Results are "
-                           "computed by cQUEST and their provenance is shown in the table below.")
-        case _:  # Cas 9 : Display everything
-            list_workflows = create_dropdown_options(exp_data['Signal'].unique(), 'All')
-            figure = generate_box_plot(exp_data, 'Metabolite', 'Amplitude',
-                                       'Comparison of metabolites')
-            label = 'Signal to highlight'
-            description = ("This chart shows the amplitude of each signal for each metabolite. Results are computed "
-                           "by cQUEST and their provenance is shown in the table below.")
+    if combination == [True, True, True]:  # Cas 1 : Display everything
+        list_workflows = create_dropdown_options(exp_data['Signal'].unique(), 'All')
+        figure = generate_box_plot(exp_data, 'Metabolite', 'Amplitude',
+                                   'Comparison of metabolites')
+        label = 'Signal to highlight'
+        description = ("This chart shows the amplitude of each signal for each metabolite. Results are computed "
+                       "by cQUEST and their provenance is shown in the table below.")
+    elif combination == [True, True, False]:  # Cas 2 : Display everything but highlight a signal
+        list_workflows = create_dropdown_options(exp_data['Signal'].unique(), 'None')
+        create_signal_group_column(exp_data, workflow)
+        figure = generate_box_plot(exp_data, 'Metabolite', 'Amplitude',
+                                   'Comparison of metabolites', 'Signal group')
+        label = 'Signal to highlight'
+        description = ("This chart shows the amplitude of each signal for each metabolite. Results are computed "
+                       "by cQUEST and their provenance is shown in the table below.")
+    elif combination == [True, False, True]:  # Cas 3 : Filter to keep only the data of the selected signal
+        list_workflows = create_dropdown_options(exp_data['Workflow'].unique(), 'None')
+        exp_data = exp_data[exp_data['Signal'] == signal]
+        figure = generate_box_plot(exp_data, 'Metabolite', 'Amplitude',
+                                   'Comparison of metabolites')
+        label = 'Workflow to highlight'
+        description = ("This chart shows the amplitude of each signal for each metabolite. Results are computed "
+                       "by cQUEST and their provenance is shown in the table below.")
+    elif combination == [True, False, False]:  # Cas 4 : Filter to keep only the data of the signal and highlight a wf
+        list_workflows = create_dropdown_options(exp_data['Workflow'].unique(), 'None')
+        exp_data = exp_data[exp_data['Signal'] == signal]
+        create_workflow_group_column(exp_data, workflow)
+        figure = generate_box_plot(exp_data, 'Metabolite', 'Amplitude',
+                                   'Comparison of metabolites', 'Workflow group')
+        label = 'Workflow to highlight'
+        description = ("This chart shows the amplitude of each signal for each metabolite. Results are computed "
+                       "by cQUEST and their provenance is shown in the table below.")
+    elif combination == [False, True, True]:  # Cas 5 : Filter to keep only the selected metabolite. Signals on abscissa
+        list_workflows = create_dropdown_options(exp_data['Workflow'].unique(), 'None')
+        exp_data = exp_data[exp_data['Metabolite'] == metabolite]
+        figure = generate_box_plot(exp_data, 'Signal', 'Amplitude',
+                                   f'Comparison of metabolite {metabolite}')
+        label = 'Workflow to highlight'
+        description = (f"This chart shows the amplitude of the signal {signal} for each metabolite. Results are "
+                       "computed by cQUEST and their provenance is shown in the table below.")
+    elif combination == [False, True, False]:  # Cas 6 : Same as 5 but highlight a wf (not really useful)
+        list_workflows = create_dropdown_options(exp_data['Workflow'].unique(), 'None')
+        exp_data = exp_data[exp_data['Metabolite'] == metabolite]
+        create_workflow_group_column(exp_data, workflow)
+        figure = generate_box_plot(exp_data, 'Signal', 'Amplitude',
+                                   f'Comparison of metabolite {metabolite}', 'Workflow group')
+        label = 'Workflow to highlight'
+        description = (f"This chart shows the amplitude of the signal {signal} for each metabolite. Results are "
+                       "computed by cQUEST and their provenance is shown in the table below.")
+    elif combination == [False, False, True]:  # Cas 7 : Filter to keep only the selected metabolite and signal
+        list_workflows = create_dropdown_options(exp_data['Workflow'].unique(), 'None')
+        exp_data = exp_data[exp_data['Metabolite'] == metabolite]
+        exp_data = exp_data[exp_data['Signal'] == signal]
+        figure = generate_box_plot(exp_data, 'Workflow', 'Amplitude',
+                                   f'Comparison of metabolite {metabolite}')
+        label = 'Workflow to highlight'
+        description = (f"This chart shows the amplitude of the signal {signal} for each metabolite. Results are "
+                       "computed by cQUEST and their provenance is shown in the table below.")
+    elif combination == [False, False, False]:  # Cas 8 : Filter to keep only the metabolite and signal + highlight a wf
+        list_workflows = create_dropdown_options(exp_data['Workflow'].unique(), 'None')
+        exp_data = exp_data[exp_data['Metabolite'] == metabolite]
+        exp_data = exp_data[exp_data['Signal'] == signal]
+        create_workflow_group_column(exp_data, workflow)
+        figure = generate_box_plot(exp_data, 'Workflow', 'Amplitude',
+                                   f'Comparison of metabolite {metabolite}', 'Workflow group')
+        label = 'Workflow to highlight'
+        description = (f"This chart shows the amplitude of the signal {signal} for each metabolite. Results are "
+                       "computed by cQUEST and their provenance is shown in the table below.")
+    else: # Cas 9 : Display everything
+        list_workflows = create_dropdown_options(exp_data['Signal'].unique(), 'All')
+        figure = generate_box_plot(exp_data, 'Metabolite', 'Amplitude',
+                                   'Comparison of metabolites')
+        label = 'Signal to highlight'
+        description = ("This chart shows the amplitude of each signal for each metabolite. Results are computed "
+                       "by cQUEST and their provenance is shown in the table below.")
 
     return figure, list_workflows, label, description
