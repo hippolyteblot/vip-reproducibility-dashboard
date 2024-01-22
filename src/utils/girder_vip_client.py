@@ -86,7 +86,13 @@ class GirderVIPClient:
             time.sleep(0.1)
 
     def download_feather_data(self, folder_id):
-        """Download the feather file named data.feather in the folder"""
+        """Download the feather file named data.feather in the folder if not already downloaded"""
+        # check if the file is already downloaded
+        if folder_id in os.listdir(self.download_folder) and 'data.feather' in os.listdir(
+                self.download_folder + folder_id):
+            date = os.path.getmtime(self.download_folder + folder_id + '/data.feather')
+            if time.time() - date < 60 * 60:
+                return self.download_folder + folder_id + '/data.feather'
         items = self.client.listItem(folder_id)
         for item in items:
             if item['name'] == 'data.feather':
@@ -94,7 +100,6 @@ class GirderVIPClient:
                     if file['name'] == 'data.feather':
                         self.client.downloadFile(file['_id'], self.download_folder + folder_id + '/data.feather')
                         return self.download_folder + folder_id + '/data.feather'
-
         return None
 
     def download_file_by_name(self, folder_id, file_name):

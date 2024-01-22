@@ -96,7 +96,7 @@ def insert_experiment_from_girder(experiment, version_id):
 
 def insert_workflow_from_girder(workflow, experiment_id):
     """Insert a workflow from Girder to the database"""
-    workflow_id = insert_workflow_if_not_exist(workflow, experiment_id)
+    insert_workflow_if_not_exist(workflow, experiment_id)
     # insert_json_if_not_exist(workflow['_id'], workflow_id, experiment_id)
 
 
@@ -149,7 +149,7 @@ def insert_workflow_if_not_exist(workflow, experiment_id):
 
 
 # insert_data_from_girder()
-#context = ('src/server-cert.pem', 'src/server-key.pem')
+# context = ('src/server-cert.pem', 'src/server-key.pem')
 app = create_app()
 app.run_server(
     host=APP_HOST,

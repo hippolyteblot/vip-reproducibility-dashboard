@@ -134,7 +134,7 @@ def layout():
 def bind_parameters_from_url(execution_id):
     # check if the url contains parameters
     if execution_id != 'None' and request.referrer is not None and len(request.referrer.split('&')) > 2:
-        metabolite_name, signal_selected, normalization, graph_type = parse_url(request.referrer)
+        _, _, metabolite_name, signal_selected, normalization, graph_type = parse_url(request.referrer)
         if not normalization:
             normalization = 'No'
 
@@ -167,7 +167,7 @@ def generate_url(exp1, exp2, metabolite_name, signal_selected, graph_type, norma
 def update_metabolite_name_bland_altman(graph, metabolite_name, signal_selected, normalization):
     if not normalization:
         normalization = 'No'
-    exec_id_1, exec_id_2 = parse_url(request.referrer)
+    exec_id_1, exec_id_2 = parse_url(request.referrer)[0:2]
     experiment_data_1 = get_cquest_experiment_data(exec_id_1)
     experiment_data_2 = get_cquest_experiment_data(exec_id_2)
 

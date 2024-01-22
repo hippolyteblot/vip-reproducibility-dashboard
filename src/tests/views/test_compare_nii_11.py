@@ -1,16 +1,12 @@
 from unittest.mock import patch
 
+import imageio
 import numpy as np
-import pandas as pd
 import plotly.graph_objects as go
 import pytest
-from numpy import array_equal
-import imageio
+from flask import Flask
 
 from views.compare_nii_11 import show_frames, build_gradient, update_one_time
-from utils.settings import GVC
-
-from flask import Flask
 
 
 @pytest.mark.parametrize("index_slider, mode, axe, expected_psnr_slice, expected_ssim, k1, k2, sigma", [

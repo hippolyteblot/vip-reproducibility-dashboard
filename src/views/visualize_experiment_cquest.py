@@ -136,7 +136,7 @@ def bind_parameters_from_url(execution_id):
     # check if the url contains parameters
     if execution_id != 'None' and request.referrer is not None and len(request.referrer.split('&')) > 1:
         # get the parameters
-        metabolite_name, signal_selected, workflow_selected, normalization = parse_url(request.referrer)
+        _, metabolite_name, signal_selected, workflow_selected, normalization = parse_url(request.referrer)
         return metabolite_name, signal_selected, workflow_selected, normalization
     return 'All', 'All', 'None', 'No'
 
