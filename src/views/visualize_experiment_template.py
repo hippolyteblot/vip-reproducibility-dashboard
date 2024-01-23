@@ -1,3 +1,6 @@
+"""
+Components
+"""
 import base64
 import hashlib
 import json
@@ -11,6 +14,7 @@ from models.visualize_experiment_template import read_file
 
 
 def layout():
+    """Return the layout for the visualize experiment template page."""
     return html.Div(
         [
             dcc.Location(id='url', refresh=False),
@@ -533,7 +537,7 @@ def update_dropdowns(contents, filename):
     if contents is None:
         return ([], [], [], [], dash.no_update, dash.no_update, dash.no_update, True, 'Drag and Drop or Select Files',
                 {'display': 'none'}, {'display': 'block'}, '', 0, 'Drag and Drop or Select Files', '', True)
-    content_type, content_string = contents[0].split(',')
+    _, content_string = contents[0].split(',')
     b64 = base64.b64encode(content_string.encode('utf-8'))
     md5 = hashlib.md5(b64).hexdigest()
     ext = filename[0].split('.')[-1]
@@ -580,7 +584,7 @@ def update_chart(x_column, y_column, graph_type, color_column, filters, filename
     for column in data.columns:
         if data[column].dtype == 'object':
             try:
-                data[column] = data[column].apply(lambda x: float(x))
+                data[column] = data[column].astype(float)
             except ValueError:
                 pass
 
@@ -647,10 +651,7 @@ def download_config(_, graph_type, x_column, y_column, color_column, filters, de
         'filters': filters.replace('\n', '').split(',') if filters is not None else [],
         'description': description,
     }
-    return dict(
-        content=json.dumps(config, indent=4),
-        filename='config.json'
-    )
+    return {"content": json.dumps(config, indent=4), "filename": 'config.json'}
 
 
 @callback(
@@ -668,13 +669,12 @@ def download_config(_, graph_type, x_column, y_column, color_column, filters, de
     prevent_initial_call=True,
 )
 def upload_config(contents, filename, fields):
-    print('upload config')
-    """Upload the config file"""
+    """Upload the config file and update the dropdowns"""
     fields_list = [f['label'] for f in fields]
     if contents is None:
         return (dash.no_update, dash.no_update, dash.no_update, dash.no_update, dash.no_update, dash.no_update,
                 dash.no_update, 'Drag and Drop or Select Files')
-    content_type, content_string = contents[0].split(',')
+    _, content_string = contents[0].split(',')
     if 'json' in filename[0]:
         try:
             config = json.loads(base64.b64decode(content_string).decode('utf-8'))
@@ -702,7 +702,7 @@ def upload_config(contents, filename, fields):
                     else:
                         print('field not in fields FILTERS')
                         raise dash.exceptions.PreventUpdate
-                    field, value = f.split(operator)
+                    field, _ = f.split(operator)
                     if field not in fields_list:
                         print('field not in fields')
                         raise dash.exceptions.PreventUpdate

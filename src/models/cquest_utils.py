@@ -1,3 +1,6 @@
+"""
+Provide functions to work with cquest data.
+"""
 import os
 from time import sleep
 
@@ -27,8 +30,8 @@ def get_cquest_experiment_data(experiment_id: int) -> pd.DataFrame:
     # finally, read the data from the file
     data = pd.read_feather(path)
     # convert field Amplitude and SD to float (they look like 1.2e-5)
-    data["Amplitude"] = data["Amplitude"].apply(lambda x: float(x))
-    data["SD"] = data["SD"].apply(lambda x: float(x))
+    data["Amplitude"] = data["Amplitude"].apply(float)
+    data["SD"] = data["SD"].apply(float)
     return data
 
 
@@ -40,6 +43,7 @@ def read_cquest_file(file_uuid: str) -> DataFrame:
 
 
 def get_metadata_cquest(exp_id: int) -> list:
+    """Get the metadata of an experiment from database"""
     query = "SELECT id FROM workflow WHERE experiment_id = %s"
     wf_ids = DB.fetch(query, (exp_id,))
     array_wf_ids = [wf_ids[i]['id'] for i in range(len(wf_ids))]
@@ -90,6 +94,7 @@ def read_folder(folder):
 
 
 def normalize(data):
+    """Normalize the data using the formula : (x - mean) / std"""
     data['Amplitude'] = pd.to_numeric(data['Amplitude'], errors='coerce')
     data.dropna(subset=['Amplitude'], inplace=True)
 
@@ -100,6 +105,7 @@ def normalize(data):
 
 
 def filter_and_normalize_data(wf_data, signal, normalization):
+    """Filter the data and normalize it if needed"""
     wf_data = wf_data.sort_values(by=['Metabolite'])
     wf_data = wf_data[~wf_data['Metabolite'].str.contains('water')]
 
@@ -113,6 +119,7 @@ def filter_and_normalize_data(wf_data, signal, normalization):
 
 
 def get_description_and_label(signal, workflow, metabolite):
+    """Get the description and the label of the chart depending on the signal, workflow and metabolite"""
     description = ''
     if signal != 'All':
         label = 'Workflow to highlight'
@@ -129,16 +136,19 @@ def get_description_and_label(signal, workflow, metabolite):
 
 
 def create_workflow_group_column(wf_data, workflow):
+    """Create a column 'Workflow group' with the value of workflow"""
     wf_data['Workflow group'] = wf_data['Workflow'].apply(
         lambda x: str(workflow) if x == workflow else 'Other'
     )
 
 
 def create_signal_group_column(wf_data, signal):
+    """Create a column 'Signal group' with the value of signal"""
     wf_data['Signal group'] = np.where(wf_data['Signal'] == signal, signal, 'Other')
 
 
 def generate_box_plot(wf_data: pd.DataFrame, x_column, y_column, title, color_column=None):
+    """Generate a box plot with the data"""
     # if there is less than 4 values per column, we use a scatter plot
     if wf_data.groupby(x_column).count()[y_column].max() < 4:
         graph = px.scatter(
@@ -167,6 +177,7 @@ def generate_box_plot(wf_data: pd.DataFrame, x_column, y_column, title, color_co
 
 
 def filter_and_get_unique_values(wf_data):
+    """Filter the data and get the unique values of metabolites and signals"""
     metabolites = wf_data['Metabolite'].unique()
     metabolites = [metabolite for metabolite in metabolites if 'water' not in metabolite]
     signals = wf_data['Signal'].unique()
@@ -174,6 +185,7 @@ def filter_and_get_unique_values(wf_data):
 
 
 def create_dropdown_options(values, all_label):
+    """Create the options for a dropdown"""
     options = [{'label': str(value), 'value': value} for value in values]
     options.sort(key=lambda x: x['label'])
     options.insert(0, {'label': all_label, 'value': all_label})
@@ -181,6 +193,7 @@ def create_dropdown_options(values, all_label):
 
 
 def create_metadata_structure(metadata):
+    """Create a table with the metadata of the experiment"""
     metadata_structure = [
         dbc.Table(
             [
@@ -218,15 +231,13 @@ def create_metadata_structure(metadata):
 
 
 def preprocess_cquest_data_compare(data1, data2):
-    # Créer des copies explicites des DataFrames
+    """Preprocess the data for the comparison"""
     data1 = data1[~data1['Metabolite'].str.contains('water')].copy()
     data2 = data2[~data2['Metabolite'].str.contains('water')].copy()
 
-    # Appliquer la conversion en float aux colonnes 'Amplitude'
-    data1['Amplitude'] = data1['Amplitude'].apply(lambda x: float(x))
-    data2['Amplitude'] = data2['Amplitude'].apply(lambda x: float(x))
+    data1['Amplitude'] = data1['Amplitude'].apply(float)
+    data2['Amplitude'] = data2['Amplitude'].apply(float)
 
-    # Ajouter la colonne 'File' avec les valeurs correspondantes
     data1['File'] = 'File 1'
     data2['File'] = 'File 2'
 

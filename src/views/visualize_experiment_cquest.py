@@ -1,3 +1,6 @@
+"""
+Visualize an experiment page for cquest.
+"""
 import dash_bootstrap_components as dbc
 from dash import html, callback, Input, Output, dcc, State
 from flask import request
@@ -9,6 +12,7 @@ from models.reproduce import get_experiment_name, parse_url
 
 
 def layout():
+    """Return the layout for the visualize experiment cquest page."""
     return html.Div(
         [
             dcc.Location(id='url', refresh=False),
@@ -133,6 +137,7 @@ def layout():
     Input('url', 'value'),
 )
 def bind_parameters_from_url(execution_id):
+    """Bind the parameters from the url to the dropdowns"""
     # check if the url contains parameters
     if execution_id != 'None' and request.referrer is not None and len(request.referrer.split('&')) > 1:
         # get the parameters
@@ -159,6 +164,7 @@ def bind_parameters_from_url(execution_id):
     prevent_initial_call=True,
 )
 def update_dropdowns(_, metabolite_name, signal_selected, workflow_selected, normalization):
+    """Update the dropdowns"""
     wf_id = int(parse_url(request.referrer)[0])
     wf_data = get_cquest_experiment_data(wf_id)
 
@@ -179,6 +185,7 @@ def update_dropdowns(_, metabolite_name, signal_selected, workflow_selected, nor
 
 
 def generate_url(wf_id, metabolite_name, signal_selected, workflow_selected, normalization='Yes'):
+    """Generate the url to be used in the callback"""
     url = "?execution_id=" + str(wf_id) + "&metabolite_name=" + str(metabolite_name) + "&signal_selected=" + \
           str(signal_selected) + "&workflow_selected=" + str(workflow_selected) + "&normalization=" + \
           str(normalization)
@@ -193,10 +200,10 @@ def generate_url(wf_id, metabolite_name, signal_selected, workflow_selected, nor
     prevent_initial_call=True,
 )
 def update_signal_dropdown(click_data, signal_selected):
+    """Update the signal dropdown"""
     if click_data is None:
         return signal_selected
-    else:
-        return click_data['points'][0]['customdata'][0]
+    return click_data['points'][0]['customdata'][0]
 
 
 @callback(
@@ -212,6 +219,7 @@ def update_signal_dropdown(click_data, signal_selected):
     prevent_initial_call=True,
 )
 def update_chart(_, metabolite, signal, workflow, normalization):
+    """Update the chart"""
     combination = [
         metabolite == 'All',
         signal == 'All',

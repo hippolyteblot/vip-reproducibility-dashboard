@@ -1,3 +1,6 @@
+"""
+Compare the results of two brats experiments
+"""
 import dash_bootstrap_components as dbc
 import pandas as pd
 import plotly.express as px
@@ -9,6 +12,7 @@ from models.reproduce import parse_url
 
 
 def layout():
+    """Return the layout for the visualize experiment brats page."""
     return html.Div(
         [
             html.H2('Visualize an experiment'),
@@ -74,6 +78,7 @@ def layout():
 
 
 def get_experiment_data(exec_id, file):
+    """Get the data of a brats experiment from database or local file"""
     experiment_data = get_global_brats_experiment_data(exec_id)
     files = experiment_data['File'].unique().tolist()
     if file != 'All':
@@ -85,17 +90,18 @@ def get_experiment_data(exec_id, file):
 
 
 def sort_experiment_data(experiment_data1, experiment_data2):
+    """Sort the experiment data by file"""
     sorted_experiments = pd.DataFrame()
     files_to_check = ['_raw.nii.gz', '_rai.nii.gz', '_rai_n4.nii.gz', '_to_SRI.nii.gz', '_to_SRI_brain.nii.gz']
 
     dfs_to_concat = []
 
     for file_to_check in files_to_check:
-        for index, row in experiment_data1.iterrows():
+        for _, row in experiment_data1.iterrows():
             if file_to_check in row['File']:
                 dfs_to_concat.append(row)
 
-        for index, row in experiment_data2.iterrows():
+        for _, row in experiment_data2.iterrows():
             if file_to_check in row['File']:
                 dfs_to_concat.append(row)
 
@@ -108,6 +114,7 @@ def sort_experiment_data(experiment_data1, experiment_data2):
 
 
 def create_box_plot(sorted_experiments, unique_file=False):
+    """Create a box plot with the given data"""
     if unique_file:
         title = f"Significant digits mean per step for file {sorted_experiments['File'].iloc[0]}"
     else:
@@ -131,6 +138,7 @@ def create_box_plot(sorted_experiments, unique_file=False):
     Input('file-brats-exp-compare', 'value'),
 )
 def update_chart(_, file):
+    """Update the chart with the given file"""
     exec_id1, exec_id2 = parse_url(request.referrer)
 
     experiment_data1, files = get_experiment_data(exec_id1, file)

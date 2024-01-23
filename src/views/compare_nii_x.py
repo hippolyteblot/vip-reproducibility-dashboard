@@ -1,5 +1,6 @@
-import imageio
-import numpy as np
+"""
+Compare niftis in the x or y or z axis.
+"""
 from dash import html, callback, Input, Output, dcc
 import dash_bootstrap_components as dbc
 import plotly.express as px
@@ -10,6 +11,7 @@ from models.reproduce import parse_url
 
 
 def layout():
+    """Return the layout for the compare xy page for niftis."""
     return html.Div(
         [
             dcc.Location(id='url', refresh=False),
@@ -87,6 +89,7 @@ def layout():
     Input('url', 'pathname'),
 )
 def bind_components(_):
+    """Bind the charts to the data"""
     folder_id = parse_url(request.referrer)[0]
     _, size = get_processed_data_from_niftis_folder(folder_id, 0, "z", False)
 
@@ -108,11 +111,11 @@ def bind_components(_):
     prevent_initial_call=True,
 )
 def show_frames(slider_value, axe, only_differences):
+    """Show the frames of the niftis difference"""
     folder_id = parse_url(request.referrer)[0]
     diff_matrix, size = get_processed_data_from_niftis_folder(folder_id, slider_value, axe, only_differences == 'yes')
 
-    if slider_value > size:
-        slider_value = size
+    slider_value = min(slider_value, size)
     return (
         px.imshow(diff_matrix),
         0,

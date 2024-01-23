@@ -1,3 +1,6 @@
+"""
+This module contains the layout and the callbacks of the page that allows to compare two experiments.
+"""
 import pandas as pd
 from dash import html, callback, Input, Output, dcc, State
 import dash_bootstrap_components as dbc
@@ -9,6 +12,7 @@ from models.reproduce import get_experiment_name, parse_url
 
 
 def layout():
+    """Return the layout for the compare experiments page."""
     return html.Div(
         [
             dcc.Location(id='url', refresh=False),
@@ -132,6 +136,7 @@ def layout():
     Input('url', 'value'),
 )
 def bind_parameters_from_url(execution_id):
+    """Bind the parameters from the url to the dropdowns"""
     # check if the url contains parameters
     if execution_id != 'None' and request.referrer is not None and len(request.referrer.split('&')) > 2:
         _, _, metabolite_name, signal_selected, normalization, graph_type = parse_url(request.referrer)
@@ -143,6 +148,7 @@ def bind_parameters_from_url(execution_id):
 
 
 def generate_url(exp1, exp2, metabolite_name, signal_selected, graph_type, normalization):
+    """Generate the url from the parameters"""
     url = "?exp1=" + str(exp1) + "&exp2=" + str(exp2) + "&metabolite_name=" + str(metabolite_name) + \
           "&signal_selected=" + str(signal_selected) + "&normalization=" + str(normalization) + \
           "&graph_type=" + str(graph_type)
@@ -165,6 +171,7 @@ def generate_url(exp1, exp2, metabolite_name, signal_selected, graph_type, norma
     prevent_initial_call=True,
 )
 def update_metabolite_name_bland_altman(graph, metabolite_name, signal_selected, normalization):
+    """Update the dropdowns"""
     if not normalization:
         normalization = 'No'
     exec_id_1, exec_id_2 = parse_url(request.referrer)[0:2]
@@ -212,6 +219,7 @@ def update_metabolite_name_bland_altman(graph, metabolite_name, signal_selected,
     prevent_initial_call=True,
 )
 def update_exp_chart_bland_altman(_, metabolite_name, signal_selected, normalization, graph_type):
+    """Update the chart with the given parameters"""
     exec_id_1, exec_id_2 = parse_url(request.referrer)[0:2]
     experiment_data_1 = get_cquest_experiment_data(exec_id_1)
     experiment_data_2 = get_cquest_experiment_data(exec_id_2)
@@ -302,87 +310,85 @@ def update_exp_chart_bland_altman(_, metabolite_name, signal_selected, normaliza
                       "95% confidence interval of the difference."
 
         return fig, description
+
+    concat_data = pd.concat([experiment_data_1, experiment_data_2], ignore_index=True)
+
+    graph_list = [px.box, px.scatter]
+    # Delete rows where Metabolite contains 'water'
+    concat_data = concat_data[~concat_data['Metabolite'].str.contains('water')]
+    # keep only the wanted signal
+    if signal_selected != 'All':
+        concat_data = concat_data[concat_data['Signal'] == signal_selected]
+
+    if signal_selected == 'All':
+        # Keep one value per signal by taking the mean
+        concat_data = concat_data.groupby(['Metabolite', 'Signal', 'Experiment']).mean(numeric_only=True).\
+            reset_index()
+    if metabolite_name != 'All':
+        concat_data = concat_data[concat_data["Metabolite"] == metabolite_name]
+
     else:
-        concat_data = pd.concat([experiment_data_1, experiment_data_2], ignore_index=True)
+        addon = ''
+        if normalization == 'Yes':
+            normalize(concat_data)
+            addon = 'The metabolites are normalized by subtracting the mean and dividing by the standard deviation.'
 
-        graph_list = [px.box, px.scatter]
-        # Delete rows where Metabolite contains 'water'
-        concat_data = concat_data[~concat_data['Metabolite'].str.contains('water')]
-        # keep only the wanted signal
-        if signal_selected != 'All':
-            concat_data = concat_data[concat_data['Signal'] == signal_selected]
-
-        if signal_selected == 'All':
-            # Keep one value per signal by taking the mean
-            concat_data = concat_data.groupby(['Metabolite', 'Signal', 'Experiment']).mean(numeric_only=True).\
-                reset_index()
-
-        if metabolite_name != 'All':
-            concat_data = concat_data[concat_data["Metabolite"] == metabolite_name]
-
+        first_x_value = concat_data['Metabolite'].iloc[0]
+        if len(concat_data[concat_data['Metabolite'] == first_x_value]) < 4:
+            selected_graph = graph_list[1]
         else:
-            addon = ''
-            if normalization == 'Yes':
-                normalize(concat_data)
-                addon = 'The metabolites are normalized by subtracting the mean and dividing by the standard deviation.'
+            selected_graph = graph_list[0]
 
-            first_x_value = concat_data['Metabolite'].iloc[0]
-            if len(concat_data[concat_data['Metabolite'] == first_x_value]) < 4:
-                selected_graph = graph_list[1]
-            else:
-                selected_graph = graph_list[0]
+        graph = selected_graph(
+            x=concat_data['Metabolite'],
+            y=concat_data['Amplitude'],
+            title='Comparison of metabolites',
+            labels={
+                'x': 'Metabolite',
+                'y': 'Amplitude',
+            },
+            color=concat_data['Experiment'],
+            data_frame=concat_data,
+            hover_data=['Signal']
+        )
+        description = "Boxplot of the amplitude of the metabolites for the two experiments. " \
+                      "The amplitude is the area under the curve of the metabolite. " + addon
+        return graph, description
 
-            graph = selected_graph(
-                x=concat_data['Metabolite'],
-                y=concat_data['Amplitude'],
-                title='Comparison of metabolites',
-                labels={
-                    'x': 'Metabolite',
-                    'y': 'Amplitude',
-                },
-                color=concat_data['Experiment'],
-                data_frame=concat_data,
-                hover_data=['Signal']
-            )
-            description = "Boxplot of the amplitude of the metabolites for the two experiments. " \
-                          "The amplitude is the area under the curve of the metabolite. " + addon
-            return graph, description
-
-        if signal_selected == 'None':
-            first_x_value = concat_data['Workflow'].iloc[0]
-            if len(concat_data[concat_data['Workflow'] == first_x_value]) < 4:
-                selected_graph = graph_list[1]
-            else:
-                selected_graph = graph_list[0]
-            graph = selected_graph(
-                x=concat_data['Workflow'],
-                y=concat_data['Amplitude'],
-                title='Comparison of metabolite ' + metabolite_name,
-                color=concat_data['Experiment'],
-                data_frame=concat_data,
-                hover_data=['Signal']
-            )
-            description = "Boxplot of the amplitude of the metabolite " + metabolite_name + " for the two " \
-                          "experiments. The amplitude is the area under the curve of the metabolite."
-            return graph, description
+    if signal_selected == 'None':
+        first_x_value = concat_data['Workflow'].iloc[0]
+        if len(concat_data[concat_data['Workflow'] == first_x_value]) < 4:
+            selected_graph = graph_list[1]
         else:
-            first_x_value = concat_data['Signal'].iloc[0]
-            if len(concat_data[concat_data['Signal'] == first_x_value]) < 4:
-                selected_graph = graph_list[1]
-            else:
-                selected_graph = graph_list[0]
-            signal_values = concat_data['Signal']
-            amplitude_values = concat_data['Amplitude']
-            graph = selected_graph(
-                x=signal_values,
-                y=amplitude_values,
-                title='Comparison',
-                color=concat_data['Experiment'],
-                data_frame=concat_data,
-                hover_data=['Signal']
-            )
-            description = "Boxplot of the amplitude of the metabolite " + metabolite_name + " for the two " \
-                          "experiments for the signal " + signal_selected + ". The amplitude is the area under the " \
-                          "curve of the metabolite."
+            selected_graph = graph_list[0]
+        graph = selected_graph(
+            x=concat_data['Workflow'],
+            y=concat_data['Amplitude'],
+            title='Comparison of metabolite ' + metabolite_name,
+            color=concat_data['Experiment'],
+            data_frame=concat_data,
+            hover_data=['Signal']
+        )
+        description = "Boxplot of the amplitude of the metabolite " + metabolite_name + " for the two " \
+                      "experiments. The amplitude is the area under the curve of the metabolite."
+        return graph, description
 
-            return graph, description
+    first_x_value = concat_data['Signal'].iloc[0]
+    if len(concat_data[concat_data['Signal'] == first_x_value]) < 4:
+        selected_graph = graph_list[1]
+    else:
+        selected_graph = graph_list[0]
+    signal_values = concat_data['Signal']
+    amplitude_values = concat_data['Amplitude']
+    graph = selected_graph(
+        x=signal_values,
+        y=amplitude_values,
+        title='Comparison',
+        color=concat_data['Experiment'],
+        data_frame=concat_data,
+        hover_data=['Signal']
+    )
+    description = "Boxplot of the amplitude of the metabolite " + metabolite_name + " for the two " \
+                  "experiments for the signal " + signal_selected + ". The amplitude is the area under the " \
+                  "curve of the metabolite."
+    return graph, description

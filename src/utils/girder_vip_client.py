@@ -2,7 +2,6 @@
 This file contains the GirderVIPClient class, which is used to interact with Girder.
 """
 
-import json
 import os
 import time
 

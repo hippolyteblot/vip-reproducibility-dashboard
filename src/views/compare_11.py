@@ -1,3 +1,6 @@
+"""
+Compare two quest2 files of cquest
+"""
 import pandas as pd
 from dash import html, callback, Input, Output, dcc
 import dash_bootstrap_components as dbc
@@ -9,6 +12,7 @@ from models.reproduce import parse_url
 
 
 def layout():
+    """Return the layout for the compare quest2 files page."""
     return html.Div(
         [
             dcc.Location(id='url', refresh=False),
@@ -60,6 +64,7 @@ def layout():
     Input('normalization-compare-11', 'value'),
 )
 def bind_charts(_, normalization):
+    """Bind the charts to the data"""
     id1, id2 = parse_url(request.referrer)
     data1 = read_cquest_file(id1)
     data2 = read_cquest_file(id2)

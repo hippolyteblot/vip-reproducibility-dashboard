@@ -1,3 +1,6 @@
+"""
+View for the compare xy (many to many files) page for cquest.
+"""
 import dash_bootstrap_components as dbc
 import pandas as pd
 import plotly.express as px
@@ -10,6 +13,7 @@ from models.reproduce import parse_url
 
 
 def layout():
+    """Return the layout for the compare xy page for cquest."""
     return html.Div(
         [
             dcc.Location(id='url', refresh=False),
@@ -106,6 +110,7 @@ def layout():
     prevent_initial_call='initial_duplicate',
 )
 def bind_selects(_):
+    """Bind the charts to the data"""
     id1, id2 = parse_url(request.referrer)
     files1 = get_files_in_folder(id1)
     files2 = get_files_in_folder(id2)
@@ -125,8 +130,8 @@ def bind_selects(_):
     prevent_initial_call=True,
 )
 def update_chart(file1, file2, aggregate1, aggregate2, normalization):
+    """Bind the charts to the data"""
     id1, id2 = parse_url(request.referrer)
-
     if aggregate1:
         data1 = read_folder(id1)
     else:
