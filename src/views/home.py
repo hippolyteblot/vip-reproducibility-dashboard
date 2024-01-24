@@ -1,11 +1,15 @@
+"""
+Home page of the application
+"""
 import dash_bootstrap_components as dbc
 from dash import html, Output, Input, State, callback, clientside_callback, ClientsideFunction, dcc
 
 from models.home import load_exp_from_db, get_available_applications, get_available_versions, \
-    save_file_for_comparison, load_app_wf_from_db
+    save_file_for_comparison, load_app_wf_from_db, check_type, get_list_structure
 
 
 def layout():
+    """Return the layout for the home page."""
     return html.Div(
         [
             html.H1(
@@ -64,30 +68,40 @@ def layout():
                                                                                 children=[
                                                                                     html.P('Select the results format'),
                                                                                     dbc.Select(
-                                                                                        id='application-selected-for-upload',
+                                                                                        id='application-selected-'
+                                                                                           'for-upload',
                                                                                         options=[
-                                                                                            {'label': 'cQuest results (quest2.txt)',
-                                                                                             'value': 'cquest'},
+                                                                                            {
+                                                                                                'label': 'cQuest '
+                                                                                                         'results '
+                                                                                                         '(quest2.txt)',
+                                                                                                'value': 'cquest'},
                                                                                             {'label': 'NIfTI files',
                                                                                              'value': 'nifti'},
                                                                                         ],
-                                                                                        value='cquest',
+                                                                                        value='nifti',
                                                                                         style={'width': '100%'},
                                                                                     ),
                                                                                     html.Br(),
                                                                                     html.P('Select how you want to '
-                                                                                             'compare your results'),
+                                                                                           'compare your results'),
                                                                                     dbc.Select(
-                                                                                        id='data-type-selected-for-upload',
+                                                                                        id=
+                                                                                        'data-type-selected-for-upload',
                                                                                         options=[
-                                                                                            {'label': '1 file to 1 file',
-                                                                                             'value': '1-1'},
                                                                                             {
-                                                                                                'label': 'x files to y files '
-                                                                                                         '(two zipped folders)',
+                                                                                                'label': '1 file to 1 '
+                                                                                                         'file',
+                                                                                                'value': '1-1'},
+                                                                                            {
+                                                                                                'label': 'x files to y '
+                                                                                                         'files '
+                                                                                                         '(two zipped '
+                                                                                                         'folders)',
                                                                                                 'value': 'x-y'},
                                                                                             {
-                                                                                                'label': 'x files (one zipped '
+                                                                                                'label': 'x files (one '
+                                                                                                         'zipped '
                                                                                                          'folder)',
                                                                                                 'value': 'x'},
                                                                                         ],
@@ -99,7 +113,9 @@ def layout():
                                                                             ),
                                                                             dbc.Col(
                                                                                 children=[
-                                                                                    html.P('Upload a first file to compare'),
+                                                                                    html.P(
+                                                                                        'Upload a first file to compare'
+                                                                                    ),
                                                                                     html.Br(),
                                                                                     dcc.Upload(
                                                                                         id='upload-data-1',
@@ -571,6 +587,7 @@ def layout():
     prevent_initial_call=True
 )
 def toggle_upload_modal(n1, n2, is_open):
+    """Open or close the upload modal"""
     if n1 or n2:
         return not is_open
     return is_open
@@ -581,10 +598,10 @@ def toggle_upload_modal(n1, n2, is_open):
     Input('data-type-selected-for-upload', 'value'),
 )
 def update_upload_data_2_container(type_selected):
+    """Update the style of the upload data 2 container"""
     if type_selected == 'x':
         return {'display': 'none'}
-    else:
-        return {'display': 'block'}
+    return {'display': 'block'}
 
 
 @callback(
@@ -597,17 +614,20 @@ def update_upload_data_2_container(type_selected):
     prevent_initial_call=True
 )
 def update_compare_btn(_, type1, type2, app, type_selected):
+    """Update the compare button state depending on the uploaded files and the selected application"""
     # assert that if type_selected is 1-1, type1 and type2 are txt else zip
-    if type_selected == '1-1' and ((type1 == 'txt' and type2 == 'txt' and app == 'cquest') or
-                                   (type1 == 'nii' and type2 == 'nii' and app == 'brats') or
-                                   (type1 in ['gz', 'nii'] and type2 in ['gz', 'nii']) and app == 'nifti'):
+    if type_selected == '1-1' and (
+            ((type1 == 'txt' and type2 == 'txt' and app == 'cquest') or
+             (type1 == 'nii' and type2 == 'nii' and app == 'brats') or
+             (type1 in ['gz', 'nii'] and type2 in ['gz', 'nii'])) and
+            app == 'nifti'
+    ):
         return False
-    elif type_selected == 'x-y' and type1 == 'zip' and type2 == 'zip':
+    if type_selected == 'x-y' and type1 == 'zip' and type2 == 'zip':
         return False
-    elif type_selected == 'x' and type1 == 'zip':
+    if type_selected == 'x' and type1 == 'zip':
         return False
-    else:
-        return True
+    return True
 
 
 @callback(
@@ -623,6 +643,7 @@ def update_compare_btn(_, type1, type2, app, type_selected):
     prevent_initial_call=True
 )
 def update_output1(content, href, name, type_selected, app):
+    """Update the output of the upload data 1 div"""
     return update_output(content, href, name, 1, type_selected, app)
 
 
@@ -639,6 +660,7 @@ def update_output1(content, href, name, type_selected, app):
     prevent_initial_call=True
 )
 def update_output2(content, href, name, type_selected, app):
+    """Update the output of the upload data 2 div"""
     return update_output(content, href, name, 2, type_selected, app)
 
 
@@ -649,6 +671,7 @@ def update_output2(content, href, name, type_selected, app):
     State('compare-btn', 'href'),
 )
 def update_href(app, data_type, href):
+    """Update the href of the compare button depending on the selected application and data type of comparison"""
     app_str = 'compare'
     if app == 'nifti':
         app_str = 'compare-nii'
@@ -663,6 +686,7 @@ def update_href(app, data_type, href):
 
 
 def update_output(content, href, name, data_id, data_type, app):
+    """Update the output of the upload data div"""
     if content is not None and check_type(data_type, name, app):
         file_extension = name.split('.')[-1]
         if file_extension in ['txt', 'zip', 'nii'] or (name.split('.')[-2] == 'nii' and file_extension == 'gz'):
@@ -681,26 +705,12 @@ def update_output(content, href, name, data_id, data_type, app):
             return html.Div([
                 html.P('File uploaded: ' + name),
             ]), str(uuid), href, file_extension
-        else:
-            return html.Div([
-                'Wrong file type, please upload a .txt file'
-            ]), None, href, None
-    else:
         return html.Div([
-            'Wrong file type, please upload a file according to the selected application and data type',
+            'Wrong file type, please upload a .txt file'
         ]), None, href, None
-
-
-def check_type(data_type, name, app):
-    ext = name.split('.')[-1]
-    if data_type == '1-1' and app == 'cquest':
-        return ext == 'txt'
-    elif data_type == '1-1' and app == 'nifti':
-        return (ext == 'nii') or (name.split('.')[-2] == 'nii' and ext == 'gz')
-    elif data_type == 'x-y' or data_type == 'x':
-        return ext == 'zip'
-    else:
-        return False
+    return html.Div([
+        'Wrong file type, please upload a file according to the selected application and data type',
+    ]), None, href, None
 
 
 @callback(
@@ -712,9 +722,10 @@ def check_type(data_type, name, app):
     prevent_initial_call=True
 )
 def toggle_modal_workflows(n1, n2, is_open):
+    """Open or close the workflows modal"""
     if n1 or n2:
         wf_list = load_exp_from_db()
-        wf_data = get_list_structure2(wf_list, '/visualize-experiment')
+        wf_data = get_list_structure(wf_list, '/visualize-experiment')
         applications = get_available_applications()
         options = [{'label': app['name'], 'value': app['id']} for app in applications]
         options.insert(0, {'label': 'All', 'value': 'all'})
@@ -731,6 +742,7 @@ def toggle_modal_workflows(n1, n2, is_open):
     prevent_initial_call=True
 )
 def filter_exp(version_id, app_id):
+    """Filter the experiments depending on the selected application and version"""
     exp_list = load_exp_from_db()
     new_exp_list = []
     if version_id != 'all':
@@ -754,6 +766,7 @@ def filter_exp(version_id, app_id):
     prevent_initial_call=True
 )
 def filter_wf(version_id):
+    """Filter the workflows depending on the selected version"""
     wf_list = load_exp_from_db()
     new_wf_list = []
     if version_id != 'all':
@@ -763,7 +776,7 @@ def filter_wf(version_id):
     else:
         new_wf_list = wf_list
 
-    wf_data = get_list_structure2(new_wf_list, '/visualize-experiment')
+    wf_data = get_list_structure(new_wf_list, '/visualize-experiment')
 
     return wf_data
 
@@ -779,13 +792,13 @@ def filter_wf(version_id):
     prevent_initial_call=True
 )
 def toggle_modal_exp(n1, n2, is_open):
+    """Open or close the experiments modal"""
     if n1 or n2:
         exp_list = load_exp_from_db()
         exp_options = [{'label': exp['name'], 'value': str(exp['id']) + '/-/' + exp['application_name']} for exp in
                        exp_list]
         applications = get_available_applications()
         options = [{'label': app['name'], 'value': str(app['id']) + '/-/' + app['name']} for app in applications]
-        print(exp_options)
         return not is_open, exp_options, exp_options, options, options[0]['value']
 
     return is_open, [], [], [], []
@@ -799,11 +812,8 @@ def toggle_modal_exp(n1, n2, is_open):
     prevent_initial_call=True
 )
 def update_version_dropdown(app_id):
-    versions = get_available_versions(app_id)
-    options = [{'label': version['number'], 'value': version['id']} for version in versions]
-    options.sort(key=lambda x: x['label'])
-    options.insert(0, {'label': 'All', 'value': 'all'})
-    exp_list = load_exp_from_db()
+    """Update the version dropdown depending on the selected application"""
+    exp_list, options = load_experiments(app_id)
     new_exp_list = []
     if app_id != 'all':
         for exp in exp_list:
@@ -825,11 +835,8 @@ def update_version_dropdown(app_id):
     prevent_initial_call=True
 )
 def update_wf_version_dropdown(app_id):
-    versions = get_available_versions(app_id)
-    options = [{'label': version['number'], 'value': version['id']} for version in versions]
-    options.sort(key=lambda x: x['label'])
-    options.insert(0, {'label': 'All', 'value': 'all'})
-    wf_list = load_exp_from_db()
+    """Update the version dropdown depending on the selected application"""
+    wf_list, options = load_experiments(app_id)
     new_wf_list = []
     if app_id != 'all':
         for wf in wf_list:
@@ -838,8 +845,19 @@ def update_wf_version_dropdown(app_id):
     else:
         new_wf_list = wf_list
 
-    wf_data = get_list_structure2(new_wf_list, '/visualize-experiment')
+    wf_data = get_list_structure(new_wf_list, '/visualize-experiment')
     return options, wf_data
+
+
+def load_experiments(app_id):
+    """
+    Load the experiments and the options depending on the selected application
+    """
+    versions = get_available_versions(app_id)
+    options = [{'label': version['number'], 'value': version['id']} for version in versions]
+    options.sort(key=lambda x: x['label'])
+    options.insert(0, {'label': 'All', 'value': 'all'})
+    return load_exp_from_db(), options
 
 
 clientside_callback(
@@ -852,40 +870,9 @@ clientside_callback(
     prevent_initial_call=True
 )
 
-# Search on server side version
-"""
-@callback(
-    Output("experiment-container", "children", allow_duplicate=True),
-    [Input("search-exp", "value")],
-    prevent_initial_call=True
-)
-def search_exp(value):
-    exp_list = load_exp_from_db()
-    if value is not None:
-        exp_list = [exp for exp in exp_list if value.lower() in exp.get("name").lower()]
 
-    exp_data = get_list_structure(exp_list, '/repro-experiment')
-
-    return exp_data
-
-
-@callback(
-    Output("execution-container", "children", allow_duplicate=True),
-    [Input("search-exec", "value")],
-    prevent_initial_call=True
-)
-def search_exec(value):
-    exec_list = load_exec_from_db()
-    if value is not None:
-        exec_list = [exec_item for exec_item in exec_list if value.lower() in exec_item.get("name").lower()]
-
-    exec_data = get_list_structure(exec_list, '/repro-execution')
-
-    return exec_data
-"""
-
-
-def get_list_structure(exp_list, href):
+def get_list_structure_for_comparison(exp_list, href):
+    """Get the list structure for the experiments"""
     return dbc.Row(
         children=[
             html.Div(
@@ -911,33 +898,6 @@ def get_list_structure(exp_list, href):
     )
 
 
-def get_list_structure2(exp_list, href):
-    return dbc.Row(
-        children=[
-            html.Div(
-                children=[
-                    dbc.Row(
-                        children=[
-                            dbc.Button(
-                                exp.get("application_name") + '/' + exp.get("application_version")  + ' - ' +
-                                exp.get("name"),
-                                id='repro-execution',
-                                className="mr-1",
-                                href=href + "-" + str(exp.get("application_name")) + '?id=' + str(exp.get("id")),
-                                style={'width': 'fit-content'},
-                            ),
-                        ],
-                        className='card-body',
-                        style={'justifyContent': 'center', 'gap': '10px', 'width': 'fit-content'},
-                    )
-                    for exp in exp_list
-                ],
-            )
-        ],
-        style={'flexDirection': 'row'},
-    )
-
-
 @callback(
     Output("compare-exp-button", "disabled"),
     Output("compare-exp-button", "href"),
@@ -945,6 +905,7 @@ def get_list_structure2(exp_list, href):
     prevent_initial_call=True
 )
 def toggle_compare_button(exp1, exp2):
+    """Toggle the compare button depending on the selected experiments"""
     application_name1 = None
     application_name2 = None
     if exp1 is not None and exp2 is not None:
@@ -968,6 +929,7 @@ def toggle_compare_button(exp1, exp2):
     prevent_initial_call=True
 )
 def update_upload_options(app_id):
+    """Update the options of the upload select"""
     wf_list = load_app_wf_from_db(app_id)
     options = [
         {'label': wf['name'] + " (" + wf['application_version'] + ")",
@@ -986,7 +948,7 @@ def update_upload_options(app_id):
     prevent_initial_call=True
 )
 def toggle_upload_compare_button(wf1, wf2, app_id, options):
-    print(wf1, wf2, app_id, options)
+    """Toggle the compare button depending on the selected workflows"""
     if wf1 is not None and wf2 is not None:
         application_name = None
         for option in options:

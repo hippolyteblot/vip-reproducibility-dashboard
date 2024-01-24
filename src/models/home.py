@@ -1,3 +1,6 @@
+"""
+Home page model
+"""
 import gzip
 import hashlib
 import io
@@ -5,8 +8,11 @@ import os
 import base64
 import shutil
 import zipfile
+from dash import html
+import dash_bootstrap_components as dbc
 
 from utils.settings import DB, CACHE_FOLDER
+
 
 def load_exec_from_local() -> list:
     """Load the executions from the local folder"""
@@ -14,9 +20,6 @@ def load_exec_from_local() -> list:
     exec_list = []
     for group in ["A", "B"]:
         for subfolder in os.listdir(folder + group):
-            # add to list : group - subfolder - index
-            # TODO : Correct the name of the execution (remove the white space of each .feather file)
-
             voxel = subfolder.split("_Vox")[1]
             exec_number = int(subfolder.split("_")[0].split("Rec")[1])
 
@@ -41,18 +44,20 @@ def load_exp_from_db():
 
 
 def build_json_from_db(query):
+    """Build the json from the database"""
     results = DB.fetch(query)
     exp_list = []
     for result in results:
         exp_list.append({
             "id": result.get("id"),
             "name": result.get("application_name") + " " + result.get("application_version") + " "
-            + "(par : " + result.get("username") + ")",
+                    + "(par : " + result.get("username") + ")",
         })
     return exp_list
 
 
 def build_json_from_db2(query):
+    """Build the json from the database"""
     results = DB.fetch(query)
     exp_list = []
     for result in results:
@@ -110,6 +115,7 @@ def load_app_wf_from_db(app_id):
 
 
 def build_wf_json_from_db(results):
+    """Build the json from the database"""
     exp_list = []
     for result in results:
         exp_list.append({
@@ -175,6 +181,46 @@ def flatten_folder(path):
             shutil.move(os.path.join(path, node), path)
 
     # remove the subfolders
-    for root, dirs, files in os.walk(path):
+    for root, dirs, _ in os.walk(path):
         for actual_dir in dirs:
             shutil.rmtree(os.path.join(root, actual_dir))
+
+
+def check_type(data_type, name, app):
+    """Check if the uploaded file is of the right type"""
+    ext = name.split('.')[-1]
+    if data_type == '1-1' and app == 'cquest':
+        return ext == 'txt'
+    if data_type == '1-1' and app == 'nifti':
+        return (ext == 'nii') or (name.split('.')[-2] == 'nii' and ext == 'gz')
+    if data_type in ('x-y', 'x'):
+        return ext == 'zip'
+    return False
+
+
+def get_list_structure(exp_list, href):
+    """Get the list structure for the workflows"""
+    return dbc.Row(
+        children=[
+            html.Div(
+                children=[
+                    dbc.Row(
+                        children=[
+                            dbc.Button(
+                                exp.get("application_name") + '/' + exp.get("application_version") + ' - ' +
+                                exp.get("name"),
+                                id='repro-execution',
+                                className="mr-1",
+                                href=href + "-" + str(exp.get("application_name")) + '?id=' + str(exp.get("id")),
+                                style={'width': 'fit-content'},
+                            ),
+                        ],
+                        className='card-body',
+                        style={'justifyContent': 'center', 'gap': '10px', 'width': 'fit-content'},
+                    )
+                    for exp in exp_list
+                ],
+            )
+        ],
+        style={'flexDirection': 'row'},
+    )

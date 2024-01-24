@@ -1,11 +1,13 @@
-import numpy as np
+"""
+This file contains the layout and the callbacks for the page that compares two nifti files.
+"""
 from dash import html, callback, Input, Output, dcc, State
 import dash_bootstrap_components as dbc
 import plotly.express as px
 from flask import request
 
 from models.brats_utils import get_processed_data_from_niftis, build_difference_image, build_difference_image_ssim, \
-    compute_psnr, compute_psnr_foreach_slice
+    compute_psnr, compute_psnr_foreach_slice, build_gradient
 from models.reproduce import parse_url
 
 
@@ -207,7 +209,7 @@ def bind_parameters_from_url(url):
     # check if the url contains parameters
     if url != 'None' and request.referrer is not None and len(request.referrer.split('&')) > 2:
         # get the parameters
-        id1, id2, axe, mode, slicer, k1, k2, sigma, colorscale = parse_url(request.referrer)
+        _, _, axe, mode, slicer, k1, k2, sigma, colorscale = parse_url(request.referrer)
         return axe, mode, int(slicer), float(k1), float(k2), float(sigma), colorscale
     return 'z', 'pixel', 0, 0.001, 1, 1, 'abs'
 
@@ -234,6 +236,7 @@ def bind_parameters_from_url(url):
     prevent_initial_call=True,
 )
 def show_frames(slider_value, axe, mode, k1, k2, sigma, colorscale):
+    """Show the frames of the nifti files + the difference"""
     id1, id2 = parse_url(request.referrer)[0:2]
     img_rgb1, img_rgb2, max_slider, vol1, vol2, maximum = get_processed_data_from_niftis(id1, id2, axe, slider_value)
     value = 0
@@ -256,8 +259,7 @@ def show_frames(slider_value, axe, mode, k1, k2, sigma, colorscale):
     if not isinstance(psnr, str):
         psnr = round(psnr, 4)
 
-    if slider_value > max_slider:
-        slider_value = max_slider
+    slider_value = min(slider_value, max_slider)
     return (
         px.imshow(img_rgb1, color_continuous_scale='gray'),
         # -1 = red, 0 = white, 1 = green
@@ -283,8 +285,9 @@ def show_frames(slider_value, axe, mode, k1, k2, sigma, colorscale):
     State('slider-nii', 'value'),
 )
 def update_one_time(_, axe, slicer):
+    """Update the gradient and the psnr value for the whole image when the page is loaded"""
     id1, id2 = parse_url(request.referrer)[0:2]
-    img_rgb1, img_rgb2, max_slider, vol1, vol2, maximum = get_processed_data_from_niftis(id1, id2, axe, slicer)
+    _, _, _, vol1, vol2, _ = get_processed_data_from_niftis(id1, id2, axe, slicer)
     psnr_list = compute_psnr_foreach_slice(vol1, vol2, axe)
     full_psnr = compute_psnr(vol1, vol2)
     if not isinstance(full_psnr, str):
@@ -293,19 +296,3 @@ def update_one_time(_, axe, slicer):
         {'background': build_gradient(psnr_list), 'height': '5px', 'margin-left': '25px', 'margin-right': '25px'},
         full_psnr,
     )
-
-
-def build_gradient(psnr_values):
-    minimum = min(psnr_values)
-    # for each psnr value, add a color to the gradient
-    gradient = 'linear-gradient(to right, '
-    for i in range(psnr_values.size):
-        if psnr_values[i] == np.inf:
-            value = 0
-        else:
-            value = 1 - ((psnr_values[i] - (minimum * 0.8)) * 0.05)
-        gradient += f'rgba(255, 0, 0, {value}) '
-        if i != psnr_values.size - 1:
-            gradient += ', '
-    gradient += ')'
-    return gradient

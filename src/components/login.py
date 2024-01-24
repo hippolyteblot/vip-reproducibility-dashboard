@@ -1,3 +1,6 @@
+"""
+Components for the login page
+"""
 from dash import html, dcc, callback, Output, Input, State
 from dash.exceptions import PreventUpdate
 import dash_bootstrap_components as dbc
@@ -94,6 +97,7 @@ add_experiment_admin = dbc.NavItem(
     Input('url-login', 'pathname')
 )
 def update_authentication_status(path):
+    """Update the authentication status of the user"""
     logged_in = current_user.is_authenticated
     if path == '/logout' and logged_in:
         logout_user()
@@ -117,6 +121,7 @@ def update_authentication_status(path):
     prevent_initial_call=True
 )
 def login_button_click(n_clicks, username, password, pathname):
+    """Login the user"""
     if n_clicks > 0:
         result = check_user(username, password)
         if result is not None:

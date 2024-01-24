@@ -17,7 +17,7 @@ from flask import Flask
         ('_rai_n4.nii.gz', 2, 'Significant digits mean per step for file _rai_n4.nii.gz'),
         ('_to_SRI.nii.gz', 2, 'Significant digits mean per step for file _to_SRI.nii.gz'),
     ])
-@patch('views.compare_exp_brats.get_global_brats_experiment_data')
+@patch('models.brats_utils.get_global_brats_experiment_data')
 def test_update_chart(mock_get_data, file, expected_groups, title):
     # Configuration of the environment
     app = Flask(__name__)

@@ -34,5 +34,3 @@ jobs:
           echo "Pylint score is too low: $pylint_score"
           exit 1
         fi
-
-

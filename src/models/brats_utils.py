@@ -6,6 +6,7 @@ import gzip
 import math
 import os
 import shutil
+from plotly import express as px
 from time import sleep
 
 import cv2
@@ -19,60 +20,78 @@ from utils.settings import GVC
 from utils.settings import DB, CACHE_FOLDER
 
 
-def get_processed_data_from_niftis_folder(folder_id: str, slider_value: int, axe: str,
-                                          only_mask: bool) -> np.ndarray and int:
-    """Get the data from the niftis folder"""
-    path = os.path.join(CACHE_FOLDER, "user_compare", str(folder_id))
-    files = os.listdir(path)
+def uncompress_nifti_files(folder_path):
+    """Uncompresses .nii.gz files in the given folder."""
+    files = [file for file in os.listdir(folder_path) if file.endswith(".nii.gz")]
 
-    # list .nii.gz files
-    files = [file for file in files if file.endswith(".nii.gz")]
-    # uncompress them
     for file in files:
-        with gzip.open(os.path.join(path, file), 'rb') as f_in:
-            with open(os.path.join(path, file[:-3]), 'wb') as f_out:
+        with gzip.open(os.path.join(folder_path, file), 'rb') as f_in:
+            with open(os.path.join(folder_path, file[:-3]), 'wb') as f_out:
                 shutil.copyfileobj(f_in, f_out)
-        os.remove(os.path.join(path, file))
+        os.remove(os.path.join(folder_path, file))
 
-    files = os.listdir(path)
-    files = [file for file in files if file.endswith(".nii")]
+
+def get_nifti_files(folder_path):
+    """Returns a list of .nii files in the given folder."""
+    return [file for file in os.listdir(folder_path) if file.endswith(".nii")]
+
+
+def read_nifti_volume(file_path):
+    """Reads the NIfTI volume from the given file path."""
+    return imageio.volread(file_path)
+
+
+def extract_image_slice(vol, slider_value, axe):
+    """Extracts a 2D image slice based on the specified axis and slider value."""
+    if axe == 'z':
+        return vol[slider_value, :, :]
+    if axe == 'y':
+        return vol[:, slider_value, :]
+    return vol[:, :, slider_value]
+
+
+def process_image_slices(files, folder_id, axe, slider_value):
+    """Processes the image slices and returns a list of images and the maximum volume."""
     data = []
-    max_vol = 0
     max_value = 0
+    max_vol = 0
+
     for file in files:
-        path = CACHE_FOLDER + "/user_compare/" + str(folder_id) + "/" + file
-        vol = imageio.volread(path)
-        tmp_max = np.max(vol)
-        if axe == 'z':
-            max_vol = vol.shape[0]
-            img_mask = vol[slider_value, :, :]
-        elif axe == 'y':
-            max_vol = vol.shape[1]
-            img_mask = vol[:, slider_value, :]
-            tmp_max = np.max(img_mask)
-        else:
-            max_vol = vol.shape[2]
-            img_mask = vol[:, :, slider_value]
-            tmp_max = np.max(img_mask)
+        file_path = os.path.join(CACHE_FOLDER, "user_compare", str(folder_id), file)
+        vol = read_nifti_volume(file_path)
+        img_mask = extract_image_slice(vol, slider_value, axe)
+        tmp_max = np.max(img_mask)
+
         if tmp_max > max_value:
             max_value = tmp_max
+
         data.append(img_mask)
 
-    if max_value == 0:
-        max_value = 1
-    # new frame is the mean of all the pixel of the loaded niftis
+        if axe == 'z':
+            max_vol = vol.shape[0]
+        elif axe == 'y':
+            max_vol = vol.shape[1]
+        else:
+            max_vol = vol.shape[2]
+
+    return data, max_value, max_vol
+
+
+def calculate_new_frame(data, max_value):
+    """Calculates the new frame as the mean of all pixel values."""
     new_frame = np.mean(data, axis=0)
-    # convert to rgb
     img_rgb = np.stack([(new_frame / max_value) * 255, (new_frame / max_value) * 255, (new_frame / max_value) * 255],
                        axis=-1)
+    return img_rgb
 
-    diff_mask = np.zeros_like(new_frame)
+
+def calculate_diff_mask(data, max_value):
+    """Calculates the difference mask based on the input data."""
+    diff_mask = np.zeros_like(data[0])
 
     for i in range(diff_mask.shape[0]):
         for j in range(diff_mask.shape[1]):
-            values = []
-            for k in range(len(data)):
-                values.append(data[k][i, j])
+            values = [data[k][i, j] for k in range(len(data))]
             unique = np.unique(values)
             diff_mask[i, j] = (len(unique) - 1) * 4
 
@@ -80,18 +99,43 @@ def get_processed_data_from_niftis_folder(folder_id: str, slider_value: int, axe
     diff_mask /= max_value
     diff_mask *= 255
 
-    diff_mask = np.stack([diff_mask, np.zeros(diff_mask.shape), np.zeros(diff_mask.shape)], axis=-1)
+    return np.stack([diff_mask, np.zeros(diff_mask.shape), np.zeros(diff_mask.shape)], axis=-1)
+
+
+def get_processed_data_from_niftis_folder(folder_id, slider_value, axe, only_mask):
+    """Get the processed data from the NIfTI folder."""
+    path = os.path.join(CACHE_FOLDER, "user_compare", str(folder_id))
+
+    # Uncompress NIfTI files
+    uncompress_nifti_files(path)
+
+    # Get list of .nii files
+    files = get_nifti_files(path)
+
+    # Process image slices
+    data, max_value, max_vol = process_image_slices(files, folder_id, axe, slider_value)
+
+    if max_value == 0:
+        max_value = 1
+
+    # Calculate new frame
+    img_rgb = calculate_new_frame(data, max_value)
+
+    # Calculate difference mask
+    diff_mask = calculate_diff_mask(data, max_value)
 
     if only_mask:
         img_rgb = diff_mask
     else:
         img_rgb += diff_mask
+
     img_rgb = np.clip(img_rgb, 0, 255)
     return img_rgb, max_vol
 
 
 # Tested
 def build_difference_image(img_rgb1: np.ndarray, img_rgb2: np.ndarray, tolerance: float = 0.0) -> np.ndarray:
+    """Build the difference image using the absolute difference"""
     min_shape0 = min(img_rgb1.shape[0], img_rgb2.shape[0])
     min_shape1 = min(img_rgb1.shape[1], img_rgb2.shape[1])
     img_mask3 = np.zeros(img_rgb1.shape)
@@ -109,6 +153,7 @@ def build_difference_image(img_rgb1: np.ndarray, img_rgb2: np.ndarray, tolerance
 
 # Tested
 def equal_with_tolerance(val1: int or float, val2: int or float, tolerance: float) -> bool:
+    """Check if two values are equal with a tolerance"""
     value = abs(val1 - val2)
     # round to the same number of decimals as the tolerance
     if tolerance != 0:
@@ -135,6 +180,7 @@ def get_global_brats_experiment_data(experiment_id: int) -> pd.DataFrame and lis
 
 
 def download_brats_file(execution_number, file, patient_id, experiment_id):
+    """Download a file from a brats experiment"""
     # This function finds in the database the girder_id of the file to download
     # and downloads it in the tmp folder
     query = "SELECT id FROM workflow WHERE experiment_id = %s and timestamp = %s"
@@ -157,6 +203,7 @@ def download_brats_file(execution_number, file, patient_id, experiment_id):
 
 def build_difference_image_ssim(img1: any, img2: any, k1: float = 0.01, k2: float = 0.03, sigma: float = 1.5) -> \
         np.ndarray and float:
+    """Build the difference image using the structural similarity index"""
     (score, diff) = structural_similarity(img1, img2, full=True, K1=k1, K2=k2, data_range=550,
                                           gaussian_weights=True, sigma=sigma, use_sample_covariance=False,
                                           multichannel=True)
@@ -172,19 +219,20 @@ def build_difference_image_ssim(img1: any, img2: any, k1: float = 0.01, k2: floa
 
 # Tested
 def compute_psnr(array1: np.ndarray, array2: np.ndarray, authorize_str=True) -> float or str:
+    """Compute the PSNR between two arrays"""
     img1 = array1.astype(np.float64) / 255.
     img2 = array2.astype(np.float64) / 255.
     mse = np.mean((img1 - img2) ** 2)
     if mse == 0:
         if authorize_str:
             return "Infinite"
-        else:
-            return np.inf
+        return np.inf
     return 10 * math.log10(1. / mse)
 
 
 # Tested
 def compute_psnr_foreach_slice(array1: np.ndarray, array2: np.ndarray, axe: str) -> np.ndarray:
+    """Compute the PSNR for each slice of the given axe"""
     if axe == 'z':
         slices = array1.shape[0]
     elif axe == 'y':
@@ -206,7 +254,7 @@ def compute_psnr_foreach_slice(array1: np.ndarray, array2: np.ndarray, axe: str)
 
 
 def get_processed_data_from_niftis(id1: str, id2: str, axe: str, slider_value: int) -> (np.ndarray and np.ndarray and
-                                                                                       int and imageio.core.util.Image
+                                                                                        int and imageio.core.util.Image
                                                                                         and imageio.core.util.Image):
     """Get the data from the niftis files in the cache folder"""
     data1 = CACHE_FOLDER + "/user_compare/" + id1 + ".nii"
@@ -236,15 +284,78 @@ def get_processed_data_from_niftis(id1: str, id2: str, axe: str, slider_value: i
         axe_index = 0
 
     # maximum is the max value between img_mask1 and img_mask2
-
-    maximum = 0
     maximums = [img_mask1.max(), img_mask2.max(), img_mask1.min(), img_mask2.min()]
-    for i in maximums:
-        if maximum < i:
-            maximum = i
+    maximum = max(maximums)
 
     max_slide = vol1.shape[axe_index]
     if max_slide > vol2.shape[axe_index]:
         max_slide = vol2.shape[axe_index]
 
     return img_mask1, img_mask2, max_slide-1, vol1, vol2, maximum
+
+def create_box_plot(sorted_experiments, unique_file=False):
+    """Create a box plot with the given data"""
+    if unique_file:
+        title = f"Significant digits mean per step for file {sorted_experiments['File'].iloc[0]}"
+    else:
+        title = "Significant digits mean per step for each file"
+    figure = px.box(sorted_experiments, x="File", y="Mean_sigdigits",
+                    title=title, color='Experiment')
+    figure.update_layout(
+        xaxis_title="File",
+        yaxis_title="Significant digits mean",
+        legend_title="Patient",
+    )
+
+    return figure
+
+def sort_experiment_data(experiment_data1, experiment_data2):
+    """Sort the experiment data by file"""
+    sorted_experiments = pd.DataFrame()
+    files_to_check = ['_raw.nii.gz', '_rai.nii.gz', '_rai_n4.nii.gz', '_to_SRI.nii.gz', '_to_SRI_brain.nii.gz']
+
+    dfs_to_concat = []
+
+    for file_to_check in files_to_check:
+        for _, row in experiment_data1.iterrows():
+            if file_to_check in row['File']:
+                dfs_to_concat.append(row)
+
+        for _, row in experiment_data2.iterrows():
+            if file_to_check in row['File']:
+                dfs_to_concat.append(row)
+
+    if dfs_to_concat:
+        sorted_experiments = pd.concat(dfs_to_concat, axis=1).T
+
+    sorted_experiments.reset_index(drop=True, inplace=True)
+
+    return sorted_experiments
+
+
+def get_experiment_data(exec_id, file):
+    """Get the data of a brats experiment from database or local file"""
+    experiment_data = get_global_brats_experiment_data(exec_id)
+    files = experiment_data['File'].unique().tolist()
+    if file != 'All':
+        experiment_data = experiment_data[experiment_data['File'] == file]
+
+    experiment_data = experiment_data[~experiment_data['File'].str.contains('T1CE')]
+
+    return experiment_data, files
+
+def build_gradient(psnr_values):
+    """Build the gradient for the psnr values to indicate where the differences are"""
+    minimum = min(psnr_values)
+    # for each psnr value, add a color to the gradient
+    gradient = 'linear-gradient(to right, '
+    for i in range(psnr_values.size):
+        if psnr_values[i] == np.inf:
+            value = 0
+        else:
+            value = 1 - ((psnr_values[i] - (minimum * 0.8)) * 0.05)
+        gradient += f'rgba(255, 0, 0, {value}) '
+        if i != psnr_values.size - 1:
+            gradient += ', '
+    gradient += ')'
+    return gradient

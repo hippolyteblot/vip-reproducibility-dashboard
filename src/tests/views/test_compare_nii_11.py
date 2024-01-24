@@ -1,16 +1,12 @@
 from unittest.mock import patch
 
+import imageio
 import numpy as np
-import pandas as pd
 import plotly.graph_objects as go
 import pytest
-from numpy import array_equal
-import imageio
-
-from views.compare_nii_11 import show_frames, build_gradient
-from utils.settings import GVC
-
 from flask import Flask
+
+from views.compare_nii_11 import show_frames, build_gradient, update_one_time
 
 
 @pytest.mark.parametrize("index_slider, mode, axe, expected_psnr_slice, expected_ssim, k1, k2, sigma", [
@@ -56,6 +52,38 @@ def test_update_chart(mock_get_data, index_slider, mode, axe, expected_psnr_slic
         assert isinstance(url, str)
 
 
+@pytest.mark.parametrize("axe, slider_value, nb_colors", [
+    ('x', 0, 241),
+    ('y', 100, 241),
+    ('z', 0, 156),
+    ('x', 120, 241),
+    ('x', 150, 241),
+    ('z', 40, 156)
+])
+@patch('views.compare_nii_11.get_processed_data_from_niftis')
+def test_update_one_time(mock_get_data, axe, slider_value, nb_colors):
+    app = Flask(__name__)
+
+    class MockRequest:
+        referrer = ('/compare-nii-11?id1=c153e123fb89cf4c73aad014ebb60889&id2=03098b59da9df1edc0f20604ff97b9d2&axe=z&'
+                    'mode=pixel&slice=138&K1=0.001&K2=1&sigma=1&colorscale=abs')
+        environ = {'HTTP_HOST': 'localhost'}
+        blueprints = 'compare-11'
+
+    mock_get_data.return_value = get_processed_data_from_niftis(axe, slider_value)
+
+    ctx = app.test_request_context()
+
+    with (ctx):
+        ctx.request = MockRequest()
+        gradient, vol_psnr = update_one_time(1, axe, slider_value)
+        assert isinstance(gradient, dict)
+        assert isinstance(vol_psnr, float)
+        assert len(gradient) == 4
+        assert len(gradient['background'].split('rgb')) == nb_colors
+        assert vol_psnr == 27.7729
+
+
 @pytest.mark.parametrize("psnr_values", [
     (np.array([0, 0, 0, 0, 0])),
     (np.array([np.inf, np.inf, np.inf, np.inf, np.inf])),
@@ -65,7 +93,6 @@ def test_build_gradient(psnr_values):
     gradient = build_gradient(psnr_values)
     assert isinstance(gradient, str)
     assert len(gradient.split('rgb')) == len(psnr_values) + 1
-
 
 
 def get_processed_data_from_niftis(axe: str, slider_value: int) -> np.ndarray and np.ndarray and \
@@ -96,8 +123,6 @@ def get_processed_data_from_niftis(axe: str, slider_value: int) -> np.ndarray an
     elif axe == 'z':
         axe_index = 0
 
-    # maximum is the max value between img_mask1 and img_mask2
-
     maximum = 0
     maximums = [img_mask1.max(), img_mask2.max(), img_mask1.min(), img_mask2.min()]
     for i in maximums:
@@ -105,4 +130,3 @@ def get_processed_data_from_niftis(axe: str, slider_value: int) -> np.ndarray an
             maximum = i
 
     return img_mask1, img_mask2, vol1.shape[axe_index], vol1, vol2, maximum
-

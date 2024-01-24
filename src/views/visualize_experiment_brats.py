@@ -1,5 +1,7 @@
+"""
+Visualize an experiment brats page.
+"""
 import dash_bootstrap_components as dbc
-import pandas as pd
 import plotly.express as px
 from dash import html, callback, Input, Output, dcc
 from flask import request
@@ -9,6 +11,7 @@ from models.reproduce import parse_url
 
 
 def layout():
+    """Return the layout for the visualize experiment brats page."""
     return html.Div(
         [
             html.H2('Visualize an experiment'),
@@ -158,6 +161,7 @@ def layout():
     [Input("open-modal-brats-exp", "n_clicks"), Input("close-modal-brats-exp", "n_clicks")],
 )
 def toggle_modal(n1, n2):
+    """Toggle the modal"""
     if n1 or n2:
         return not False
     return False
@@ -171,6 +175,7 @@ def toggle_modal(n1, n2):
     Input('file-brats-exp', 'value'),
 )
 def update_chart(_, file):
+    """Update the chart for the experiment visualization"""
     exec_id = int(parse_url(request.referrer)[0])
 
     experiment_data = get_global_brats_experiment_data(exec_id)
@@ -187,8 +192,7 @@ def update_chart(_, file):
                       f'The mean is computed for each step.'
         title = f'Significant digits mean per step for file {file}'
 
-    files = [file for file in files]
-    print(files)
+    files = list(files)
     files.insert(0, 'All')
 
     figure = px.box(experiment_data, x="File", y="Mean_sigdigits", color="File", facet_col="Image",
@@ -209,6 +213,7 @@ def update_chart(_, file):
     prevent_initial_call=True,
 )
 def update_compare_link(file_1, file_2):
+    """Update the compare link"""
     if file_1 is None or file_2 is None:
         return ""
     execution_number_1 = file_1.split('/-/')[0]
