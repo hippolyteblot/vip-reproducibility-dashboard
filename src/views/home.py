@@ -5,7 +5,7 @@ import dash_bootstrap_components as dbc
 from dash import html, Output, Input, State, callback, clientside_callback, ClientsideFunction, dcc
 
 from models.home import load_exp_from_db, get_available_applications, get_available_versions, \
-    save_file_for_comparison, load_app_wf_from_db, check_type
+    save_file_for_comparison, load_app_wf_from_db, check_type, get_list_structure
 
 
 def layout():
@@ -621,7 +621,7 @@ def update_compare_btn(_, type1, type2, app, type_selected):
              (type1 == 'nii' and type2 == 'nii' and app == 'brats') or
              (type1 in ['gz', 'nii'] and type2 in ['gz', 'nii'])) and
             app == 'nifti'
-        ):
+    ):
         return False
     if type_selected == 'x-y' and type1 == 'zip' and type2 == 'zip':
         return False
@@ -884,34 +884,6 @@ def get_list_structure_for_comparison(exp_list, href):
                                 id='repro-execution',
                                 className="mr-1",
                                 href=href + '?experiment=' + str(exp.get("id")),
-                                style={'width': 'fit-content'},
-                            ),
-                        ],
-                        className='card-body',
-                        style={'justifyContent': 'center', 'gap': '10px', 'width': 'fit-content'},
-                    )
-                    for exp in exp_list
-                ],
-            )
-        ],
-        style={'flexDirection': 'row'},
-    )
-
-
-def get_list_structure(exp_list, href):
-    """Get the list structure for the workflows"""
-    return dbc.Row(
-        children=[
-            html.Div(
-                children=[
-                    dbc.Row(
-                        children=[
-                            dbc.Button(
-                                exp.get("application_name") + '/' + exp.get("application_version") + ' - ' +
-                                exp.get("name"),
-                                id='repro-execution',
-                                className="mr-1",
-                                href=href + "-" + str(exp.get("application_name")) + '?id=' + str(exp.get("id")),
                                 style={'width': 'fit-content'},
                             ),
                         ],

@@ -8,6 +8,8 @@ import os
 import base64
 import shutil
 import zipfile
+from dash import html
+import dash_bootstrap_components as dbc
 
 from utils.settings import DB, CACHE_FOLDER
 
@@ -194,3 +196,31 @@ def check_type(data_type, name, app):
     if data_type in ('x-y', 'x'):
         return ext == 'zip'
     return False
+
+
+def get_list_structure(exp_list, href):
+    """Get the list structure for the workflows"""
+    return dbc.Row(
+        children=[
+            html.Div(
+                children=[
+                    dbc.Row(
+                        children=[
+                            dbc.Button(
+                                exp.get("application_name") + '/' + exp.get("application_version") + ' - ' +
+                                exp.get("name"),
+                                id='repro-execution',
+                                className="mr-1",
+                                href=href + "-" + str(exp.get("application_name")) + '?id=' + str(exp.get("id")),
+                                style={'width': 'fit-content'},
+                            ),
+                        ],
+                        className='card-body',
+                        style={'justifyContent': 'center', 'gap': '10px', 'width': 'fit-content'},
+                    )
+                    for exp in exp_list
+                ],
+            )
+        ],
+        style={'flexDirection': 'row'},
+    )

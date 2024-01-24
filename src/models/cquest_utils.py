@@ -242,3 +242,10 @@ def preprocess_cquest_data_compare(data1, data2):
     data2['File'] = 'File 2'
 
     return data1, data2
+
+def generate_url(wf_id, metabolite_name, signal_selected, workflow_selected, normalization='Yes'):
+    """Generate the url to be used in the callback"""
+    url = "?execution_id=" + str(wf_id) + "&metabolite_name=" + str(metabolite_name) + "&signal_selected=" + \
+          str(signal_selected) + "&workflow_selected=" + str(workflow_selected) + "&normalization=" + \
+          str(normalization)
+    return url

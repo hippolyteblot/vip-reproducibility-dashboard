@@ -6,6 +6,7 @@ import gzip
 import math
 import os
 import shutil
+from plotly import express as px
 from time import sleep
 
 import cv2
@@ -291,3 +292,70 @@ def get_processed_data_from_niftis(id1: str, id2: str, axe: str, slider_value: i
         max_slide = vol2.shape[axe_index]
 
     return img_mask1, img_mask2, max_slide-1, vol1, vol2, maximum
+
+def create_box_plot(sorted_experiments, unique_file=False):
+    """Create a box plot with the given data"""
+    if unique_file:
+        title = f"Significant digits mean per step for file {sorted_experiments['File'].iloc[0]}"
+    else:
+        title = "Significant digits mean per step for each file"
+    figure = px.box(sorted_experiments, x="File", y="Mean_sigdigits",
+                    title=title, color='Experiment')
+    figure.update_layout(
+        xaxis_title="File",
+        yaxis_title="Significant digits mean",
+        legend_title="Patient",
+    )
+
+    return figure
+
+def sort_experiment_data(experiment_data1, experiment_data2):
+    """Sort the experiment data by file"""
+    sorted_experiments = pd.DataFrame()
+    files_to_check = ['_raw.nii.gz', '_rai.nii.gz', '_rai_n4.nii.gz', '_to_SRI.nii.gz', '_to_SRI_brain.nii.gz']
+
+    dfs_to_concat = []
+
+    for file_to_check in files_to_check:
+        for _, row in experiment_data1.iterrows():
+            if file_to_check in row['File']:
+                dfs_to_concat.append(row)
+
+        for _, row in experiment_data2.iterrows():
+            if file_to_check in row['File']:
+                dfs_to_concat.append(row)
+
+    if dfs_to_concat:
+        sorted_experiments = pd.concat(dfs_to_concat, axis=1).T
+
+    sorted_experiments.reset_index(drop=True, inplace=True)
+
+    return sorted_experiments
+
+
+def get_experiment_data(exec_id, file):
+    """Get the data of a brats experiment from database or local file"""
+    experiment_data = get_global_brats_experiment_data(exec_id)
+    files = experiment_data['File'].unique().tolist()
+    if file != 'All':
+        experiment_data = experiment_data[experiment_data['File'] == file]
+
+    experiment_data = experiment_data[~experiment_data['File'].str.contains('T1CE')]
+
+    return experiment_data, files
+
+def build_gradient(psnr_values):
+    """Build the gradient for the psnr values to indicate where the differences are"""
+    minimum = min(psnr_values)
+    # for each psnr value, add a color to the gradient
+    gradient = 'linear-gradient(to right, '
+    for i in range(psnr_values.size):
+        if psnr_values[i] == np.inf:
+            value = 0
+        else:
+            value = 1 - ((psnr_values[i] - (minimum * 0.8)) * 0.05)
+        gradient += f'rgba(255, 0, 0, {value}) '
+        if i != psnr_values.size - 1:
+            gradient += ', '
+    gradient += ')'
+    return gradient

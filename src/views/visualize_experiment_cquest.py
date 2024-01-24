@@ -7,7 +7,7 @@ from flask import request
 
 from models.cquest_utils import (get_cquest_experiment_data, generate_box_plot, create_signal_group_column,
                                  create_workflow_group_column, create_dropdown_options,
-                                 filter_and_get_unique_values, normalize)
+                                 filter_and_get_unique_values, normalize, generate_url)
 from models.reproduce import get_experiment_name, parse_url
 
 
@@ -184,15 +184,6 @@ def update_dropdowns(_, metabolite_name, signal_selected, workflow_selected, nor
                                                                workflow_selected, normalization))
 
 
-def generate_url(wf_id, metabolite_name, signal_selected, workflow_selected, normalization='Yes'):
-    """Generate the url to be used in the callback"""
-    url = "?execution_id=" + str(wf_id) + "&metabolite_name=" + str(metabolite_name) + "&signal_selected=" + \
-          str(signal_selected) + "&workflow_selected=" + str(workflow_selected) + "&normalization=" + \
-          str(normalization)
-    return url
-
-
-# when a point of the graphe is clicked, the callback is called to update the value of the dropdown "Signal"
 @callback(
     Output('signal-selected', 'value', allow_duplicate=True),
     Input('exec-chart', 'clickData'),

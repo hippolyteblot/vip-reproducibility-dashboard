@@ -1,14 +1,13 @@
 """
 This file contains the layout and the callbacks for the page that compares two nifti files.
 """
-import numpy as np
 from dash import html, callback, Input, Output, dcc, State
 import dash_bootstrap_components as dbc
 import plotly.express as px
 from flask import request
 
 from models.brats_utils import get_processed_data_from_niftis, build_difference_image, build_difference_image_ssim, \
-    compute_psnr, compute_psnr_foreach_slice
+    compute_psnr, compute_psnr_foreach_slice, build_gradient
 from models.reproduce import parse_url
 
 
@@ -297,20 +296,3 @@ def update_one_time(_, axe, slicer):
         {'background': build_gradient(psnr_list), 'height': '5px', 'margin-left': '25px', 'margin-right': '25px'},
         full_psnr,
     )
-
-
-def build_gradient(psnr_values):
-    """Build the gradient for the psnr values to indicate where the differences are"""
-    minimum = min(psnr_values)
-    # for each psnr value, add a color to the gradient
-    gradient = 'linear-gradient(to right, '
-    for i in range(psnr_values.size):
-        if psnr_values[i] == np.inf:
-            value = 0
-        else:
-            value = 1 - ((psnr_values[i] - (minimum * 0.8)) * 0.05)
-        gradient += f'rgba(255, 0, 0, {value}) '
-        if i != psnr_values.size - 1:
-            gradient += ', '
-    gradient += ')'
-    return gradient
