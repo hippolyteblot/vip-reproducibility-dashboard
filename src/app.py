@@ -12,6 +12,7 @@ from dash import html
 import dash_bootstrap_components as dbc
 from flask import Flask
 from flask_restful import Api
+import ssl
 
 # local imports
 from utils.settings import APP_HOST, APP_PORT, APP_DEBUG, DEV_TOOLS_PROPS_CHECK
@@ -61,14 +62,15 @@ def create_app():
 
 
 # insert_data_from_girder()
-# context = ('src/server-cert.pem', 'src/server-key.pem')
+context = ssl.SSLContext(ssl.PROTOCOL_SSLv23)
+context.load_cert_chain(certfile='src/cert/cert-chain.pem', keyfile='src/cert/server-key.pem')
 app = create_app()
 api = Api(app.server)
 api.add_resource(GirderScanner, '/api/girder_scanner')
 app.run_server(
     host=APP_HOST,
     port=APP_PORT,
-    debug=APP_DEBUG,
+    debug=False,
     dev_tools_props_check=DEV_TOOLS_PROPS_CHECK,
-    # ssl_context=context
+    ssl_context=context
 )

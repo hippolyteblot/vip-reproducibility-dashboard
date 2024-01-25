@@ -914,9 +914,9 @@ def toggle_compare_button(exp1, exp2):
 
     if exp1 is not None and exp2 is not None and application_name1 == application_name2:
         begin_href = '/compare-exp-'
-        if application_name1 == 'brats':
+        if application_name1.lower() == 'brats':
             begin_href += 'brats'
-        elif application_name1 == 'cquest':
+        elif application_name1.lower() == 'cquest':
             begin_href += 'cquest'
         return False, begin_href + '?exp1=' + str(exp1.split('/-/')[0]) + '&exp2=' + str(exp2.split('/-/')[0])
     return True, '#'

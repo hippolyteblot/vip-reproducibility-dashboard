@@ -211,7 +211,7 @@ def get_list_structure(exp_list, href):
                                 exp.get("name"),
                                 id='repro-execution',
                                 className="mr-1",
-                                href=href + "-" + str(exp.get("application_name")) + '?id=' + str(exp.get("id")),
+                                href=href + "-" + str(exp.get("application_name").lower()) + '?id=' + str(exp.get("id")),
                                 style={'width': 'fit-content'},
                             ),
                         ],

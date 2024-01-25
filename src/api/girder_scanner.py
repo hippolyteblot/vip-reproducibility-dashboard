@@ -10,7 +10,6 @@ class GirderScanner(Resource):
     def get(self):
         """Get the data from Girder"""
         insert_data_from_girder()
-        print("Data inserted from Girder to the database")
         return {"message": "Data inserted from Girder to the database"}
 
 
