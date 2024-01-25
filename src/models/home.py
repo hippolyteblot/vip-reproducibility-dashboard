@@ -211,7 +211,35 @@ def get_list_structure(exp_list, href):
                                 exp.get("name"),
                                 id='repro-execution',
                                 className="mr-1",
-                                href=href + "-" + str(exp.get("application_name").lower()) + '?id=' + str(exp.get("id")),
+                                href=href + "-" + str(exp.get("application_name").lower()) + '?id=' + str(
+                                    exp.get("id")),
+                                style={'width': 'fit-content'},
+                            ),
+                        ],
+                        className='card-body',
+                        style={'justifyContent': 'center', 'gap': '10px', 'width': 'fit-content'},
+                    )
+                    for exp in exp_list
+                ],
+            )
+        ],
+        style={'flexDirection': 'row'},
+    )
+
+
+def get_list_structure_for_comparison(exp_list, href):
+    """Get the list structure for the experiments"""
+    return dbc.Row(
+        children=[
+            html.Div(
+                children=[
+                    dbc.Row(
+                        children=[
+                            dbc.Button(
+                                exp.get("application_version") + " - " + exp.get("name"),
+                                id='repro-execution',
+                                className="mr-1",
+                                href=href + '?experiment=' + str(exp.get("id")),
                                 style={'width': 'fit-content'},
                             ),
                         ],

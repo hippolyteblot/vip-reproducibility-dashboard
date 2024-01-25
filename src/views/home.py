@@ -754,8 +754,8 @@ def filter_exp(version_id, app_id):
             if int(app_id.split('/-/')[0]) == exp['application_id']:
                 new_exp_list.append(exp)
 
-    options = [{'label': exp['name'], 'value': str(exp['id']) + '/-/' + exp['application_name']} for exp in
-               new_exp_list]
+    options = [{'label': exp['application_version'] + " - " + exp['name'], 'value': str(exp['id']) + '/-/' +
+               exp['application_name']} for exp in new_exp_list]
 
     return options, options
 
@@ -795,8 +795,8 @@ def toggle_modal_exp(n1, n2, is_open):
     """Open or close the experiments modal"""
     if n1 or n2:
         exp_list = load_exp_from_db()
-        exp_options = [{'label': exp['name'], 'value': str(exp['id']) + '/-/' + exp['application_name']} for exp in
-                       exp_list]
+        exp_options = [{'label': exp['application_version'] + " - " + exp['name'], 'value': str(exp['id']) + '/-/' +
+                       exp['application_name']} for exp in exp_list]
         applications = get_available_applications()
         options = [{'label': app['name'], 'value': str(app['id']) + '/-/' + app['name']} for app in applications]
         return not is_open, exp_options, exp_options, options, options[0]['value']
@@ -822,8 +822,8 @@ def update_version_dropdown(app_id):
     else:
         new_exp_list = exp_list
 
-    exp_options = [{'label': exp['name'], 'value': str(exp['id']) + '/-/' + exp['application_name']} for exp in
-                   new_exp_list]
+    exp_options = [{'label': exp['application_version'] + " - " + exp['name'], 'value': str(exp['id']) + '/-/' +
+                   exp['application_name']} for exp in new_exp_list]
 
     return options, exp_options, exp_options
 
@@ -869,33 +869,6 @@ clientside_callback(
     [Input("search-exec", "value"), Input("wf-container-hidden", "children")],
     prevent_initial_call=True
 )
-
-
-def get_list_structure_for_comparison(exp_list, href):
-    """Get the list structure for the experiments"""
-    return dbc.Row(
-        children=[
-            html.Div(
-                children=[
-                    dbc.Row(
-                        children=[
-                            dbc.Button(
-                                exp.get("name"),
-                                id='repro-execution',
-                                className="mr-1",
-                                href=href + '?experiment=' + str(exp.get("id")),
-                                style={'width': 'fit-content'},
-                            ),
-                        ],
-                        className='card-body',
-                        style={'justifyContent': 'center', 'gap': '10px', 'width': 'fit-content'},
-                    )
-                    for exp in exp_list
-                ],
-            )
-        ],
-        style={'flexDirection': 'row'},
-    )
 
 
 @callback(
