@@ -18,6 +18,8 @@ APP_DEBUG = bool(os.environ.get('DEBUG'))
 CACHE_FOLDER = os.environ.get('CACHE_FOLDER')
 DEV_TOOLS_PROPS_CHECK = bool(os.environ.get('DEV_TOOLS_PROPS_CHECK'))
 API_KEY = os.environ.get('API_KEY', None)
+SSL_CERT_CHAIN = os.environ.get('SSL_CERT_CHAIN', None)
+SSL_SERVER_KEY = os.environ.get('SSL_SERVER_KEY', None)
 
 # database
 DB_HOST = os.environ.get('DB_HOST')
