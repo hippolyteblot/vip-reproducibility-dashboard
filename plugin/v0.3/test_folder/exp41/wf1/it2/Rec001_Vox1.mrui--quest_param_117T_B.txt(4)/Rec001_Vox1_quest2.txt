@@ -1,0 +1,210 @@
+Metabolite:	PCh_117T_STEAM3
+Pixel Position	Amplitude		SD				Phase			Damping			DFreq			Noise from LastPts			Estimated CRB
+0000	0000	1.8174E-1		1.0697E0				0.0000E0		2.2798E1		-8.0000E0		0.0000E0		2.1369E-2
+
+
+
+Metabolite:	NAAG_117T_STEAM3
+Pixel Position	Amplitude		SD				Phase			Damping			DFreq			Noise from LastPts			Estimated CRB
+0000	0000	7.6602E-1		1.3883E0				0.0000E0		2.2798E1		-5.2891E0		1.9977E-2		2.7734E-2
+
+
+
+Metabolite:	NAA_117T_STEAM3
+Pixel Position	Amplitude		SD				Phase			Damping			DFreq			Noise from LastPts			Estimated CRB
+0000	0000	3.8301E0		6.9415E0				0.0000E0		2.2798E1		-5.2891E0		1.9977E-2		1.3867E-1
+
+
+
+Metabolite:	GPC_117T_STEAM3
+Pixel Position	Amplitude		SD				Phase			Damping			DFreq			Noise from LastPts			Estimated CRB
+0000	0000	1.9991E-1		1.1766E0				0.0000E0		2.2798E1		-8.0000E0		1.9977E-2		2.3506E-2
+
+
+
+Metabolite:	Tau_117T_STEAM3
+Pixel Position	Amplitude		SD				Phase			Damping			DFreq			Noise from LastPts			Estimated CRB
+0000	0000	3.5310E0		5.4513E0				0.0000E0		2.2798E1		-6.1398E0		1.9977E-2		1.0890E-1
+
+
+
+Metabolite:	Asp_117T_STEAM3
+Pixel Position	Amplitude		SD				Phase			Damping			DFreq			Noise from LastPts			Estimated CRB
+0000	0000	1.8551E0		1.0209E1				0.0000E0		2.2798E1		-8.0000E0		1.9977E-2		2.0393E-1
+
+
+
+Metabolite:	PE_117T_STEAM3
+Pixel Position	Amplitude		SD				Phase			Damping			DFreq			Noise from LastPts			Estimated CRB
+0000	0000	9.0400E-1		5.1235E0				0.0000E0		2.2798E1		-4.8051E0		1.9977E-2		1.0235E-1
+
+
+
+Metabolite:	Lac_117T_STEAM3
+Pixel Position	Amplitude		SD				Phase			Damping			DFreq			Noise from LastPts			Estimated CRB
+0000	0000	1.0563E0		9.2168E0				0.0000E0		2.2798E1		1.5951E0		1.9977E-2		1.8412E-1
+
+
+
+Metabolite:	Ala_117T_STEAM3
+Pixel Position	Amplitude		SD				Phase			Damping			DFreq			Noise from LastPts			Estimated CRB
+0000	0000	1.8768E-1		4.0219E0				0.0000E0		2.2798E1		1.5951E0		1.9977E-2		8.0345E-2
+
+
+
+Metabolite:	Gly_117T_STEAM3
+Pixel Position	Amplitude		SD				Phase			Damping			DFreq			Noise from LastPts			Estimated CRB
+0000	0000	4.6910E-1		8.8230E-1				0.0000E0		2.2798E1		-4.2815E0		1.9977E-2		1.7625E-2
+
+
+
+Metabolite:	mI_117T_STEAM3
+Pixel Position	Amplitude		SD				Phase			Damping			DFreq			Noise from LastPts			Estimated CRB
+0000	0000	2.3455E0		4.4115E0				0.0000E0		2.2798E1		-4.2815E0		1.9977E-2		8.8127E-2
+
+
+
+Metabolite:	GABA_117T_STEAM3
+Pixel Position	Amplitude		SD				Phase			Damping			DFreq			Noise from LastPts			Estimated CRB
+0000	0000	1.3615E0		5.4767E0				0.0000E0		2.2798E1		-8.0000E0		1.9977E-2		1.0941E-1
+
+
+
+Metabolite:	Gln_117T_STEAM3
+Pixel Position	Amplitude		SD				Phase			Damping			DFreq			Noise from LastPts			Estimated CRB
+0000	0000	1.9399E0		4.8076E0				0.0000E0		2.2798E1		-4.3150E0		1.9977E-2		9.6039E-2
+
+
+
+Metabolite:	Glu_117T_STEAM3
+Pixel Position	Amplitude		SD				Phase			Damping			DFreq			Noise from LastPts			Estimated CRB
+0000	0000	5.2705E0		6.3366E0				0.0000E0		2.2798E1		-4.3150E0		1.9977E-2		1.2658E-1
+
+
+
+Metabolite:	Glc_117T_STEAM3
+Pixel Position	Amplitude		SD				Phase			Damping			DFreq			Noise from LastPts			Estimated CRB
+0000	0000	1.1784E0		4.8736E0				0.0000E0		2.2798E1		4.7147E-1		1.9977E-2		9.7359E-2
+
+
+
+Metabolite:	PCr
+Pixel Position	Amplitude		SD				Phase			Damping			DFreq			Noise from LastPts			Estimated CRB
+0000	0000	1.7006E0		5.9043E0				0.0000E0		2.2798E1		-6.3427E0		1.9977E-2		1.1795E-1
+
+
+
+Metabolite:	Cre_117T_STEAM3
+Pixel Position	Amplitude		SD				Phase			Damping			DFreq			Noise from LastPts			Estimated CRB
+0000	0000	1.5460E0		5.3676E0				0.0000E0		2.2798E1		-6.3427E0		1.9977E-2		1.0723E-1
+
+
+
+Metabolite:	water1
+Pixel Position	Amplitude		SD				Phase			Damping			DFreq			Noise from LastPts			Estimated CRB
+0000	0000	1.2167E-1		9.4612E-1				1.0519E1		2.2798E1		3.6963E-1		1.9977E-2		1.8900E-2
+
+
+
+Metabolite:	water2
+Pixel Position	Amplitude		SD				Phase			Damping			DFreq			Noise from LastPts			Estimated CRB
+0000	0000	1.1321E0		1.8291E0				-1.6434E2		2.2798E1		3.6963E-1		1.9977E-2		3.6539E-2
+
+
+
+Metabolite:	water3
+Pixel Position	Amplitude		SD				Phase			Damping			DFreq			Noise from LastPts			Estimated CRB
+0000	0000	4.6719E-1		1.3636E0				3.2197E1		2.2798E1		3.6963E-1		1.9977E-2		2.7240E-2
+
+
+
+Metabolite:	MM09
+Pixel Position	Amplitude		SD				Phase			Damping			DFreq			Noise from LastPts			Estimated CRB
+0000	0000	3.6142E0		1.1002E1				0.0000E0		2.2798E1		-1.5613E-1		1.9977E-2		2.1978E-1
+
+
+
+Metabolite:	MM12
+Pixel Position	Amplitude		SD				Phase			Damping			DFreq			Noise from LastPts			Estimated CRB
+0000	0000	2.8914E0		8.8014E0				0.0000E0		2.2798E1		-8.0000E0		1.9977E-2		1.7582E-1
+
+
+
+Metabolite:	MM14
+Pixel Position	Amplitude		SD				Phase			Damping			DFreq			Noise from LastPts			Estimated CRB
+0000	0000	4.3371E0		1.3202E1				0.0000E0		2.2798E1		-8.0000E0		1.9977E-2		2.6374E-1
+
+
+
+Metabolite:	MM19
+Pixel Position	Amplitude		SD				Phase			Damping			DFreq			Noise from LastPts			Estimated CRB
+0000	0000	3.6142E0		1.1002E1				0.0000E0		2.2798E1		-8.0000E0		1.9977E-2		2.1978E-1
+
+
+
+Metabolite:	MM20
+Pixel Position	Amplitude		SD				Phase			Damping			DFreq			Noise from LastPts			Estimated CRB
+0000	0000	4.3371E0		1.3202E1				0.0000E0		2.2798E1		-8.0000E0		1.9977E-2		2.6374E-1
+
+
+
+Metabolite:	MM22
+Pixel Position	Amplitude		SD				Phase			Damping			DFreq			Noise from LastPts			Estimated CRB
+0000	0000	3.6142E0		1.1002E1				0.0000E0		2.2798E1		-8.0000E0		1.9977E-2		2.1978E-1
+
+
+
+Metabolite:	MM27
+Pixel Position	Amplitude		SD				Phase			Damping			DFreq			Noise from LastPts			Estimated CRB
+0000	0000	3.6142E0		1.1002E1				0.0000E0		2.2798E1		-8.0000E0		1.9977E-2		2.1978E-1
+
+
+
+Metabolite:	MM30
+Pixel Position	Amplitude		SD				Phase			Damping			DFreq			Noise from LastPts			Estimated CRB
+0000	0000	3.6142E0		1.1002E1				0.0000E0		2.2798E1		-8.0000E0		1.9977E-2		2.1978E-1
+
+
+
+Metabolite:	MM32
+Pixel Position	Amplitude		SD				Phase			Damping			DFreq			Noise from LastPts			Estimated CRB
+0000	0000	3.6142E0		1.1002E1				0.0000E0		2.2798E1		-8.0000E0		1.9977E-2		2.1978E-1
+
+
+
+Metabolite:	MM37
+Pixel Position	Amplitude		SD				Phase			Damping			DFreq			Noise from LastPts			Estimated CRB
+0000	0000	2.8914E0		8.8014E0				0.0000E0		2.2798E1		-8.0000E0		1.9977E-2		1.7582E-1
+
+
+
+Metabolite:	MM39
+Pixel Position	Amplitude		SD				Phase			Damping			DFreq			Noise from LastPts			Estimated CRB
+0000	0000	2.8914E0		8.8014E0				0.0000E0		2.2798E1		-8.0000E0		1.9977E-2		1.7582E-1
+
+
+
+Metabolite:	MM079
+Pixel Position	Amplitude		SD				Phase			Damping			DFreq			Noise from LastPts			Estimated CRB
+0000	0000	4.6985E0		1.4302E1				0.0000E0		2.2798E1		-1.5613E-1		1.9977E-2		2.8571E-1
+
+
+
+Metabolite:	MM087
+Pixel Position	Amplitude		SD				Phase			Damping			DFreq			Noise from LastPts			Estimated CRB
+0000	0000	4.6985E0		1.4302E1				0.0000E0		2.2798E1		-1.5613E-1		1.9977E-2		2.8571E-1
+
+
+
+Metabolite:	MM167
+Pixel Position	Amplitude		SD				Phase			Damping			DFreq			Noise from LastPts			Estimated CRB
+0000	0000	3.7835E0		2.8691E1				0.0000E0		2.2798E1		-8.0000E0		1.9977E-2		5.7316E-1
+
+
+
+Metabolite:	MM181
+Pixel Position	Amplitude		SD				Phase			Damping			DFreq			Noise from LastPts			Estimated CRB
+0000	0000	3.5943E0		2.7257E1				0.0000E0		2.2798E1		5.1079E0		1.9977E-2		5.4450E-1
+
+
+

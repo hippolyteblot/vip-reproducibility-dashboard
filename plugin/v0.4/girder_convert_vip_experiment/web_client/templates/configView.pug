@@ -1,0 +1,17 @@
+.g-config-breadcrumb-container
+
+.g-conversion-container
+  form#conversion-plugin-config-form(role="form")
+    .form-group
+      label(for="conversion-config-data-path") Location of the girder storage folder on the host
+      input#conversion-config-data-path.input-sm.form-control(type="text", value=conversionConfig.data_path)
+
+    .form-group
+      label(for="conversion-config-outputs-id") Girder id of the folder where the converted experiments will be stored
+      input#conversion-config-outputs-id.input-sm.form-control(type="text", value=conversionConfig.girder_id_outputs)
+
+    .form-group
+      label(for="conversion-config-target-name") Name of the attribute in the metadata that identifies experiments (usually 'experiment_id')
+      input#conversion-config-target-name.input-sm.form-control(type="text", value=conversionConfig.target_name)
+
+    button.btn.btn-default.btn-sm.btm-primary(type="submit") Save Changes

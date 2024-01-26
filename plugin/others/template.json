@@ -1,0 +1,37 @@
+[
+    {
+        "output" : "Rec001_Vox1_quest2.txt",
+        "inputs" : {
+            "data_file" : {
+                "file_name" : "Rec001_Vox1.mrui",
+                "md5" : "gfdgd",
+                "girder_id" : "5b7b1a9e8d777f0001f2e2a1"
+            },
+            "parameters_file" : {
+                "file_name" : "params1.txt",
+                "md5" : "gdgdgfd",
+                "girder_id" : "gggg"
+            },
+            "string_param" : "hello"
+        },
+        "pipeline" : "CQUEST/1.4"
+    },
+    {
+        "output" : {
+            "file_name" : "Rec001_Vox1_quest2.txt",
+            "girder_id" : "5b7b1a9e8d777f0001f2e2a1"
+        },
+        "input" : {
+            "file_name" : "Rec001_Vox1.mrui",
+            "md5" : "gfdgd",
+            "girder_id" : "5b7b1a9e8d777f0001f2e2a2"
+        },
+        "parameters_file" : {
+            "file_name" : "params1.txt",
+            "md5" : "gdgdgfd",
+            "girder_id" : "5b7b1a9e8d777f0001f2e2a3"
+        },
+        "string_param" : "hello",
+        "pipeline" : "CQUEST/1.4"
+    }
+]

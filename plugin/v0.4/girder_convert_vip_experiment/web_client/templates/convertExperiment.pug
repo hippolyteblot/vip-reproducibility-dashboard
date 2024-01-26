@@ -1,0 +1,26 @@
+
+.g-body-title.convert-title Convert an experiment for the reproducibility dashboard
+
+form(role="form")
+  .conversion-form-container.g-settings-form-container
+    h4(class="convert-subtitle") Fill the form to convert an experiment produced by VIP into a readable format for the reproducibility dashboard.
+    .form.group.query.group-convert
+      label(for="application" class="label-convert") Application:
+      select(name="application" size="1" id="application" class="dropdown-convert")
+
+    .form.group.query.group-convert
+      label(for="version" class="label-convert") Version:
+      select(name="version" size="1" id="version" class="dropdown-convert")
+
+    .form.group.query.group-convert
+      label(for="container" class="label-convert") Container image:
+      select(name="container" size="1" id="container" class="dropdown-convert")
+
+    .form.group.query.group-convert
+      label(for="experiment_id" class="label-convert") Experiment id (based on metadata):
+      input.g-query-value(type="text", placeholder="Value of query" id="experiment_id" name="experiment_id" class="dropdown-convert")
+
+  .form
+    input.btn.btn-search.btn-primary(type="submit", value="Search" id="action-query")
+
+#result
