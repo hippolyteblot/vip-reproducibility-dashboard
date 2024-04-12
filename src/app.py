@@ -58,11 +58,14 @@ def create_app():
 
     local_app.layout = serve_layout  # set the layout to the serve_layout function
 
+    # create a tmp folder if it does not exist
+    if not os.path.exists('src/tmp'):
+        os.makedirs('src/tmp')
     return local_app
 
 
-context = ssl.SSLContext(ssl.PROTOCOL_SSLv23)
-context.load_cert_chain(certfile=SSL_CERT_CHAIN, keyfile=SSL_SERVER_KEY)
+# context = ssl.SSLContext(ssl.PROTOCOL_SSLv23)
+# context.load_cert_chain(certfile=SSL_CERT_CHAIN, keyfile=SSL_SERVER_KEY)
 app = create_app()
 api = Api(app.server)
 api.add_resource(GirderScanner, '/api/girder_scanner')
@@ -71,5 +74,5 @@ app.run_server(
     port=APP_PORT,
     debug=APP_DEBUG,
     dev_tools_props_check=DEV_TOOLS_PROPS_CHECK,
-    ssl_context=context
+    # ssl_context=context
 )
