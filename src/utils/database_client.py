@@ -7,11 +7,12 @@ import mysql.connector
 class DatabaseClient:
     """Database client class"""
     def __init__(self, host, user, password, database):
+        self.connection = None
         self.host = host
         self.user = user
         self.password = password
         self.database = database
-        self.connection = None
+        self.connect()
 
     def connect(self):
         """Connect to the database using the given credentials"""
@@ -29,30 +30,37 @@ class DatabaseClient:
 
     def execute(self, query, params=None):
         """Execute a query on the database and return the last inserted id"""
-        self.connect()
+        self.check_connection()
         cursor = self.connection.cursor()
         cursor.execute(query, params)
         self.connection.commit()
         cursor.close()
-        self.disconnect()
         return cursor.lastrowid
 
     def fetch(self, query, params=None):
         """Fetch all the results from a query on the database"""
-        self.connect()
+        print("Trying to fetch: ", query, params)
+        self.check_connection()
         cursor = self.connection.cursor(dictionary=True)
         cursor.execute(query, params)
         result = cursor.fetchall()
         cursor.close()
-        self.disconnect()
+        print("OK")
+        self.connection.close()
         return result
 
     def fetch_one(self, query, params=None):
         """Fetch one result from a query on the database"""
-        self.connect()
+        self.check_connection()
         cursor = self.connection.cursor(dictionary=True)
         cursor.execute(query, params)
-        result = cursor.fetchone()
+        results = cursor.fetchall() # can be better to use fetchone ? but crash sometimes
+        result = results[0] if results else None
         cursor.close()
-        self.disconnect()
+        self.connection.close()
         return result
+
+    def check_connection(self):
+        """Check if the connection is still active"""
+        if not self.connection.is_connected():
+            self.connect()

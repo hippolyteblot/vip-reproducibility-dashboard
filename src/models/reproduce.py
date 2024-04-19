@@ -10,6 +10,12 @@ def get_experiment_name(exp_id):
     return DB.fetch_one(query, (exp_id,))['name']
 
 
+def get_experiment_descriptions(exp_id):
+    """Get the descriptions of the experiment with the given id"""
+    query = "SELECT experiment_description, inputs_description, outputs_description FROM experiment WHERE id = %s"
+    return DB.fetch_one(query, (exp_id,))
+
+
 def get_girder_id_of_wf(wf_id):
     """Get the girder id of the workflow with the given id"""
     query = "SELECT girder_id FROM workflow WHERE id = %s"

@@ -8,7 +8,7 @@ from flask import request
 from models.cquest_utils import (get_cquest_experiment_data, generate_box_plot, create_signal_group_column,
                                  create_workflow_group_column, create_dropdown_options,
                                  filter_and_get_unique_values, normalize, generate_url)
-from models.reproduce import get_experiment_name, parse_url
+from models.reproduce import get_experiment_name, parse_url, get_experiment_descriptions
 
 
 def layout():
@@ -117,7 +117,40 @@ def layout():
                         children=[
                             'Description is loading...',
                         ],
+                        id='description-chart-cquest',
+                    ),
+                ],
+            ),
+            html.Div(
+                children=[
+                    html.H3('Experiment description'),
+                    html.P(
+                        children=[
+                            'Description is loading...',
+                        ],
                         id='description-exp-cquest',
+                    ),
+                ],
+            ),
+            html.Div(
+                children=[
+                    html.H3('Inputs description'),
+                    html.P(
+                        children=[
+                            'Description is loading...',
+                        ],
+                        id='description-inputs-cquest',
+                    ),
+                ],
+            ),
+            html.Div(
+                children=[
+                    html.H3('Outputs description'),
+                    html.P(
+                        children=[
+                            'Description is loading...',
+                        ],
+                        id='description-outputs-cquest',
                     ),
                 ],
             ),
@@ -156,6 +189,9 @@ def bind_parameters_from_url(execution_id):
     Output('experiment-name', 'children'),
     Output('trigger-update', 'children'),
     Output('url', 'search', allow_duplicate=True),
+    Output('description-exp-cquest', 'children'),
+    Output('description-inputs-cquest', 'children'),
+    Output('description-outputs-cquest', 'children'),
     Input('execution-id', 'value'),
     Input('metabolite-name', 'value'),
     Input('signal-selected', 'value'),
@@ -179,9 +215,12 @@ def update_dropdowns(_, metabolite_name, signal_selected, workflow_selected, nor
         workflows = wf_data['Workflow'].unique()
         list_workflows = create_dropdown_options(workflows, 'None')
 
+    exp_desc, in_desc, out_desc = get_experiment_descriptions(wf_id).values()
+
     return (list_metabolites, list_signals, list_workflows, metabolite_name, signal_selected, workflow_selected,
             get_experiment_name(wf_id), 'update', generate_url(wf_id, metabolite_name, signal_selected,
-                                                               workflow_selected, normalization))
+                                                               workflow_selected, normalization),
+            exp_desc, in_desc, out_desc)
 
 
 @callback(
@@ -201,7 +240,7 @@ def update_signal_dropdown(click_data, signal_selected):
     Output('exec-chart', 'figure'),
     Output('workflow-selected', 'options', allow_duplicate=True),
     Output('data-to-highlight-label', 'children'),
-    Output('description-exp-cquest', 'children'),
+    Output('description-chart-cquest', 'children'),
     Input('trigger-update', 'children'),
     State('metabolite-name', 'value'),
     State('signal-selected', 'value'),

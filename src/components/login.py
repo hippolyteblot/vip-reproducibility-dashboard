@@ -4,11 +4,18 @@ Components for the login page
 from dash import html, dcc, callback, Output, Input, State
 from dash.exceptions import PreventUpdate
 import dash_bootstrap_components as dbc
-from flask_login import current_user, logout_user, login_user
+from flask_login import current_user, logout_user, login_user, UserMixin
 
 from models.login import check_user
 from utils.settings import GVC
 
+
+class User(UserMixin):
+    # User data model. It has to have at least self.id as a minimum
+    def __init__(self, user_id, username, role='user'):
+        self.id = user_id
+        self.username = username
+        self.role = role
 
 login_card = dbc.Card(
     [
@@ -79,21 +86,21 @@ logged_out_info = dbc.NavItem(
     )
 )
 
-add_experiment = html.Div(
-    id='add-experiment-link',
+modify_experiment = html.Div(
+    id='modify-experiment-link',
 )
 
-add_experiment_admin = dbc.NavItem(
+modify_experiment_admin = dbc.NavItem(
     dbc.NavLink(
-        'Add experiment',
-        href='/add-experiment'
+        'Modify experiment',
+        href='/modify-experiment'
     )
 )
 
 
 @callback(
     Output('user-status-header', 'children'),
-    Output('add-experiment-link', 'children'),
+    Output('modify-experiment-link', 'children'),
     Input('url-login', 'pathname')
 )
 def update_authentication_status(path):
@@ -104,8 +111,8 @@ def update_authentication_status(path):
         children = [logged_out_info, ""]
     elif logged_in:
         GVC.clean_user_download_folder(current_user.id)
-        children = [logged_in_info, add_experiment_admin] \
-            if current_user.role == 'admin' else [logged_in_info, add_experiment]
+        children = [logged_in_info, modify_experiment_admin] \
+            if current_user.role == 'admin' else [logged_in_info, modify_experiment]
     else:
         children = [logged_out_info, ""]
     return children

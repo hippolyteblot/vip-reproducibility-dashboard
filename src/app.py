@@ -11,12 +11,14 @@ import dash
 from dash import html
 import dash_bootstrap_components as dbc
 from flask import Flask
+from flask_login import LoginManager
 from flask_restful import Api
 import ssl
 
 # local imports
-from utils.settings import APP_HOST, APP_PORT, APP_DEBUG, DEV_TOOLS_PROPS_CHECK, SSL_CERT_CHAIN, SSL_SERVER_KEY
+from utils.settings import APP_HOST, APP_PORT, APP_DEBUG, DEV_TOOLS_PROPS_CHECK, SSL_CERT_CHAIN, SSL_SERVER_KEY, DB
 from components import navbar, footer
+from components.login import User, login_location
 from api.girder_scanner import GirderScanner
 
 
@@ -47,6 +49,7 @@ def create_app():
         """Define the layout of the application"""
         return html.Div(
             [
+                login_location,
                 navbar,
                 dbc.Container(
                     dash.page_container,
@@ -61,6 +64,19 @@ def create_app():
     # create a tmp folder if it does not exist
     if not os.path.exists('src/tmp'):
         os.makedirs('src/tmp')
+
+    login_manager = LoginManager()
+    login_manager.init_app(server)
+    login_manager.login_view = '/login'
+
+    @login_manager.user_loader
+    def load_user(user_id):
+        query = "SELECT * FROM USERS WHERE id = %s"
+        result = DB.fetch_one(query, (user_id,))
+        if result is None:
+            return None
+        return User(user_id, result['username'], result['role'])
+
     return local_app
 
 

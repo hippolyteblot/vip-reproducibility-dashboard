@@ -1,13 +1,10 @@
-"""
-Navbar component for the dashboard.
-"""
 from dash import html, callback, Output, Input, State
 import dash_bootstrap_components as dbc
 
 # local imports
-from .login import login_info, add_experiment
+from .login import login_info, modify_experiment
 
-LOGIN_MAIN = '/assets/logos/logo_main.png'
+logo_main = '/assets/logos/logo_main.png'
 
 # component
 navbar = dbc.Navbar(
@@ -16,7 +13,7 @@ navbar = dbc.Navbar(
             html.A(
                 dbc.Row(
                     [
-                        html.Img(src=LOGIN_MAIN, style={'height': '40px', 'width': '40px', 'marginRight': '10px',
+                        html.Img(src=logo_main, style={'height': '40px', 'width': '40px', 'marginRight': '10px',
                                                        'backgroundColor': 'white', 'borderRadius': '50%',
                                                        'padding': '5px'}),
                         html.P('Reproducibility Dashboard', className='logo-text',
@@ -24,7 +21,7 @@ navbar = dbc.Navbar(
                     ],
                     align='center',
                     className='g-0',
-                    style={'fontSize': '1.8rem', 'display': 'flex', 'flexWrap': 'nowrap', 'alignItems': 'center',
+                    style={'fontSize': '1.8rem', 'display': 'flex', 'flexWrap': 'nowrap', 'alignTtems': 'center',
                            'justifyContent': 'center'}
                 ),
                 href='/',
@@ -39,7 +36,7 @@ navbar = dbc.Navbar(
                                 href='/'
                             )
                         ),
-                        add_experiment,
+                        modify_experiment,
                         html.Div(
                             login_info,
                             style={'display': 'flex', 'alignItems': 'center', 'justifyContent': 'center'}
@@ -57,13 +54,13 @@ navbar = dbc.Navbar(
 )
 
 
+# add callback for toggling the collapse on small screens
 @callback(
     Output('navbar-collapse', 'is_open'),
     Input('navbar-toggler', 'n_clicks'),
     State('navbar-collapse', 'is_open'),
 )
 def toggle_navbar_collapse(n, is_open):
-    """Toggle the navbar collapse"""
     if n:
         return not is_open
     return is_open
