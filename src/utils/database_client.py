@@ -39,13 +39,11 @@ class DatabaseClient:
 
     def fetch(self, query, params=None):
         """Fetch all the results from a query on the database"""
-        print("Trying to fetch: ", query, params)
         self.check_connection()
         cursor = self.connection.cursor(dictionary=True)
         cursor.execute(query, params)
         result = cursor.fetchall()
         cursor.close()
-        print("OK")
         self.connection.close()
         return result
 

@@ -71,7 +71,7 @@ def create_app():
 
     @login_manager.user_loader
     def load_user(user_id):
-        query = "SELECT * FROM USERS WHERE id = %s"
+        query = "SELECT * FROM users WHERE id = %s"
         result = DB.fetch_one(query, (user_id,))
         if result is None:
             return None
