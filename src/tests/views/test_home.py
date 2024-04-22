@@ -3,7 +3,7 @@ from unittest.mock import patch
 from dash.html import Div
 from dash_bootstrap_components import Row, Button
 
-from views.home import toggle_modal_exp, get_list_structure_for_comparison
+from views.home import toggle_modal_exp, get_list_structure
 
 
 @patch('views.home.load_exp_from_db')
@@ -74,6 +74,6 @@ def test_get_list_structure():
         ],
         style={'flexDirection': 'row'})
 
-    outputs = get_list_structure_for_comparison(data_list, href)
+    outputs = get_list_structure(data_list, href)
 
     assert str(outputs) == str(result)

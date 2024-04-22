@@ -81,6 +81,8 @@ def get_available_applications():
 
 def get_available_versions(application_id):
     """Get the available versions from the database"""
+    if application_id == -1:
+        return []
     query = 'SELECT * FROM app_version WHERE application_id = %s'
     versions = DB.fetch(query, (application_id,))
     return versions
