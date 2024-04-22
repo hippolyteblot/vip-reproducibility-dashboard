@@ -7,7 +7,18 @@ from models.modify_experiment import get_available_experiments, update_experimen
 
 
 def layout():
-    return html.Div(id='modify_experiment')
+    return html.Div(
+        id='modify_experiment',
+        children=[
+            html.Div(
+                [
+                    dbc.Spinner(color="primary"),
+                ],
+            style={'display': 'flex', 'justify-content': 'center', 'align-items': 'center', 'height': '50vh'}
+            ),
+            html.P("Checking access rights..."),
+        ]
+    )
 
 def authorize_page():
     return html.Div(
