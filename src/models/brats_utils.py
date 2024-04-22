@@ -291,7 +291,8 @@ def get_processed_data_from_niftis(id1: str, id2: str, axe: str, slider_value: i
     if max_slide > vol2.shape[axe_index]:
         max_slide = vol2.shape[axe_index]
 
-    return img_mask1, img_mask2, max_slide-1, vol1, vol2, maximum
+    return img_mask1, img_mask2, max_slide - 1, vol1, vol2, maximum
+
 
 def create_box_plot(sorted_experiments, unique_file=False):
     """Create a box plot with the given data"""
@@ -308,6 +309,7 @@ def create_box_plot(sorted_experiments, unique_file=False):
     )
 
     return figure
+
 
 def sort_experiment_data(experiment_data1, experiment_data2):
     """Sort the experiment data by file"""
@@ -343,6 +345,7 @@ def get_experiment_data(exec_id, file):
     experiment_data = experiment_data[~experiment_data['File'].str.contains('T1CE')]
 
     return experiment_data, files
+
 
 def build_gradient(psnr_values):
     """Build the gradient for the psnr values to indicate where the differences are"""

@@ -10,7 +10,7 @@ logo_main = '/assets/logos/logo_main.png'
 navbar = dbc.Navbar(
     dbc.Container(
         [
-            html.A(
+            dbc.NavLink(
                 dbc.Row(
                     [
                         html.Img(src=logo_main, style={'height': '40px', 'width': '40px', 'marginRight': '10px',

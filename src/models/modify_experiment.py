@@ -34,3 +34,4 @@ def update_experiment_on_db(exp_id, name, description, inputs, outputs):
     except Exception as e:
         print("An unexpected error occurred:", e)
         return False
+
