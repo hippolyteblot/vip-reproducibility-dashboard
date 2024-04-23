@@ -213,6 +213,8 @@ def toggle_modal(n1, n2):
 def update_chart(_, file):
     """Update the chart for the experiment visualization"""
     exec_id = int(parse_url(request.referrer)[0])
+    print("tsibii: ", request.referrer)
+    print("tsibii: ", exec_id)
 
     experiment_data = get_global_brats_experiment_data(exec_id)
     files = experiment_data['File'].unique()
@@ -239,7 +241,7 @@ def update_chart(_, file):
     figure.update_layout(
         yaxis_title="Significant digits mean",
     )
-    exp_desc, in_desc, out_desc = get_experiment_descriptions(wf_id).values()
+    exp_desc, in_desc, out_desc = get_experiment_descriptions(exec_id).values()
     return figure, [{'label': file, 'value': file} for file in files], description, exp_desc, in_desc, out_desc
 
 
