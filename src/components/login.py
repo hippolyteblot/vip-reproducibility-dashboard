@@ -7,7 +7,7 @@ import dash_bootstrap_components as dbc
 from flask_login import current_user, logout_user, login_user, UserMixin
 
 from models.login import check_user
-from utils.settings import GVC
+from utils.settings import get_GVC
 
 
 class User(UserMixin):
@@ -110,6 +110,7 @@ def update_authentication_status(path):
         logout_user()
         children = [logged_out_info, ""]
     elif logged_in:
+        GVC = get_GVC()
         GVC.clean_user_download_folder(current_user.id)
         children = [logged_in_info, modify_experiment_admin] \
             if current_user.role == 'admin' else [logged_in_info, modify_experiment]

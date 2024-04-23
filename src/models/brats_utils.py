@@ -16,8 +16,8 @@ import pandas as pd
 from skimage.metrics import structural_similarity
 
 from models.home import save_file_for_comparison
-from utils.settings import GVC
-from utils.settings import DB, CACHE_FOLDER
+from utils.settings import get_GVC
+from utils.settings import get_DB, CACHE_FOLDER
 
 
 def uncompress_nifti_files(folder_path):
@@ -163,6 +163,8 @@ def equal_with_tolerance(val1: int or float, val2: int or float, tolerance: floa
 
 def get_global_brats_experiment_data(experiment_id: int) -> pd.DataFrame and list:
     """Get the data of a brats experiment from database or local file"""
+    DB = get_DB()
+    GVC = get_GVC()
     # first, get the girder_id of the folder containing the experiment
     query = "SELECT girder_id FROM experiment WHERE id = %s"
     girder_id = DB.fetch_one(query, (experiment_id,))['girder_id']
@@ -181,6 +183,8 @@ def get_global_brats_experiment_data(experiment_id: int) -> pd.DataFrame and lis
 
 def download_brats_file(execution_number, file, patient_id, experiment_id):
     """Download a file from a brats experiment"""
+    DB = get_DB()
+    GVC = get_GVC()
     # This function finds in the database the girder_id of the file to download
     # and downloads it in the tmp folder
     query = "SELECT id FROM workflow WHERE experiment_id = %s and timestamp = %s"

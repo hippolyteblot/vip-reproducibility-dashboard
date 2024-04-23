@@ -1,6 +1,6 @@
 import re
 from flask_restful import Resource
-from utils.settings import DB, GVC, GIRDER_PROCESSED_FOLDER
+from utils.settings import get_DB, get_GVC, GIRDER_PROCESSED_FOLDER
 
 
 class GirderScanner(Resource):

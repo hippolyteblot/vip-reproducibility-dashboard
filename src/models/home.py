@@ -11,7 +11,7 @@ import zipfile
 from dash import html
 import dash_bootstrap_components as dbc
 
-from utils.settings import DB, CACHE_FOLDER
+from utils.settings import get_DB, CACHE_FOLDER
 
 
 def load_exec_from_local() -> list:
@@ -45,6 +45,7 @@ def load_exp_from_db():
 
 def build_json_from_db(query):
     """Build the json from the database"""
+    DB = get_DB()
     results = DB.fetch(query)
     exp_list = []
     for result in results:
@@ -58,6 +59,7 @@ def build_json_from_db(query):
 
 def build_json_from_db2(query):
     """Build the json from the database"""
+    DB = get_DB()
     results = DB.fetch(query)
     exp_list = []
     for result in results:
@@ -74,6 +76,7 @@ def build_json_from_db2(query):
 
 def get_available_applications():
     """Get the available applications from the database"""
+    DB = get_DB()
     query = 'SELECT * FROM application'
     applications = DB.fetch(query)
     return applications
@@ -81,6 +84,7 @@ def get_available_applications():
 
 def get_available_versions(application_id):
     """Get the available versions from the database"""
+    DB = get_DB()
     if application_id == -1:
         return []
     query = 'SELECT * FROM app_version WHERE application_id = %s'
@@ -90,6 +94,7 @@ def get_available_versions(application_id):
 
 def load_wf_from_db():
     """Load the workflows from girder"""
+    DB = get_DB()
     query = 'SELECT workflow.id as workflow_id, workflow.timestamp as workflow_name, ' \
             'application.name as application_name, app_version.number as application_version, ' \
             'app_version.id as version_id, application.id as application_id, experiment.name as experiment_name ' \
@@ -104,6 +109,7 @@ def load_wf_from_db():
 
 def load_app_wf_from_db(app_id):
     """Load the workflows from girder for a specific application"""
+    DB = get_DB()
     query = 'SELECT workflow.id as workflow_id, workflow.timestamp as workflow_name, ' \
             'application.name as application_name, app_version.number as application_version, ' \
             'app_version.id as version_id, application.id as application_id, experiment.name as experiment_name ' \

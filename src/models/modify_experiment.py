@@ -1,11 +1,12 @@
 from mysql.connector import DatabaseError
 
-from utils.settings import DB
+from utils.settings import get_DB
 from flask_login import current_user
 
 
 def get_available_experiments(version_id):
     """Get the available experiments from the database"""
+    DB = get_DB()
     if version_id is None:
         query = 'SELECT * FROM experiment'
         experiments = DB.fetch(query)
@@ -17,6 +18,7 @@ def get_available_experiments(version_id):
 
 def get_experiment_details(exp_id):
     """Get the details of an experiment from the database"""
+    DB = get_DB()
     query = 'SELECT * FROM experiment WHERE id = %s'
     return DB.fetch_one(query, (exp_id,))
 
@@ -24,6 +26,7 @@ def get_experiment_details(exp_id):
 def update_experiment_on_db(exp_id, name, description, inputs, outputs):
     """Update the details of an experiment in the database"""
     try:
+        DB = get_DB()
         query = ('UPDATE experiment SET name = %s, experiment_description = %s, inputs_description = %s, '
                  'outputs_description = %s WHERE id = %s')
         DB.execute(query, (name, description, inputs, outputs, exp_id))

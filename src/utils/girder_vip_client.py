@@ -12,6 +12,7 @@ from girder_client import GirderClient, AuthenticationError
 class GirderVIPClient:
     """This class is used to interact with Girder"""
     def __init__(self, raw_folder, processed_folder, cache_folder, url=None, key=None):
+        print("GirderVIPClient")
         self.client = GirderClient(apiUrl=url + "/api/v1")
         self.url = url
         try:
