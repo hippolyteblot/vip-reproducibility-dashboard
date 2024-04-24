@@ -11,12 +11,14 @@ import plotly.express as px
 from dash import html
 from pandas import DataFrame
 
-from utils.settings import GVC
+from utils.settings import get_GVC
 from utils.quest2_reader import get_quest2
-from utils.settings import DB
+from utils.settings import get_DB
 
 
 def get_cquest_experiment_data(experiment_id: int) -> pd.DataFrame:
+    GVC = get_GVC()
+    DB = get_DB()
     """Get the data of an experiment from database or local file"""
     # first, get the girder_id of the folder containing the experiment
     query = "SELECT girder_id FROM experiment WHERE id = %s"
@@ -44,6 +46,7 @@ def read_cquest_file(file_uuid: str) -> DataFrame:
 
 def get_metadata_cquest(exp_id: int) -> list:
     """Get the metadata of an experiment from database"""
+    DB = get_DB()
     query = "SELECT id FROM workflow WHERE experiment_id = %s"
     wf_ids = DB.fetch(query, (exp_id,))
     array_wf_ids = [wf_ids[i]['id'] for i in range(len(wf_ids))]

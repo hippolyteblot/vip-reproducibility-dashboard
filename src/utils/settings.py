@@ -11,6 +11,8 @@ cwd = os.getcwd()
 dotenv_path = os.path.join(cwd, os.getenv('ENVIRONMENT_FILE', '.env'))
 load_dotenv(dotenv_path=dotenv_path, override=True)
 
+PRODUCTION = True if os.environ.get('PRODUCTION') == 'True' else False
+
 # server config
 APP_HOST = os.environ.get('HOST')
 APP_PORT = int(os.environ.get('PORT'))
@@ -26,7 +28,14 @@ DB_HOST = os.environ.get('DB_HOST')
 DB_USER = os.environ.get('DB_USER')
 DB_PASSWORD = os.environ.get('DB_PASSWORD')
 DB_NAME = os.environ.get('DB_NAME')
-DB = DatabaseClient(DB_HOST, DB_USER, DB_PASSWORD, DB_NAME)
+
+DB = None
+def get_DB():
+    global DB
+    if DB is None:
+        DB = DatabaseClient(DB_HOST, DB_USER, DB_PASSWORD, DB_NAME)
+        DB.connect()
+    return DB
 
 # girder credentials
 GIRDER_API_URL = os.environ.get('GIRDER_API_URL')
@@ -34,7 +43,14 @@ GIRDER_API_KEY = os.environ.get('GIRDER_API_KEY')
 GIRDER_RAW_FOLDER = os.environ.get('GIRDER_RAW_FOLDER')
 GIRDER_PROCESSED_FOLDER = os.environ.get('GIRDER_PROCESSED_FOLDER')
 GIRDER_SOURCE_FOLDER = os.environ.get('GIRDER_SOURCE_FOLDER')
-GVC = GirderVIPClient(GIRDER_RAW_FOLDER, GIRDER_PROCESSED_FOLDER, CACHE_FOLDER, GIRDER_API_URL, GIRDER_API_KEY)
+
+
+GVC = None
+def get_GVC():
+    global GVC
+    if GVC is None:
+        GVC = GirderVIPClient(GIRDER_RAW_FOLDER, GIRDER_PROCESSED_FOLDER, GIRDER_SOURCE_FOLDER, GIRDER_API_URL, GIRDER_API_KEY)
+    return GVC
 
 
 """

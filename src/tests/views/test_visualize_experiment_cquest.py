@@ -8,9 +8,14 @@ import pytest
 from numpy import array_equal
 
 from views.visualize_experiment_cquest import update_chart
-from utils.settings import GVC
+from utils.settings import get_GVC
 
 from flask import Flask
+
+
+@pytest.fixture(autouse=True)
+def mock_database_client(mocker):
+    return mocker.patch('models.cquest_utils.get_DB')
 
 
 # Define the test cases using @pytest.mark.parametrize
@@ -28,7 +33,8 @@ from flask import Flask
          'scatter'),
     ])
 @patch('views.visualize_experiment_cquest.get_cquest_experiment_data')
-def test_update_chart(mock_get_data, metabolite, signal, wf, expected_groups, title, x_label, y_label, graph_type):
+def test_update_chart(mock_get_data, metabolite, signal, wf, expected_groups, title, x_label, y_label,
+                      graph_type):
     # Configuration of the environment
     app = Flask(__name__)
 
@@ -37,11 +43,6 @@ def test_update_chart(mock_get_data, metabolite, signal, wf, expected_groups, ti
                    'workflow_selected=All&normalization=No'
         environ = {'HTTP_HOST': 'localhost'}
         blueprints = 'visualize-experiment-cquest'
-
-    class MockUser:
-        is_authenticated = True
-        id = 1
-        role = 'admin'
 
     feather_data = pd.read_feather('src/tests/data/sample_data_exp_cquest.feather')
 
