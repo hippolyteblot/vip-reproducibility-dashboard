@@ -7,7 +7,7 @@ from dash import html, callback, Input, Output, dcc
 from flask import request
 
 from models.brats_utils import get_global_brats_experiment_data, download_brats_file
-from models.reproduce import parse_url
+from models.reproduce import parse_url, get_experiment_descriptions
 
 
 def layout():
@@ -68,7 +68,7 @@ def layout():
                         children=[
                             'Description is loading...',
                         ],
-                        id='description-exp-brats',
+                        id='description-chart-brats',
                     ),
                 ],
             ),
@@ -152,6 +152,39 @@ def layout():
                 id='modal-brats-exp-container',
                 style={'display': 'none'},
             ),
+            html.Div(
+                children=[
+                    html.H3('Experiment description'),
+                    html.P(
+                        children=[
+                            'Description is loading...',
+                        ],
+                        id='description-exp-brats',
+                    ),
+                ],
+            ),
+            html.Div(
+                children=[
+                    html.H3('Inputs description'),
+                    html.P(
+                        children=[
+                            'Description is loading...',
+                        ],
+                        id='description-inputs-brats',
+                    ),
+                ],
+            ),
+            html.Div(
+                children=[
+                    html.H3('Outputs description'),
+                    html.P(
+                        children=[
+                            'Description is loading...',
+                        ],
+                        id='description-outputs-brats',
+                    ),
+                ],
+            ),
         ]
     )
 
@@ -170,13 +203,18 @@ def toggle_modal(n1, n2):
 @callback(
     Output('general-chart-brats-exp', 'figure'),
     Output('file-brats-exp', 'options'),
+    Output('description-chart-brats', 'children'),
     Output('description-exp-brats', 'children'),
+    Output('description-inputs-brats', 'children'),
+    Output('description-outputs-brats', 'children'),
     Input('general-chart-brats-exp', 'figure'),
     Input('file-brats-exp', 'value'),
 )
 def update_chart(_, file):
     """Update the chart for the experiment visualization"""
     exec_id = int(parse_url(request.referrer)[0])
+    print("tsibii: ", request.referrer)
+    print("tsibii: ", exec_id)
 
     experiment_data = get_global_brats_experiment_data(exec_id)
     files = experiment_data['File'].unique()
@@ -203,7 +241,8 @@ def update_chart(_, file):
     figure.update_layout(
         yaxis_title="Significant digits mean",
     )
-    return figure, [{'label': file, 'value': file} for file in files], description
+    exp_desc, in_desc, out_desc = get_experiment_descriptions(exec_id).values()
+    return figure, [{'label': file, 'value': file} for file in files], description, exp_desc, in_desc, out_desc
 
 
 @callback(

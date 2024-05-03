@@ -4,7 +4,7 @@ Model for the login system
 import bcrypt
 from flask_login import UserMixin
 
-from utils.settings import DB
+from utils.settings import get_DB
 
 
 class User(UserMixin):
@@ -18,6 +18,7 @@ class User(UserMixin):
 
 def check_user(username, password):
     """Check if the username and password are correct"""
+    DB = get_DB()
     user = None
     query = 'SELECT * FROM users WHERE username = %s'
     check = DB.fetch_one(query, [username])

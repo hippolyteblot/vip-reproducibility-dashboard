@@ -16,8 +16,8 @@ import pandas as pd
 from skimage.metrics import structural_similarity
 
 from models.home import save_file_for_comparison
-from utils.settings import GVC
-from utils.settings import DB, CACHE_FOLDER
+from utils.settings import get_GVC
+from utils.settings import get_DB, CACHE_FOLDER
 
 
 def uncompress_nifti_files(folder_path):
@@ -163,6 +163,8 @@ def equal_with_tolerance(val1: int or float, val2: int or float, tolerance: floa
 
 def get_global_brats_experiment_data(experiment_id: int) -> pd.DataFrame and list:
     """Get the data of a brats experiment from database or local file"""
+    DB = get_DB()
+    GVC = get_GVC()
     # first, get the girder_id of the folder containing the experiment
     query = "SELECT girder_id FROM experiment WHERE id = %s"
     girder_id = DB.fetch_one(query, (experiment_id,))['girder_id']
@@ -181,6 +183,8 @@ def get_global_brats_experiment_data(experiment_id: int) -> pd.DataFrame and lis
 
 def download_brats_file(execution_number, file, patient_id, experiment_id):
     """Download a file from a brats experiment"""
+    DB = get_DB()
+    GVC = get_GVC()
     # This function finds in the database the girder_id of the file to download
     # and downloads it in the tmp folder
     query = "SELECT id FROM workflow WHERE experiment_id = %s and timestamp = %s"
@@ -291,7 +295,8 @@ def get_processed_data_from_niftis(id1: str, id2: str, axe: str, slider_value: i
     if max_slide > vol2.shape[axe_index]:
         max_slide = vol2.shape[axe_index]
 
-    return img_mask1, img_mask2, max_slide-1, vol1, vol2, maximum
+    return img_mask1, img_mask2, max_slide - 1, vol1, vol2, maximum
+
 
 def create_box_plot(sorted_experiments, unique_file=False):
     """Create a box plot with the given data"""
@@ -308,6 +313,7 @@ def create_box_plot(sorted_experiments, unique_file=False):
     )
 
     return figure
+
 
 def sort_experiment_data(experiment_data1, experiment_data2):
     """Sort the experiment data by file"""
@@ -343,6 +349,7 @@ def get_experiment_data(exec_id, file):
     experiment_data = experiment_data[~experiment_data['File'].str.contains('T1CE')]
 
     return experiment_data, files
+
 
 def build_gradient(psnr_values):
     """Build the gradient for the psnr values to indicate where the differences are"""

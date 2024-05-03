@@ -11,6 +11,7 @@ from utils.settings import GVC
 
 from flask import Flask
 
+
 @pytest.mark.parametrize(
     "file, expected_groups, title", [
         ('All', 12, 'Significant digits mean per step for each file'),
@@ -18,7 +19,8 @@ from flask import Flask
         ('_to_SRI.nii.gz', 4, 'Significant digits mean per step for file _to_SRI.nii.gz'),
     ])
 @patch('views.visualize_experiment_brats.get_global_brats_experiment_data')
-def test_update_chart(mock_get_data, file, expected_groups, title):
+@patch('views.visualize_experiment_brats.get_experiment_descriptions')
+def test_update_chart(mock_get_description, mock_get_data, file, expected_groups, title):
     # Configuration of the environment
     app = Flask(__name__)
 
@@ -35,6 +37,12 @@ def test_update_chart(mock_get_data, file, expected_groups, title):
     feather_data = pd.read_feather('src/tests/data/sample_data_exp_brats.feather')
 
     mock_get_data.return_value = feather_data
+
+    mock_get_description.return_value = {
+        'experiment_description': 'Description',
+        'inputs_description': 'Inputs',
+        'outputs_description': 'Outputs'
+    }
 
     ctx = app.test_request_context()
 

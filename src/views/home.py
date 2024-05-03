@@ -122,7 +122,7 @@ def layout():
                                                                                         children=html.Div(
                                                                                             children=[
                                                                                                 'Drag and Drop or ',
-                                                                                                html.A('Select Files')
+                                                                                                dbc.NavLink('Select Files')
                                                                                             ],
                                                                                             id='upload-data-1-div'
                                                                                         ),
@@ -166,7 +166,7 @@ def layout():
                                                                                         children=html.Div(
                                                                                             children=[
                                                                                                 'Drag and Drop or ',
-                                                                                                html.A('Select Files')
+                                                                                                dbc.NavLink('Select Files')
                                                                                             ],
                                                                                             id='upload-data-2-div'
                                                                                         ),
@@ -263,7 +263,7 @@ def layout():
                                                         'Choose axis, metrics and data to compare your results. '
                                                         'You can also share your settings with other users.'
                                                     ),
-                                                    html.A(
+                                                    dbc.NavLink(
                                                         dbc.Button(
                                                             "Compare tabular results",
                                                             id="compare-tabular-button",

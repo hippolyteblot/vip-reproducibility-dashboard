@@ -1,13 +1,20 @@
 """
 Home model
 """
-from utils.settings import DB
+from utils.settings import get_DB
 
 
 def get_experiment_name(exp_id):
     """Get the name of the experiment with the given id"""
+    DB = get_DB()
     query = "SELECT name FROM experiment WHERE id = %s"
     return DB.fetch_one(query, (exp_id,))['name']
+
+
+def get_experiment_descriptions(exp_id):
+    """Get the descriptions of the experiment with the given id"""
+    query = "SELECT experiment_description, inputs_description, outputs_description FROM experiment WHERE id = %s"
+    return DB.fetch_one(query, (exp_id,))
 
 
 def get_girder_id_of_wf(wf_id):
