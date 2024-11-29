@@ -7,8 +7,8 @@ import plotly.express as px
 from dash import html, callback, Input, Output, dcc
 from flask import request
 
-from models.cquest_utils import (get_files_in_folder, read_file_in_folder, read_folder, preprocess_cquest_data_compare,
-                                 normalize, preprocess_lcmodel_data_compare)
+from models.cquest_utils import (get_files_in_folder, normalize, read_folder_lcmodel, preprocess_lcmodel_data_compare,
+                                 read_file_in_folder_lcmodel)
 from models.reproduce import parse_url
 
 
@@ -28,14 +28,14 @@ def layout():
                                 children=[
                                     html.H4('File 1'),
                                     dcc.Dropdown(
-                                        id='file1-selected-compare',
+                                        id='file1-selected-compare-lcmodel',
                                         options=[
                                         ],
                                         value='',
                                         clearable=False,
                                     ),
                                     dcc.Checklist(
-                                        id='aggregate-data-compare-1',
+                                        id='aggregate-data-compare-1-lcmodel',
                                         options=[
                                             {'label': 'Aggregate data', 'value': 'aggregate'},
                                         ],
@@ -49,14 +49,14 @@ def layout():
                                 children=[
                                     html.H4('File 2'),
                                     dcc.Dropdown(
-                                        id='file2-selected-compare',
+                                        id='file2-selected-compare-lcmodel',
                                         options=[
                                         ],
                                         value='',
                                         clearable=False,
                                     ),
                                     dcc.Checklist(
-                                        id='aggregate-data-compare-2',
+                                        id='aggregate-data-compare-2-lcmodel',
                                         options=[
                                             {'label': 'Aggregate data', 'value': 'aggregate'},
                                         ],
@@ -70,7 +70,7 @@ def layout():
                                 children=[
                                     html.H4('Normalization'),
                                     dcc.RadioItems(
-                                        id='normalization-compare-xy',
+                                        id='normalization-compare-xy-lcmodel',
                                         options=[
                                             {'label': 'No', 'value': 'No'},
                                             {'label': 'Yes', 'value': 'Yes'},
@@ -91,7 +91,7 @@ def layout():
             html.Div(
                 children=[
                     dcc.Graph(
-                        id='nn-chart-compare',
+                        id='nn-chart-compare-lcmodel',
                         config={"displayModeBar": False},
                     ),
                 ],
@@ -102,47 +102,47 @@ def layout():
 
 
 @callback(
-    Output('file1-selected-compare', 'options'),
-    Output('file2-selected-compare', 'options'),
-    Output('file1-selected-compare', 'value', allow_duplicate=True),
-    Output('file2-selected-compare', 'value', allow_duplicate=True),
+    Output('file1-selected-compare-lcmodel', 'options'),
+    Output('file2-selected-compare-lcmodel', 'options'),
+    Output('file1-selected-compare-lcmodel', 'value', allow_duplicate=True),
+    Output('file2-selected-compare-lcmodel', 'value', allow_duplicate=True),
     Input('url', 'pathname'),
     prevent_initial_call='initial_duplicate',
 )
 def bind_selects(_):
+    print("bind_selects")
     """Bind the charts to the data"""
     id1, id2 = parse_url(request.referrer)
-    files1 = get_files_in_folder(id1)
-    files2 = get_files_in_folder(id2)
+    files1 = get_files_in_folder(id1, extension='table')
+    files2 = get_files_in_folder(id2, extension='table')
     return [{'label': file, 'value': file} for file in files1], [{'label': file, 'value': file} for file in files2], \
         files1[0], files2[0]
 
 
 @callback(
-    Output('nn-chart-compare', 'figure'),
-    Output('file1-selected-compare', 'value', allow_duplicate=True),
-    Output('file2-selected-compare', 'value', allow_duplicate=True),
-    Input('file1-selected-compare', 'value'),
-    Input('file2-selected-compare', 'value'),
-    Input('aggregate-data-compare-1', 'value'),
-    Input('aggregate-data-compare-2', 'value'),
-    Input('normalization-compare-xy', 'value'),
+    Output('nn-chart-compare-lcmodel', 'figure'),
+    Output('file1-selected-compare-lcmodel', 'value', allow_duplicate=True),
+    Output('file2-selected-compare-lcmodel', 'value', allow_duplicate=True),
+    Input('file1-selected-compare-lcmodel', 'value'),
+    Input('file2-selected-compare-lcmodel', 'value'),
+    Input('aggregate-data-compare-1-lcmodel', 'value'),
+    Input('aggregate-data-compare-2-lcmodel', 'value'),
+    Input('normalization-compare-xy-lcmodel', 'value'),
     prevent_initial_call=True,
 )
 def update_chart(file1, file2, aggregate1, aggregate2, normalization):
     """Bind the charts to the data"""
     id1, id2 = parse_url(request.referrer)
     if aggregate1:
-        print('aggregate1')
-        data1 = read_folder(id1)
+        data1 = read_folder_lcmodel(id1)
     else:
-        file1 = file1 if file1 else get_files_in_folder(id1)[0]
-        data1 = read_file_in_folder(id1, file1)
+        file1 = file1 if file1 else get_files_in_folder(id1, 'table')[0]
+        data1 = read_file_in_folder_lcmodel(id1, file1)
     if aggregate2:
-        data2 = read_folder(id2)
+        data2 = read_folder_lcmodel(id2)
     else:
-        file2 = file2 if file2 else get_files_in_folder(id2)[0]
-        data2 = read_file_in_folder(id2, file2)
+        file2 = file2 if file2 else get_files_in_folder(id2, 'table')[0]
+        data2 = read_file_in_folder_lcmodel(id2, file2)
 
     # delete metabolites water1, water2, water3
     data1, data2 = preprocess_lcmodel_data_compare(data1, data2)
@@ -153,13 +153,13 @@ def update_chart(file1, file2, aggregate1, aggregate2, normalization):
     if normalization == 'Yes':
         normalize(data)
 
-    fig1 = px.scatter(
+    fig1 = px.box(
         x=data['Metabolite'],
-        y=data['Amplitude'],
+        y=data['Rate_Raw'],
         title='Comparison of metabolites',
         labels={
             'x': 'Metabolite',
-            'y': 'Amplitude',
+            'y': 'Rate_Raw',
         },
         color=data['File'],
     )

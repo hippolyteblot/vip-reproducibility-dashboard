@@ -201,6 +201,8 @@ def check_type(data_type, name, app):
         return ext == 'txt'
     if data_type == '1-1' and app == 'nifti':
         return (ext == 'nii') or (name.split('.')[-2] == 'nii' and ext == 'gz')
+    if data_type == '1-1' and app == 'lcmodel':
+        return ext == 'table'
     if data_type in ('x-y', 'x'):
         return ext == 'zip'
     return False

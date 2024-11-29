@@ -12,7 +12,6 @@ from girder_client import GirderClient, AuthenticationError
 class GirderVIPClient:
     """This class is used to interact with Girder"""
     def __init__(self, raw_folder, processed_folder, cache_folder, url=None, key=None):
-        print("GirderVIPClient")
         self.client = GirderClient(apiUrl=url + "/api/v1")
         self.url = url
         try:
@@ -103,7 +102,7 @@ class GirderVIPClient:
         return None
 
     def download_file_by_name(self, folder_id, file_name):
-        """Download the feather file nammed 'data.feather' in the folder"""
+        """Download the feather file named 'data.feather' in the folder"""
         items = self.client.listItem(folder_id)
         for item in items:
             if item['name'] == file_name:

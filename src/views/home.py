@@ -6,6 +6,9 @@ from dash import html, Output, Input, State, callback, clientside_callback, Clie
 
 from models.home import load_exp_from_db, get_available_applications, get_available_versions, \
     save_file_for_comparison, load_app_wf_from_db, check_type, get_list_structure
+from models.link_vip import download_file
+
+from utils.settings import get_DB
 
 
 def layout():
@@ -78,6 +81,10 @@ def layout():
                                                                                                 'value': 'cquest'},
                                                                                             {'label': 'NIfTI files',
                                                                                              'value': 'nifti'},
+                                                                                            {'label': 'LCModel results '
+                                                                                                      '(.table)',
+                                                                                             'value': 'lcmodel'},
+
                                                                                         ],
                                                                                         value='nifti',
                                                                                         style={'width': '100%'},
@@ -122,7 +129,8 @@ def layout():
                                                                                         children=html.Div(
                                                                                             children=[
                                                                                                 'Drag and Drop or ',
-                                                                                                dbc.NavLink('Select Files')
+                                                                                                dbc.NavLink(
+                                                                                                    'Select Files')
                                                                                             ],
                                                                                             id='upload-data-1-div'
                                                                                         ),
@@ -166,7 +174,8 @@ def layout():
                                                                                         children=html.Div(
                                                                                             children=[
                                                                                                 'Drag and Drop or ',
-                                                                                                dbc.NavLink('Select Files')
+                                                                                                dbc.NavLink(
+                                                                                                    'Select Files')
                                                                                             ],
                                                                                             id='upload-data-2-div'
                                                                                         ),
@@ -572,11 +581,87 @@ def layout():
                         className='card',
                         style={'display': 'flex', 'gap': '10px', 'flexDirection': 'column', 'width': '50%'},
                     ),
+
                 ],
                 style={'display': 'flex', 'gap': '10px', 'flexDirection': 'row'},
             ),
         ]
     )
+
+
+@callback(
+    Output('wfs-modal', 'is_open'),
+    Input('wfs-open', 'n_clicks'),
+    Input('wfs-close', 'n_clicks'),
+    State('wfs-modal', 'is_open'),
+    prevent_initial_call=True
+)
+def toggle_wfs_modal(n1, n2, is_open):
+    """Open or close the workflows modal"""
+    if n1 or n2:
+        return not is_open
+    return is_open
+
+
+@callback(
+    Output('select-app-wfs', 'options'),
+    Output('select-app-wfs', 'value'),
+    Input('select-app-wfs', 'children'),
+)
+def update_select_app_wfs(_):
+    """Update the select app wfs options"""
+    sp_db = get_DB('fake_vip')
+    applications = sp_db.fetch(
+        'SELECT DISTINCT w.application FROM workflows w INNER JOIN outputs o ON o.workflow_id = w.id ORDER BY w.application')
+    appli = applications[0] if applications else None
+    return [{'label': app['application'], 'value': app['application']} for app in applications], appli[
+        'application'] if appli else None
+
+
+@callback(
+    Output('select-wf1', 'options'),
+    Output('select-wf2', 'options'),
+    Output('select-wf1', 'value'),
+    Output('select-wf2', 'value'),
+    Input('select-app-wfs', 'value'),
+)
+def update_select_wf(app):
+    print(app)
+    """Update the select wf options"""
+    sp_db = get_DB('fake_vip')
+    workflows = sp_db.fetch(
+        'SELECT w.* FROM workflows w WHERE EXISTS (SELECT 1 FROM outputs o WHERE o.workflow_id = w.id) AND application like %s',
+        (app,))
+    wf = workflows[0] if workflows else None
+    return ([{'label': wf['simulation_name'], 'value': wf['id']} for wf in workflows], [
+        {'label': wf['simulation_name'], 'value': wf['id']} for wf in workflows], wf['id'] if wf else None,
+            wf['id'] if wf else None)
+
+
+@callback(
+    Output('select-file-wfs', 'options'),
+    Output('select-file-wfs', 'value'),
+    Output('compare-wfs-btn', 'href'),
+    Output('compare-wfs-btn', 'disabled'),
+    Input('select-wf1', 'value'),
+    Input('select-wf2', 'value'),
+    State('select-file-wfs', 'options'),
+)
+def update_wfs_files(wf1, wf2, _):
+    """Update the wfs modal body"""
+    sp_db = get_DB('fake_vip')
+    files = sp_db.fetch('select * from outputs where workflow_id like %s', (wf1,))
+    verif_files = sp_db.fetch('select * from outputs where workflow_id like %s', (wf2,))
+    # keep only the files that are in both workflows (check by name, last splited part by / of path)
+    files = [file for file in files if file['path'].split('/')[-1] in [f['path'].split('/')[-1] for f in verif_files]]
+    file = files[0] if files else None
+    disabled = True if not files else False
+    download_file(wf1, file['path'])
+    download_file(wf2, file['path'])
+    link = '/compare-wfs?id1=' + str(wf1) + '&id2=' + str(wf2) + '&file=' + file[
+        'path'] if file else '/compare-wfs?id1=&id2=&file='
+    return [{'label': file['path'], 'value': file['path']} for file in files], file[
+        'path'] if file else None, link, disabled
 
 
 @callback(
@@ -616,13 +701,11 @@ def update_upload_data_2_container(type_selected):
 def update_compare_btn(_, type1, type2, app, type_selected):
     """Update the compare button state depending on the uploaded files and the selected application"""
     # assert that if type_selected is 1-1, type1 and type2 are txt else zip
-    if type_selected == '1-1' and (
-            ((type1 == 'txt' and type2 == 'txt' and app == 'cquest') or
-             (type1 == 'nii' and type2 == 'nii' and app == 'brats') or
-             (type1 in ['gz', 'nii'] and type2 in ['gz', 'nii'])) and
-            app == 'nifti'
-    ):
-        return False
+    print(type1, type2, app, type_selected)
+    if type_selected == '1-1':
+        if type1 == 'txt' and type2 == 'txt' and app == 'cquest' or type1 == 'nii' and type2 == 'nii' and app == 'brats' or type1 == 'table' and type2 == 'table' and app == 'lcmodel' or (
+                type1 in ['gz', 'nii'] and type2 in ['gz', 'nii'] and app == 'nifti'):
+            return False
     if type_selected == 'x-y' and type1 == 'zip' and type2 == 'zip':
         return False
     if type_selected == 'x' and type1 == 'zip':
@@ -671,10 +754,13 @@ def update_output2(content, href, name, type_selected, app):
     State('compare-btn', 'href'),
 )
 def update_href(app, data_type, href):
+    print(app, data_type, href)
     """Update the href of the compare button depending on the selected application and data type of comparison"""
     app_str = 'compare'
     if app == 'nifti':
         app_str = 'compare-nii'
+    elif app == 'lcmodel':
+        app_str = 'compare-lcmodel'
     data_type_str = '11'
     if data_type == 'x-y':
         data_type_str = 'xy'
@@ -689,7 +775,8 @@ def update_output(content, href, name, data_id, data_type, app):
     """Update the output of the upload data div"""
     if content is not None and check_type(data_type, name, app):
         file_extension = name.split('.')[-1]
-        if file_extension in ['txt', 'zip', 'nii'] or (name.split('.')[-2] == 'nii' and file_extension == 'gz'):
+        if file_extension in ['txt', 'zip', 'nii', 'table'] or (
+                name.split('.')[-2] == 'nii' and file_extension == 'gz'):
             # save the file in the server
             uuid = save_file_for_comparison(content, name)
             # get olds values
@@ -755,7 +842,8 @@ def filter_exp(version_id, app_id):
                 new_exp_list.append(exp)
 
     options = [{'label': exp['application_version'] + " - " + exp['name'], 'value': str(exp['id']) + '/-/' +
-               exp['application_name']} for exp in new_exp_list]
+                                                                                    exp['application_name']} for exp in
+               new_exp_list]
 
     return options, options
 
@@ -796,7 +884,8 @@ def toggle_modal_exp(n1, n2, is_open):
     if n1 or n2:
         exp_list = load_exp_from_db()
         exp_options = [{'label': exp['application_version'] + " - " + exp['name'], 'value': str(exp['id']) + '/-/' +
-                       exp['application_name']} for exp in exp_list]
+                                                                                            exp['application_name']} for
+                       exp in exp_list]
         applications = get_available_applications()
         options = [{'label': app['name'], 'value': str(app['id']) + '/-/' + app['name']} for app in applications]
         return not is_open, exp_options, exp_options, options, options[0]['value']
@@ -823,7 +912,8 @@ def update_version_dropdown(app_id):
         new_exp_list = exp_list
 
     exp_options = [{'label': exp['application_version'] + " - " + exp['name'], 'value': str(exp['id']) + '/-/' +
-                   exp['application_name']} for exp in new_exp_list]
+                                                                                        exp['application_name']} for exp
+                   in new_exp_list]
 
     return options, exp_options, exp_options
 
