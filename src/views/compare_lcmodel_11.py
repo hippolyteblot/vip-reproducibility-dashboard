@@ -17,7 +17,7 @@ def layout():
     return html.Div(
         [
             dcc.Location(id='url', refresh=False),
-            html.H2('Compare quest2 files'),
+            html.H2('Compare LDModel files'),
             dbc.Input(id='data-id1', type='hidden', value=''),
             dbc.Input(id='data-id2', type='hidden', value=''),
             html.Div(

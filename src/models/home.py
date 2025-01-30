@@ -8,6 +8,8 @@ import os
 import base64
 import shutil
 import zipfile
+import time
+
 from dash import html
 import dash_bootstrap_components as dbc
 
@@ -178,20 +180,33 @@ def decode_base64(string: str) -> bytes:
 
 
 def flatten_folder(path):
-    """Flatten the folder by moving the files to the top level"""
-    nodes = os.listdir(path)
-    while nodes:
-        node = nodes.pop()
-        if os.path.isdir(os.path.join(path, node)):
-            for subnode in os.listdir(os.path.join(path, node)):
-                nodes.append(os.path.join(node, subnode))
-        else:
-            shutil.move(os.path.join(path, node), path)
+    """Déplace tous les fichiers d'une hiérarchie de dossiers à la racine et supprime les dossiers vides."""
+    files_to_move = []
 
-    # remove the subfolders
-    for root, dirs, _ in os.walk(path):
-        for actual_dir in dirs:
-            shutil.rmtree(os.path.join(root, actual_dir))
+    for root, dirs, files in os.walk(path, topdown=False):
+        for file in files:
+            src_path = os.path.join(root, file)
+            dest_path = os.path.join(path, file)
+
+            if os.path.exists(dest_path):
+                base, ext = os.path.splitext(file)
+                counter = 1
+                while os.path.exists(dest_path):
+                    dest_path = os.path.join(path, f"{base}_{counter}{ext}")
+                    counter += 1
+
+            files_to_move.append((src_path, dest_path))
+
+        for dir in dirs:
+            dir_path = os.path.join(root, dir)
+            if os.path.isdir(dir_path):
+                try:
+                    os.rmdir(dir_path)
+                except OSError:
+                    pass
+
+    for src, dest in files_to_move:
+        shutil.move(src, dest)
 
 
 def check_type(data_type, name, app):

@@ -43,12 +43,14 @@ def read_cquest_file(file_uuid: str) -> DataFrame:
     data = get_quest2(path)
     return data
 
+
 def read_lcmodel_file(file_uuid: str) -> DataFrame:
     """Read the file uploaded by the user using the uuid and return a dataframe"""
     path = os.path.join("src", "tmp", "user_compare", str(file_uuid) + ".table")
     data, diag = get_lcmodel(path)
     data = parse_lcmodel(data, diag)
     return data
+
 
 def get_metadata_cquest(exp_id: int) -> list:
     """Get the metadata of an experiment from database"""
@@ -132,6 +134,17 @@ def normalize(data):
     stds = data.groupby('Metabolite')['Amplitude'].transform('std')
 
     data['Amplitude'] = (data['Amplitude'] - means) / stds
+
+
+def normalize_lcmodel(data):
+    """Normalize the data using the formula : (x - mean) / std"""
+    data['Rate_Raw'] = pd.to_numeric(data['Rate_Raw'], errors='coerce')
+    data.dropna(subset=['Rate_Raw'], inplace=True)
+
+    means = data.groupby('Metabolite')['Rate_Raw'].transform('mean')
+    stds = data.groupby('Metabolite')['Rate_Raw'].transform('std')
+
+    data['Rate_Raw'] = (data['Rate_Raw'] - means) / stds
 
 
 def filter_and_normalize_data(wf_data, signal, normalization):

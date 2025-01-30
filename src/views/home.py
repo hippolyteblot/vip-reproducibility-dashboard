@@ -626,7 +626,6 @@ def update_select_app_wfs(_):
     Input('select-app-wfs', 'value'),
 )
 def update_select_wf(app):
-    print(app)
     """Update the select wf options"""
     sp_db = get_DB('fake_vip')
     workflows = sp_db.fetch(
@@ -701,7 +700,6 @@ def update_upload_data_2_container(type_selected):
 def update_compare_btn(_, type1, type2, app, type_selected):
     """Update the compare button state depending on the uploaded files and the selected application"""
     # assert that if type_selected is 1-1, type1 and type2 are txt else zip
-    print(type1, type2, app, type_selected)
     if type_selected == '1-1':
         if type1 == 'txt' and type2 == 'txt' and app == 'cquest' or type1 == 'nii' and type2 == 'nii' and app == 'brats' or type1 == 'table' and type2 == 'table' and app == 'lcmodel' or (
                 type1 in ['gz', 'nii'] and type2 in ['gz', 'nii'] and app == 'nifti'):
@@ -754,7 +752,6 @@ def update_output2(content, href, name, type_selected, app):
     State('compare-btn', 'href'),
 )
 def update_href(app, data_type, href):
-    print(app, data_type, href)
     """Update the href of the compare button depending on the selected application and data type of comparison"""
     app_str = 'compare'
     if app == 'nifti':

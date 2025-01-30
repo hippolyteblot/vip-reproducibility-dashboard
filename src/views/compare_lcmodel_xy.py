@@ -7,7 +7,7 @@ import plotly.express as px
 from dash import html, callback, Input, Output, dcc
 from flask import request
 
-from models.cquest_utils import (get_files_in_folder, normalize, read_folder_lcmodel, preprocess_lcmodel_data_compare,
+from models.cquest_utils import (get_files_in_folder, normalize_lcmodel, read_folder_lcmodel, preprocess_lcmodel_data_compare,
                                  read_file_in_folder_lcmodel)
 from models.reproduce import parse_url
 
@@ -17,7 +17,7 @@ def layout():
     return html.Div(
         [
             dcc.Location(id='url', refresh=False),
-            html.H2('Compare quest2 files'),
+            html.H2('Compare LCModel files'),
             dbc.Input(id='data-id1', type='hidden', value=''),
             dbc.Input(id='data-id2', type='hidden', value=''),
             html.Div(
@@ -110,7 +110,6 @@ def layout():
     prevent_initial_call='initial_duplicate',
 )
 def bind_selects(_):
-    print("bind_selects")
     """Bind the charts to the data"""
     id1, id2 = parse_url(request.referrer)
     files1 = get_files_in_folder(id1, extension='table')
@@ -143,7 +142,6 @@ def update_chart(file1, file2, aggregate1, aggregate2, normalization):
     else:
         file2 = file2 if file2 else get_files_in_folder(id2, 'table')[0]
         data2 = read_file_in_folder_lcmodel(id2, file2)
-
     # delete metabolites water1, water2, water3
     data1, data2 = preprocess_lcmodel_data_compare(data1, data2)
     # concat data with pandas.concat
@@ -151,7 +149,7 @@ def update_chart(file1, file2, aggregate1, aggregate2, normalization):
     data = pd.concat([data1, data2], ignore_index=True)
 
     if normalization == 'Yes':
-        normalize(data)
+        normalize_lcmodel(data)
 
     fig1 = px.box(
         x=data['Metabolite'],
