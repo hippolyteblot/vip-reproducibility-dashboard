@@ -16,23 +16,6 @@ import dash_bootstrap_components as dbc
 from utils.settings import get_DB, CACHE_FOLDER
 
 
-def load_exec_from_local() -> list:
-    """Load the executions from the local folder"""
-    folder = "src/data/spectro/"
-    exec_list = []
-    for group in ["A", "B"]:
-        for subfolder in os.listdir(folder + group):
-            voxel = subfolder.split("_Vox")[1]
-            exec_number = int(subfolder.split("_")[0].split("Rec")[1])
-
-            execution = {
-                "path": group + "/" + subfolder + "/",
-                "name": "parameters " + group + ", voxel " + voxel + ", execution " + str(exec_number)
-            }
-            exec_list.append(execution)
-    return exec_list
-
-
 def load_exp_from_db():
     """Load the experiments from the local folder"""
     # query = 'SELECT * FROM EXPERIMENTS INNER JOIN USERS U ON EXPERIMENTS.user_id = U.id WHERE EXPERIMENTS.single = 0'

@@ -11,6 +11,7 @@ from dash.dependencies import Input, Output, State
 import plotly.express as px
 
 from models.visualize_experiment_template import read_file
+from settings import CACHE_FOLDER
 
 
 def layout():
@@ -542,7 +543,7 @@ def update_dropdowns(contents, filename):
     md5 = hashlib.md5(b64).hexdigest()
     ext = filename[0].split('.')[-1]
     new_filename = md5 + '.' + ext
-    with open('src/tmp/' + new_filename, 'wb') as f:
+    with open(CACHE_FOLDER + new_filename, 'wb') as f:
         f.write(base64.b64decode(content_string))
     try:
         data = read_file(new_filename)

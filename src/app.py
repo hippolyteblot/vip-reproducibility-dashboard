@@ -17,7 +17,7 @@ import ssl
 
 # local imports
 from utils.settings import (APP_HOST, APP_PORT, APP_DEBUG, DEV_TOOLS_PROPS_CHECK, SSL_CERT_CHAIN, SSL_SERVER_KEY,
-                            get_DB, PRODUCTION)
+                            get_DB, PRODUCTION, CACHE_FOLDER)
 
 from components import navbar, footer
 from components.login import User, login_location
@@ -64,8 +64,8 @@ def create_app():
     local_app.layout = serve_layout  # set the layout to the serve_layout function
 
     # create a tmp folder if it does not exist
-    if not os.path.exists('src/tmp'):
-        os.makedirs('src/tmp')
+    if not os.path.exists(CACHE_FOLDER):
+        os.makedirs(CACHE_FOLDER)
 
     login_manager = LoginManager()
     login_manager.init_app(server)
