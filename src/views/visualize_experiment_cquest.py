@@ -5,9 +5,9 @@ import dash_bootstrap_components as dbc
 from dash import html, callback, Input, Output, dcc, State
 from flask import request
 
-from models.cquest_utils import (get_cquest_experiment_data, generate_box_plot, create_signal_group_column,
-                                 create_workflow_group_column, create_dropdown_options,
-                                 filter_and_get_unique_values, normalize, generate_url)
+from models.spectro_utils import (get_cquest_experiment_data, generate_box_plot, create_signal_group_column,
+                                  create_workflow_group_column, create_dropdown_options,
+                                  filter_and_get_unique_values, normalize_cquest, generate_url)
 from models.reproduce import get_experiment_name, parse_url, get_experiment_descriptions
 
 
@@ -266,7 +266,7 @@ def update_chart(_, metabolite, signal, workflow, normalization):
     exp_data = exp_data.sort_values(by=['Metabolite', 'Signal', 'Workflow'])
 
     if normalization == 'Yes':
-        normalize(exp_data)
+        normalize_cquest(exp_data)
 
     if combination == [True, True, True]:  # Cas 1 : Display everything
         list_workflows = create_dropdown_options(exp_data['Signal'].unique(), 'All')

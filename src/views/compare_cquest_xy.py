@@ -7,8 +7,8 @@ import plotly.express as px
 from dash import html, callback, Input, Output, dcc
 from flask import request
 
-from models.cquest_utils import (get_files_in_folder, read_file_in_folder, read_folder, preprocess_cquest_data_compare,
-                                 normalize)
+from models.spectro_utils import (get_files_in_folder, read_file_in_folder_cquest, read_folder_cquest, preprocess_cquest_data_compare,
+                                  normalize_cquest, preprocess_lcmodel_data_compare)
 from models.reproduce import parse_url
 
 
@@ -111,6 +111,8 @@ def layout():
 )
 def bind_selects(_):
     """Bind the charts to the data"""
+    if len(request.referrer.split('?')) <= 1:
+        return [], [], '', ''
     id1, id2 = parse_url(request.referrer)
     files1 = get_files_in_folder(id1)
     files2 = get_files_in_folder(id2)
@@ -133,15 +135,16 @@ def update_chart(file1, file2, aggregate1, aggregate2, normalization):
     """Bind the charts to the data"""
     id1, id2 = parse_url(request.referrer)
     if aggregate1:
-        data1 = read_folder(id1)
+        print('aggregate1')
+        data1 = read_folder_cquest(id1)
     else:
         file1 = file1 if file1 else get_files_in_folder(id1)[0]
-        data1 = read_file_in_folder(id1, file1)
+        data1 = read_file_in_folder_cquest(id1, file1)
     if aggregate2:
-        data2 = read_folder(id2)
+        data2 = read_folder_cquest(id2)
     else:
         file2 = file2 if file2 else get_files_in_folder(id2)[0]
-        data2 = read_file_in_folder(id2, file2)
+        data2 = read_file_in_folder_cquest(id2, file2)
 
     # delete metabolites water1, water2, water3
     data1, data2 = preprocess_cquest_data_compare(data1, data2)
@@ -150,7 +153,7 @@ def update_chart(file1, file2, aggregate1, aggregate2, normalization):
     data = pd.concat([data1, data2], ignore_index=True)
 
     if normalization == 'Yes':
-        normalize(data)
+        normalize_cquest(data)
 
     fig1 = px.scatter(
         x=data['Metabolite'],

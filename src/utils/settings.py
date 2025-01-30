@@ -30,12 +30,17 @@ DB_PASSWORD = os.environ.get('DB_PASSWORD')
 DB_NAME = os.environ.get('DB_NAME')
 
 DB = None
-def get_DB():
+
+
+def get_DB(db_name=DB_NAME):
+    if db_name != DB_NAME:
+        return DatabaseClient(DB_HOST, DB_USER, DB_PASSWORD, db_name)
     global DB
     if DB is None:
         DB = DatabaseClient(DB_HOST, DB_USER, DB_PASSWORD, DB_NAME)
         DB.connect()
     return DB
+
 
 # girder credentials
 GIRDER_API_URL = os.environ.get('GIRDER_API_URL')
@@ -44,12 +49,14 @@ GIRDER_RAW_FOLDER = os.environ.get('GIRDER_RAW_FOLDER')
 GIRDER_PROCESSED_FOLDER = os.environ.get('GIRDER_PROCESSED_FOLDER')
 GIRDER_SOURCE_FOLDER = os.environ.get('GIRDER_SOURCE_FOLDER')
 
-
 GVC = None
+
+
 def get_GVC():
     global GVC
     if GVC is None:
-        GVC = GirderVIPClient(GIRDER_RAW_FOLDER, GIRDER_PROCESSED_FOLDER, GIRDER_SOURCE_FOLDER, GIRDER_API_URL, GIRDER_API_KEY)
+        GVC = GirderVIPClient(GIRDER_RAW_FOLDER, GIRDER_PROCESSED_FOLDER, GIRDER_SOURCE_FOLDER, GIRDER_API_URL,
+                              GIRDER_API_KEY)
     return GVC
 
 

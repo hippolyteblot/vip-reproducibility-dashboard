@@ -6,7 +6,7 @@ import plotly.graph_objects as go
 import pytest
 from numpy import array_equal
 
-from views.compare_11 import bind_charts
+from views.compare_cquest_11 import bind_charts
 from utils.settings import GVC
 
 from flask import Flask

@@ -7,7 +7,7 @@ import dash_bootstrap_components as dbc
 import plotly.express as px
 from flask import request
 
-from models.cquest_utils import get_cquest_experiment_data, normalize
+from models.spectro_utils import get_cquest_experiment_data, normalize_cquest
 from models.reproduce import get_experiment_name, parse_url
 
 
@@ -330,7 +330,7 @@ def update_exp_chart_bland_altman(_, metabolite_name, signal_selected, normaliza
     else:
         addon = ''
         if normalization == 'Yes':
-            normalize(concat_data)
+            normalize_cquest(concat_data)
             addon = 'The metabolites are normalized by subtracting the mean and dividing by the standard deviation.'
 
         first_x_value = concat_data['Metabolite'].iloc[0]

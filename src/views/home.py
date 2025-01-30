@@ -78,6 +78,10 @@ def layout():
                                                                                                 'value': 'cquest'},
                                                                                             {'label': 'NIfTI files',
                                                                                              'value': 'nifti'},
+                                                                                            {'label': 'LCModel results '
+                                                                                                      '(.table)',
+                                                                                             'value': 'lcmodel'},
+
                                                                                         ],
                                                                                         value='nifti',
                                                                                         style={'width': '100%'},
@@ -122,7 +126,8 @@ def layout():
                                                                                         children=html.Div(
                                                                                             children=[
                                                                                                 'Drag and Drop or ',
-                                                                                                dbc.NavLink('Select Files')
+                                                                                                dbc.NavLink(
+                                                                                                    'Select Files')
                                                                                             ],
                                                                                             id='upload-data-1-div'
                                                                                         ),
@@ -166,7 +171,8 @@ def layout():
                                                                                         children=html.Div(
                                                                                             children=[
                                                                                                 'Drag and Drop or ',
-                                                                                                dbc.NavLink('Select Files')
+                                                                                                dbc.NavLink(
+                                                                                                    'Select Files')
                                                                                             ],
                                                                                             id='upload-data-2-div'
                                                                                         ),
@@ -572,11 +578,13 @@ def layout():
                         className='card',
                         style={'display': 'flex', 'gap': '10px', 'flexDirection': 'column', 'width': '50%'},
                     ),
+
                 ],
                 style={'display': 'flex', 'gap': '10px', 'flexDirection': 'row'},
             ),
         ]
     )
+
 
 
 @callback(
@@ -616,13 +624,10 @@ def update_upload_data_2_container(type_selected):
 def update_compare_btn(_, type1, type2, app, type_selected):
     """Update the compare button state depending on the uploaded files and the selected application"""
     # assert that if type_selected is 1-1, type1 and type2 are txt else zip
-    if type_selected == '1-1' and (
-            ((type1 == 'txt' and type2 == 'txt' and app == 'cquest') or
-             (type1 == 'nii' and type2 == 'nii' and app == 'brats') or
-             (type1 in ['gz', 'nii'] and type2 in ['gz', 'nii'])) and
-            app == 'nifti'
-    ):
-        return False
+    if type_selected == '1-1':
+        if type1 == 'txt' and type2 == 'txt' and app == 'cquest' or type1 == 'nii' and type2 == 'nii' and app == 'brats' or type1 == 'table' and type2 == 'table' and app == 'lcmodel' or (
+                type1 in ['gz', 'nii'] and type2 in ['gz', 'nii'] and app == 'nifti'):
+            return False
     if type_selected == 'x-y' and type1 == 'zip' and type2 == 'zip':
         return False
     if type_selected == 'x' and type1 == 'zip':
@@ -675,6 +680,8 @@ def update_href(app, data_type, href):
     app_str = 'compare'
     if app == 'nifti':
         app_str = 'compare-nii'
+    elif app == 'lcmodel':
+        app_str = 'compare-lcmodel'
     data_type_str = '11'
     if data_type == 'x-y':
         data_type_str = 'xy'
@@ -689,7 +696,8 @@ def update_output(content, href, name, data_id, data_type, app):
     """Update the output of the upload data div"""
     if content is not None and check_type(data_type, name, app):
         file_extension = name.split('.')[-1]
-        if file_extension in ['txt', 'zip', 'nii'] or (name.split('.')[-2] == 'nii' and file_extension == 'gz'):
+        if file_extension in ['txt', 'zip', 'nii', 'table'] or (
+                name.split('.')[-2] == 'nii' and file_extension == 'gz'):
             # save the file in the server
             uuid = save_file_for_comparison(content, name)
             # get olds values
@@ -755,7 +763,8 @@ def filter_exp(version_id, app_id):
                 new_exp_list.append(exp)
 
     options = [{'label': exp['application_version'] + " - " + exp['name'], 'value': str(exp['id']) + '/-/' +
-               exp['application_name']} for exp in new_exp_list]
+                                                                                    exp['application_name']} for exp in
+               new_exp_list]
 
     return options, options
 
@@ -796,7 +805,8 @@ def toggle_modal_exp(n1, n2, is_open):
     if n1 or n2:
         exp_list = load_exp_from_db()
         exp_options = [{'label': exp['application_version'] + " - " + exp['name'], 'value': str(exp['id']) + '/-/' +
-                       exp['application_name']} for exp in exp_list]
+                                                                                            exp['application_name']} for
+                       exp in exp_list]
         applications = get_available_applications()
         options = [{'label': app['name'], 'value': str(app['id']) + '/-/' + app['name']} for app in applications]
         return not is_open, exp_options, exp_options, options, options[0]['value']
@@ -823,7 +833,8 @@ def update_version_dropdown(app_id):
         new_exp_list = exp_list
 
     exp_options = [{'label': exp['application_version'] + " - " + exp['name'], 'value': str(exp['id']) + '/-/' +
-                   exp['application_name']} for exp in new_exp_list]
+                                                                                        exp['application_name']} for exp
+                   in new_exp_list]
 
     return options, exp_options, exp_options
 

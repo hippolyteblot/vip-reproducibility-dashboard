@@ -12,7 +12,7 @@ from dash import html
 from pandas import DataFrame
 
 from utils.settings import get_GVC
-from utils.quest2_reader import get_quest2
+from utils.spectro_reader import get_quest2, get_lcmodel, parse_lcmodel
 from utils.settings import get_DB
 
 
@@ -44,6 +44,14 @@ def read_cquest_file(file_uuid: str) -> DataFrame:
     return data
 
 
+def read_lcmodel_file(file_uuid: str) -> DataFrame:
+    """Read the file uploaded by the user using the uuid and return a dataframe"""
+    path = os.path.join("src", "tmp", "user_compare", str(file_uuid) + ".table")
+    data, diag = get_lcmodel(path)
+    data = parse_lcmodel(data, diag)
+    return data
+
+
 def get_metadata_cquest(exp_id: int) -> list:
     """Get the metadata of an experiment from database"""
     DB = get_DB()
@@ -68,35 +76,56 @@ def get_metadata_cquest(exp_id: int) -> list:
     return metadata
 
 
-def get_files_in_folder(folder_id):
+def get_files_in_folder(folder_id, extension='txt'):
     """Get the files in a folder from user's folder in local"""
     path = os.path.join("src", "tmp", "user_compare", str(folder_id))
     files = os.listdir(path)
-    files = [file for file in files if file.endswith(".txt")]
+    files = [file for file in files if file.endswith(f".{extension}")]
     return files
 
 
-def read_file_in_folder(folder, file):
+def read_file_in_folder_cquest(folder, file):
     """Read the file uploaded by the user using the uuid and return a dataframe"""
     path = os.path.join("src", "tmp", "user_compare", str(folder), str(file))
     data = get_quest2(path)
     return data
 
 
-def read_folder(folder):
+def read_file_in_folder_lcmodel(folder, file):
+    """Read the file uploaded by the user using the uuid and return a dataframe"""
+    path = os.path.join("src", "tmp", "user_compare", str(folder), str(file))
+    data, diag = get_lcmodel(path)
+    data = parse_lcmodel(data, diag)
+    return data
+
+
+def read_folder_cquest(folder):
     """Read all the files in a folder and return a dataframe containing all the data"""
     path = os.path.join("src", "tmp", "user_compare", str(folder))
     files = os.listdir(path)
     files = [file for file in files if file.endswith(".txt")]
     data = pd.DataFrame()
     for file in files:
-        df = read_file_in_folder(folder, file)
+        df = read_file_in_folder_cquest(folder, file)
         data = pd.concat([data, df])
     data.reset_index(drop=True, inplace=True)
     return data
 
 
-def normalize(data):
+def read_folder_lcmodel(folder):
+    """Read all the files in a folder and return a dataframe containing all the data"""
+    path = os.path.join("src", "tmp", "user_compare", str(folder))
+    files = os.listdir(path)
+    files = [file for file in files if file.endswith(".table")]
+    data = pd.DataFrame()
+    for file in files:
+        df = read_file_in_folder_lcmodel(folder, file)
+        data = pd.concat([data, df])
+    data.reset_index(drop=True, inplace=True)
+    return data
+
+
+def normalize_cquest(data):
     """Normalize the data using the formula : (x - mean) / std"""
     data['Amplitude'] = pd.to_numeric(data['Amplitude'], errors='coerce')
     data.dropna(subset=['Amplitude'], inplace=True)
@@ -107,18 +136,15 @@ def normalize(data):
     data['Amplitude'] = (data['Amplitude'] - means) / stds
 
 
-def filter_and_normalize_data(wf_data, signal, normalization):
-    """Filter the data and normalize it if needed"""
-    wf_data = wf_data.sort_values(by=['Metabolite'])
-    wf_data = wf_data[~wf_data['Metabolite'].str.contains('water')]
+def normalize_lcmodel(data):
+    """Normalize the data using the formula : (x - mean) / std"""
+    data['Rate_Raw'] = pd.to_numeric(data['Rate_Raw'], errors='coerce')
+    data.dropna(subset=['Rate_Raw'], inplace=True)
 
-    if normalization == 'Yes':
-        normalize(wf_data)
+    means = data.groupby('Metabolite')['Rate_Raw'].transform('mean')
+    stds = data.groupby('Metabolite')['Rate_Raw'].transform('std')
 
-    if signal != 'All':
-        wf_data = wf_data[wf_data['Signal'] == signal]
-
-    return wf_data
+    data['Rate_Raw'] = (data['Rate_Raw'] - means) / stds
 
 
 def get_description_and_label(signal, workflow, metabolite):
@@ -245,6 +271,16 @@ def preprocess_cquest_data_compare(data1, data2):
     data2['File'] = 'File 2'
 
     return data1, data2
+
+
+def preprocess_lcmodel_data_compare(data1, data2):
+    """Preprocess the data for the comparison"""
+
+    data1['File'] = 'File 1'
+    data2['File'] = 'File 2'
+
+    return data1, data2
+
 
 def generate_url(wf_id, metabolite_name, signal_selected, workflow_selected, normalization='Yes'):
     """Generate the url to be used in the callback"""

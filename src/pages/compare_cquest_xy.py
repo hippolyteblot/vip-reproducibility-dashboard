@@ -3,7 +3,7 @@ Controller for the compare_xy page. Allows to compare the results of two zipped 
 """
 import dash
 
-from views.compare_xy import layout
+from views.compare_cquest_xy import layout
 
 dash.register_page(
     __name__,
