@@ -11,7 +11,7 @@ import plotly.express as px
 from dash import html
 from pandas import DataFrame
 
-from utils.settings import get_GVC
+from utils.settings import get_GVC, CACHE_FOLDER
 from utils.spectro_reader import get_quest2, get_lcmodel, parse_lcmodel
 from utils.settings import get_DB
 
@@ -39,14 +39,14 @@ def get_cquest_experiment_data(experiment_id: int) -> pd.DataFrame:
 
 def read_cquest_file(file_uuid: str) -> DataFrame:
     """Read the file uploaded by the user using the uuid and return a dataframe"""
-    path = os.path.join("src", "tmp", "user_compare", str(file_uuid) + ".txt")
+    path = os.path.join(CACHE_FOLDER, "user_compare", str(file_uuid) + ".txt")
     data = get_quest2(path)
     return data
 
 
 def read_lcmodel_file(file_uuid: str) -> DataFrame:
     """Read the file uploaded by the user using the uuid and return a dataframe"""
-    path = os.path.join("src", "tmp", "user_compare", str(file_uuid) + ".table")
+    path = os.path.join(CACHE_FOLDER, "user_compare", str(file_uuid) + ".table")
     data, diag = get_lcmodel(path)
     data = parse_lcmodel(data, diag)
     return data
@@ -78,7 +78,7 @@ def get_metadata_cquest(exp_id: int) -> list:
 
 def get_files_in_folder(folder_id, extension='txt'):
     """Get the files in a folder from user's folder in local"""
-    path = os.path.join("src", "tmp", "user_compare", str(folder_id))
+    path = os.path.join(CACHE_FOLDER, "user_compare", str(folder_id))
     files = os.listdir(path)
     files = [file for file in files if file.endswith(f".{extension}")]
     return files
@@ -86,14 +86,14 @@ def get_files_in_folder(folder_id, extension='txt'):
 
 def read_file_in_folder_cquest(folder, file):
     """Read the file uploaded by the user using the uuid and return a dataframe"""
-    path = os.path.join("src", "tmp", "user_compare", str(folder), str(file))
+    path = os.path.join(CACHE_FOLDER, "user_compare", str(folder), str(file))
     data = get_quest2(path)
     return data
 
 
 def read_file_in_folder_lcmodel(folder, file):
     """Read the file uploaded by the user using the uuid and return a dataframe"""
-    path = os.path.join("src", "tmp", "user_compare", str(folder), str(file))
+    path = os.path.join(CACHE_FOLDER, "user_compare", str(folder), str(file))
     data, diag = get_lcmodel(path)
     data = parse_lcmodel(data, diag)
     return data
@@ -101,7 +101,7 @@ def read_file_in_folder_lcmodel(folder, file):
 
 def read_folder_cquest(folder):
     """Read all the files in a folder and return a dataframe containing all the data"""
-    path = os.path.join("src", "tmp", "user_compare", str(folder))
+    path = os.path.join(CACHE_FOLDER, "user_compare", str(folder))
     files = os.listdir(path)
     files = [file for file in files if file.endswith(".txt")]
     data = pd.DataFrame()
@@ -114,7 +114,7 @@ def read_folder_cquest(folder):
 
 def read_folder_lcmodel(folder):
     """Read all the files in a folder and return a dataframe containing all the data"""
-    path = os.path.join("src", "tmp", "user_compare", str(folder))
+    path = os.path.join(CACHE_FOLDER, "user_compare", str(folder))
     files = os.listdir(path)
     files = [file for file in files if file.endswith(".table")]
     data = pd.DataFrame()
