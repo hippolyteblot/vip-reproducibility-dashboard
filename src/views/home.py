@@ -586,19 +586,6 @@ def layout():
     )
 
 
-@callback(
-    Output('wfs-modal', 'is_open'),
-    Input('wfs-open', 'n_clicks'),
-    Input('wfs-close', 'n_clicks'),
-    State('wfs-modal', 'is_open'),
-    prevent_initial_call=True
-)
-def toggle_wfs_modal(n1, n2, is_open):
-    """Open or close the workflows modal"""
-    if n1 or n2:
-        return not is_open
-    return is_open
-
 
 @callback(
     Output('upload-modal', 'is_open'),
