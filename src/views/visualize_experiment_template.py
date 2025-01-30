@@ -11,7 +11,7 @@ from dash.dependencies import Input, Output, State
 import plotly.express as px
 
 from models.visualize_experiment_template import read_file
-from settings import CACHE_FOLDER
+from utils.settings import CACHE_FOLDER
 
 
 def layout():

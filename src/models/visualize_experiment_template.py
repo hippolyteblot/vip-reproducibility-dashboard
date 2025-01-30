@@ -4,7 +4,7 @@ This file contains functions that are used to visualize the results of an experi
 
 import pandas as pd
 
-from settings import CACHE_FOLDER
+from utils.settings import CACHE_FOLDER
 
 
 def read_file(filename):
