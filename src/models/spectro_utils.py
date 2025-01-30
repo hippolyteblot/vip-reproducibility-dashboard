@@ -12,7 +12,7 @@ from dash import html
 from pandas import DataFrame
 
 from utils.settings import get_GVC
-from utils.quest2_reader import get_quest2, get_lcmodel, parse_lcmodel
+from utils.spectro_reader import get_quest2, get_lcmodel, parse_lcmodel
 from utils.settings import get_DB
 
 
@@ -84,7 +84,7 @@ def get_files_in_folder(folder_id, extension='txt'):
     return files
 
 
-def read_file_in_folder(folder, file):
+def read_file_in_folder_cquest(folder, file):
     """Read the file uploaded by the user using the uuid and return a dataframe"""
     path = os.path.join("src", "tmp", "user_compare", str(folder), str(file))
     data = get_quest2(path)
@@ -99,14 +99,14 @@ def read_file_in_folder_lcmodel(folder, file):
     return data
 
 
-def read_folder(folder):
+def read_folder_cquest(folder):
     """Read all the files in a folder and return a dataframe containing all the data"""
     path = os.path.join("src", "tmp", "user_compare", str(folder))
     files = os.listdir(path)
     files = [file for file in files if file.endswith(".txt")]
     data = pd.DataFrame()
     for file in files:
-        df = read_file_in_folder(folder, file)
+        df = read_file_in_folder_cquest(folder, file)
         data = pd.concat([data, df])
     data.reset_index(drop=True, inplace=True)
     return data
@@ -125,7 +125,7 @@ def read_folder_lcmodel(folder):
     return data
 
 
-def normalize(data):
+def normalize_cquest(data):
     """Normalize the data using the formula : (x - mean) / std"""
     data['Amplitude'] = pd.to_numeric(data['Amplitude'], errors='coerce')
     data.dropna(subset=['Amplitude'], inplace=True)
@@ -145,20 +145,6 @@ def normalize_lcmodel(data):
     stds = data.groupby('Metabolite')['Rate_Raw'].transform('std')
 
     data['Rate_Raw'] = (data['Rate_Raw'] - means) / stds
-
-
-def filter_and_normalize_data(wf_data, signal, normalization):
-    """Filter the data and normalize it if needed"""
-    wf_data = wf_data.sort_values(by=['Metabolite'])
-    wf_data = wf_data[~wf_data['Metabolite'].str.contains('water')]
-
-    if normalization == 'Yes':
-        normalize(wf_data)
-
-    if signal != 'All':
-        wf_data = wf_data[wf_data['Signal'] == signal]
-
-    return wf_data
 
 
 def get_description_and_label(signal, workflow, metabolite):
@@ -289,8 +275,6 @@ def preprocess_cquest_data_compare(data1, data2):
 
 def preprocess_lcmodel_data_compare(data1, data2):
     """Preprocess the data for the comparison"""
-    """data1['Amplitude'] = data1['Amplitude'].apply(float)
-    data2['Amplitude'] = data2['Amplitude'].apply(float)"""
 
     data1['File'] = 'File 1'
     data2['File'] = 'File 2'

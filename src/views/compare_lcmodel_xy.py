@@ -7,8 +7,8 @@ import plotly.express as px
 from dash import html, callback, Input, Output, dcc
 from flask import request
 
-from models.cquest_utils import (get_files_in_folder, normalize_lcmodel, read_folder_lcmodel, preprocess_lcmodel_data_compare,
-                                 read_file_in_folder_lcmodel)
+from models.spectro_utils import (get_files_in_folder, normalize_lcmodel, read_folder_lcmodel, preprocess_lcmodel_data_compare,
+                                  read_file_in_folder_lcmodel)
 from models.reproduce import parse_url
 
 
@@ -111,6 +111,8 @@ def layout():
 )
 def bind_selects(_):
     """Bind the charts to the data"""
+    if len(request.referrer.split('?')) <= 1:
+        return [], [], '', ''
     id1, id2 = parse_url(request.referrer)
     files1 = get_files_in_folder(id1, extension='table')
     files2 = get_files_in_folder(id2, extension='table')

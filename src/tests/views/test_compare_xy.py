@@ -5,7 +5,7 @@ import plotly.graph_objects as go
 import pytest
 from flask import Flask
 
-from views.compare_xy import update_chart
+from views.compare_cquest_xy import update_chart
 
 
 @pytest.mark.parametrize(

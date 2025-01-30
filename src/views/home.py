@@ -6,9 +6,6 @@ from dash import html, Output, Input, State, callback, clientside_callback, Clie
 
 from models.home import load_exp_from_db, get_available_applications, get_available_versions, \
     save_file_for_comparison, load_app_wf_from_db, check_type, get_list_structure
-from models.link_vip import download_file
-
-from utils.settings import get_DB
 
 
 def layout():
@@ -601,66 +598,6 @@ def toggle_wfs_modal(n1, n2, is_open):
     if n1 or n2:
         return not is_open
     return is_open
-
-
-@callback(
-    Output('select-app-wfs', 'options'),
-    Output('select-app-wfs', 'value'),
-    Input('select-app-wfs', 'children'),
-)
-def update_select_app_wfs(_):
-    """Update the select app wfs options"""
-    sp_db = get_DB('fake_vip')
-    applications = sp_db.fetch(
-        'SELECT DISTINCT w.application FROM workflows w INNER JOIN outputs o ON o.workflow_id = w.id ORDER BY w.application')
-    appli = applications[0] if applications else None
-    return [{'label': app['application'], 'value': app['application']} for app in applications], appli[
-        'application'] if appli else None
-
-
-@callback(
-    Output('select-wf1', 'options'),
-    Output('select-wf2', 'options'),
-    Output('select-wf1', 'value'),
-    Output('select-wf2', 'value'),
-    Input('select-app-wfs', 'value'),
-)
-def update_select_wf(app):
-    """Update the select wf options"""
-    sp_db = get_DB('fake_vip')
-    workflows = sp_db.fetch(
-        'SELECT w.* FROM workflows w WHERE EXISTS (SELECT 1 FROM outputs o WHERE o.workflow_id = w.id) AND application like %s',
-        (app,))
-    wf = workflows[0] if workflows else None
-    return ([{'label': wf['simulation_name'], 'value': wf['id']} for wf in workflows], [
-        {'label': wf['simulation_name'], 'value': wf['id']} for wf in workflows], wf['id'] if wf else None,
-            wf['id'] if wf else None)
-
-
-@callback(
-    Output('select-file-wfs', 'options'),
-    Output('select-file-wfs', 'value'),
-    Output('compare-wfs-btn', 'href'),
-    Output('compare-wfs-btn', 'disabled'),
-    Input('select-wf1', 'value'),
-    Input('select-wf2', 'value'),
-    State('select-file-wfs', 'options'),
-)
-def update_wfs_files(wf1, wf2, _):
-    """Update the wfs modal body"""
-    sp_db = get_DB('fake_vip')
-    files = sp_db.fetch('select * from outputs where workflow_id like %s', (wf1,))
-    verif_files = sp_db.fetch('select * from outputs where workflow_id like %s', (wf2,))
-    # keep only the files that are in both workflows (check by name, last splited part by / of path)
-    files = [file for file in files if file['path'].split('/')[-1] in [f['path'].split('/')[-1] for f in verif_files]]
-    file = files[0] if files else None
-    disabled = True if not files else False
-    download_file(wf1, file['path'])
-    download_file(wf2, file['path'])
-    link = '/compare-wfs?id1=' + str(wf1) + '&id2=' + str(wf2) + '&file=' + file[
-        'path'] if file else '/compare-wfs?id1=&id2=&file='
-    return [{'label': file['path'], 'value': file['path']} for file in files], file[
-        'path'] if file else None, link, disabled
 
 
 @callback(

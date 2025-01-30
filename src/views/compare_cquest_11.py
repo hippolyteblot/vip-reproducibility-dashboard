@@ -7,7 +7,7 @@ import dash_bootstrap_components as dbc
 import plotly.express as px
 from flask import request
 
-from models.cquest_utils import read_cquest_file, normalize, preprocess_cquest_data_compare
+from models.spectro_utils import read_cquest_file, normalize_cquest, preprocess_cquest_data_compare
 from models.reproduce import parse_url
 
 
@@ -74,7 +74,7 @@ def bind_charts(_, normalization):
     data = pd.concat([data1, data2])
 
     if normalization:
-        normalize(data)
+        normalize_cquest(data)
 
     fig1 = px.scatter(
         x=data['Metabolite'],

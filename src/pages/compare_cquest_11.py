@@ -3,7 +3,7 @@ Controller for the compare-11 page. Allows to compare the results of two executi
 """
 import dash
 
-from views.compare_11 import layout
+from views.compare_cquest_11 import layout
 
 dash.register_page(
     __name__,
