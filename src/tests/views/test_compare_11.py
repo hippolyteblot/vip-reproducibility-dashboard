@@ -13,7 +13,7 @@ from flask import Flask
 
 
 @patch('views.compare_exp_cquest.get_cquest_experiment_data')
-@patch('models.cquest_utils.get_quest2')
+@patch('models.spectro_utils.get_quest2')
 def test_update_chart(mock_get_data, mock_get_cquest_data):
     # Configuration of the environment
     app = Flask(__name__)

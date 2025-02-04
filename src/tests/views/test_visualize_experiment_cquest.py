@@ -15,7 +15,7 @@ from flask import Flask
 
 @pytest.fixture(autouse=True)
 def mock_database_client(mocker):
-    return mocker.patch('models.cquest_utils.get_DB')
+    return mocker.patch('models.spectro_utils.get_DB')
 
 
 # Define the test cases using @pytest.mark.parametrize

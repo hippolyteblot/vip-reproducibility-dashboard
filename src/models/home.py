@@ -162,6 +162,7 @@ def decode_base64(string: str) -> bytes:
     return base64.b64decode(string)
 
 
+
 def flatten_folder(path):
     """Déplace tous les fichiers d'une hiérarchie de dossiers à la racine et supprime les dossiers vides."""
     files_to_move = []
@@ -180,17 +181,16 @@ def flatten_folder(path):
 
             files_to_move.append((src_path, dest_path))
 
-        for dir in dirs:
-            dir_path = os.path.join(root, dir)
-            if os.path.isdir(dir_path):
-                try:
-                    os.rmdir(dir_path)
-                except OSError:
-                    pass
-
     for src, dest in files_to_move:
         shutil.move(src, dest)
 
+    for root, dirs, _ in os.walk(path, topdown=False):
+        for dir in dirs:
+            dir_path = os.path.join(root, dir)
+            try:
+                os.rmdir(dir_path)
+            except OSError:
+                pass
 
 def check_type(data_type, name, app):
     """Check if the uploaded file is of the right type"""

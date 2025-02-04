@@ -55,7 +55,9 @@ GVC = None
 def get_GVC():
     global GVC
     if GVC is None:
-        GVC = GirderVIPClient(GIRDER_RAW_FOLDER, GIRDER_PROCESSED_FOLDER, GIRDER_SOURCE_FOLDER, GIRDER_API_URL,
+        #GVC = GirderVIPClient(GIRDER_RAW_FOLDER, GIRDER_PROCESSED_FOLDER, GIRDER_SOURCE_FOLDER, GIRDER_API_URL,
+        #                      GIRDER_API_KEY)
+        GVC = GirderVIPClient(GIRDER_RAW_FOLDER, GIRDER_PROCESSED_FOLDER, CACHE_FOLDER, GIRDER_API_URL,
                               GIRDER_API_KEY)
     return GVC
 

@@ -15,8 +15,8 @@ from views.compare_cquest_xy import update_chart
         (None, 'yes', 'Mean of the significant digits mean per step for each file'),
         ('yes', 'yes', 'Mean of the significant digits mean per step for each file'),
     ])
-@patch('views.compare_xy.read_folder')
-@patch('views.compare_xy.read_file_in_folder')
+@patch('views.compare_cquest_xy.read_folder_cquest')
+@patch('views.compare_cquest_xy.read_file_in_folder_cquest')
 def test_update_chart(mock_get_data, mock_read_folder, aggregate1, aggregate2, title):
     # Configuration of the environment
     app = Flask(__name__)

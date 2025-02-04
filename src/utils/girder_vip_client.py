@@ -98,6 +98,7 @@ class GirderVIPClient:
                 for file in self.client.listFile(item['_id']):
                     if file['name'] == 'data.feather':
                         self.client.downloadFile(file['_id'], self.download_folder + folder_id + '/data.feather')
+                        print('File downloaded')
                         return self.download_folder + folder_id + '/data.feather'
         return None
 
