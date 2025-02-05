@@ -1,6 +1,13 @@
 name: Pylint Check
 
-on: [push]
+on:
+  push:
+    branches:
+      - main
+      - develop
+  pull_request:
+    branches:
+      - develop
 
 jobs:
   pylint:
